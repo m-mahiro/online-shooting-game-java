@@ -11,7 +11,7 @@ public class MyClient extends JFrame implements MouseMotionListener, KeyListener
 	ImageIcon whiteIcon = new ImageIcon("assets/White.jpg");
 	ImageIcon lightBlackIcon = new ImageIcon("assets/LightBlack.jpg");
 	ImageIcon lightWhiteIcon = new ImageIcon("assets/LightWhite.jpg");
-	ImageIcon bullet = new ImageIcon("assets/GreenFrame.jpg");
+	ImageIcon bulletIcon = new ImageIcon("assets/GreenFrame.jpg"); // Renamed for clarity
 	PrintWriter out;//出力用のライター
 	private int myClientNumber;
 	public volatile ImageIcon tern;
@@ -87,13 +87,13 @@ public class MyClient extends JFrame implements MouseMotionListener, KeyListener
 	@Override
 	public void keyTyped(KeyEvent e) {
 		JLabel myTank = tanks[myTankId];
-
-		int x = myTank.getX();
-		int y = myTank.getY();
+		int tankX = myTank.getX();
+		int tankY = myTank.getY();
 
 		switch (e.getKeyChar()) {
 			case 'p': {
-				BulletThread bulletFlying = new BulletThread(x + 50, y + 50, mouseX - x, mouseY - y, true);
+				// For debugging, fire towards (10, 10) direction vector
+				BulletThread bulletFlying = new BulletThread(tankX + 25, tankY + 25, mouseX - tankX, mouseY - tankY, true);
 				System.out.println("発射！");
 				break;
 			}
@@ -103,7 +103,7 @@ public class MyClient extends JFrame implements MouseMotionListener, KeyListener
 	@Override
 	public void keyPressed(KeyEvent e) {
 		char key = e.getKeyChar();
-		System.out.println(key);
+		// System.out.println(key);
 		JLabel myTank = tanks[myTankId];
 		int x = myTank.getX();
 		int y = myTank.getY();
@@ -118,61 +118,83 @@ public class MyClient extends JFrame implements MouseMotionListener, KeyListener
 		}
 		myTank.setLocation(x, y);
 		out.println("MOVE " + MyClient.this.myTankId + " " + x + " " + y);
-
 	}
 
-	private class BulletThread extends Thread{
-		private JLabel bullet;
-		private int x, y, dx, dy;
-		BulletThread(int x, int y, int dx, int dy, boolean isShooter) {
-			this.x = x;
-			this.y = y;
-			this.dx = dx;
-			this.dy = dy;
-			bullet = new JLabel(MyClient.this.bullet);
-			bullet.setLocation(x, y);
-			bullet.setSize(10, 10);
-			c.add(bullet);
-			if (isShooter) {
-				MyClient.this.out.println("BULLET " + MyClient.this.myTankId + " " +  x + " " + y + " " + dx + " " + dy);
-			}
-			this.start();
-		}
+    private class BulletThread extends Thread {
+        private JLabel bulletLabel;
+        private double x, y, dx, dy;
+        private static final double SPEED = 5.0;
 
-		@Override
-		public void run() {
-			for (int i = 0; i < 100; i++) {
-				x += dx;
-				y += dy;
-				bullet.setLocation(x, y);
-				try {
-					sleep(10);
-				} catch (Exception e) {
-					continue;
-				}
-			}
-			SwingUtilities.invokeLater(() -> {
-				c.remove(bullet);
-				c.repaint();
-			});
-		}
-	}
+        BulletThread(double startX, double startY, double dirX, double dirY, boolean isShooter) {
+            this.x = startX;
+            this.y = startY;
+
+            // Normalize the direction vector
+            double magnitude = Math.sqrt(dirX * dirX + dirY * dirY);
+            double normalizedDx = 0;
+            double normalizedDy = 0;
+            if (magnitude > 0) {
+                normalizedDx = dirX / magnitude;
+                normalizedDy = dirY / magnitude;
+            }
+
+            // Apply speed to get the final velocity vector
+            this.dx = normalizedDx * SPEED;
+            this.dy = normalizedDy * SPEED;
+
+            bulletLabel = new JLabel(bulletIcon);
+            bulletLabel.setBounds((int)this.x, (int)this.y, 10, 10);
+            c.add(bulletLabel);
+            c.setComponentZOrder(bulletLabel, 0); // Ensure bullet is drawn on top
+
+            if (isShooter) {
+                // Send the normalized direction vector, not the velocity
+                MyClient.this.out.println("BULLET " + MyClient.this.myTankId + " " + this.x + " " + this.y + " " + normalizedDx + " " + normalizedDy);
+            }
+            this.start();
+        }
+
+        @Override
+        public void run() {
+            // Fly for 400 frames (4 seconds) or until off-screen
+            for (int i = 0; i < 400; i++) {
+                x += dx;
+                y += dy;
+                bulletLabel.setLocation((int) x, (int) y);
+
+                // Check if the bullet is off-screen
+                if (x < 0 || x > c.getWidth() || y < 0 || y > c.getHeight()) {
+                    break;
+                }
+
+                try {
+                    sleep(10);
+                } catch (InterruptedException e) {
+                    break; // Exit if interrupted
+                }
+            }
+            // Remove bullet from container on the Event Dispatch Thread
+            SwingUtilities.invokeLater(() -> {
+                c.remove(bulletLabel);
+                c.repaint();
+            });
+        }
+    }
+
 
 	@Override
-	public void keyReleased(KeyEvent e) {
-
-	}
+	public void keyReleased(KeyEvent e) {}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
-
+		this.mouseX = e.getX();
+		this.mouseY = e.getY();
 	}
 
 	@Override
 	public void mouseMoved(MouseEvent e) {
 		this.mouseX = e.getX();
 		this.mouseY = e.getY();
-		System.out.println(this.mouseX + " " + this.mouseY);
 	}
 
 	//メッセージ受信のためのスレッド
@@ -204,11 +226,10 @@ public class MyClient extends JFrame implements MouseMotionListener, KeyListener
 				myIconInfo.setBounds(110, 5, 50, 50);
 				c.add(myIconInfo);
 
-
 				while (true) {
 					String inputLine = br.readLine();//データを一行分だけ読み込んでみる
 					if (inputLine != null) {//読み込んだときにデータが読み込まれたかどうかをチェックする
-//						System.out.println("Receive: " + inputLine);//デバッグ（動作確認用）にコンソールに出力する
+						// System.out.println("Receive: " + inputLine);//デバッグ（動作確認用）にコンソールに出力する
 						String[] inputTokens = inputLine.split(" ");    //入力データを解析するために、スペースで切り分ける
 						String cmd = inputTokens[0];//コマンドの取り出し．１つ目の要素を取り出す
 
@@ -223,11 +244,12 @@ public class MyClient extends JFrame implements MouseMotionListener, KeyListener
 							if (tankId == MyClient.this.myTankId) {
 								continue;
 							}
-							int x = Integer.parseInt(inputTokens[2]);//数値に変換する
-							int y = Integer.parseInt(inputTokens[3]);//数値に変換する
-							int dx = Integer.parseInt(inputTokens[4]);
-							int dy = Integer.parseInt(inputTokens[5]);
-							BulletThread bulletFlying = new BulletThread(x, y, dx, dy, false);
+							double x = Double.parseDouble(inputTokens[2]);
+							double y = Double.parseDouble(inputTokens[3]);
+							double dx = Double.parseDouble(inputTokens[4]);
+							double dy = Double.parseDouble(inputTokens[5]);
+							// Create a bullet for another player using the received normalized direction
+							new BulletThread(x, y, dx, dy, false);
 						}
 
 					} else {
@@ -235,18 +257,17 @@ public class MyClient extends JFrame implements MouseMotionListener, KeyListener
 					}
 				}
 				socket.close();
-			} catch (
-					IOException e) {
+			} catch (IOException e) {
 				System.err.println("エラーが発生しました: " + e);
 			}
 		}
-
-
 	}
 
 	public static void main(String[] args) {
-		MyClient net = new MyClient();
-		net.setVisible(true);
+		// Ensure UI updates are on the Event Dispatch Thread
+//		SwingUtilities.invokeLater(() -> {
+			MyClient net = new MyClient();
+			net.setVisible(true);
+//		});
 	}
-
 }
