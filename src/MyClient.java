@@ -5,13 +5,18 @@ import java.lang.*;
 import java.awt.*;
 import java.awt.event.*;
 
-public class MyClient extends JFrame implements MouseMotionListener, KeyListener {
+public class MyClient extends JFrame implements MouseMotionListener, KeyListener, MouseListener {
 	private Container c;
-	ImageIcon blackIcon = new ImageIcon("assets/Black.jpg");
-	ImageIcon whiteIcon = new ImageIcon("assets/White.jpg");
-	ImageIcon lightBlackIcon = new ImageIcon("assets/LightBlack.jpg");
-	ImageIcon lightWhiteIcon = new ImageIcon("assets/LightWhite.jpg");
-	ImageIcon bulletIcon = new ImageIcon("assets/GreenFrame.jpg"); // Renamed for clarity
+
+	ImageIcon blueTankIcon = new ImageIcon("assets/tank_grey_base.png");
+	ImageIcon redTankIcon = new ImageIcon("assets/tank_grey_base.png");
+	ImageIcon blueTankGunIcon = new ImageIcon("assets/tank_blue_gun.png");
+	ImageIcon redTankGunIcon = new ImageIcon("assets/tank_blue_gun.png");
+	ImageIcon myBlueTankIcon = new ImageIcon("assets/tank_grey_base.png");
+	ImageIcon myRedTankIcon = new ImageIcon("assets/tank_grey_base.png");
+	ImageIcon blueBulletIcon = new ImageIcon("assets/blue_bullet.png");
+	ImageIcon redBulletIcon = new ImageIcon("assets/blue_bullet.png");
+
 	PrintWriter out;//出力用のライター
 	private int myClientNumber;
 	public volatile ImageIcon tern;
@@ -19,6 +24,8 @@ public class MyClient extends JFrame implements MouseMotionListener, KeyListener
 	private JLabel[] tanks;
 	int myTankId;
 	int mouseX, mouseY;
+	int NUM_OF_TANK = 4;
+	int[][] tankTransforms = new int[NUM_OF_TANK][4]; // x, y, 戦車の向き, 砲台の向き
 
 	public MyClient() {
 		//名前の入力ダイアログを開く
@@ -38,20 +45,27 @@ public class MyClient extends JFrame implements MouseMotionListener, KeyListener
 
 		//アイコンの設定
 		c.setLayout(null);//自動レイアウトの設定を行わない
-		tanks[0] = new JLabel(blackIcon);
-		tanks[1] = new JLabel(whiteIcon);
-		tanks[2] = new JLabel(blackIcon);
-		tanks[3] = new JLabel(whiteIcon);
+
+		blueTankIcon = new ImageIcon(blueTankIcon.getImage().getScaledInstance(50, 50, Image.SCALE_AREA_AVERAGING));
+		redTankIcon = new ImageIcon(redTankIcon.getImage().getScaledInstance(50, 50, Image.SCALE_AREA_AVERAGING));
+		myBlueTankIcon = new ImageIcon(myBlueTankIcon.getImage().getScaledInstance(50, 50, Image.SCALE_AREA_AVERAGING));
+		myRedTankIcon = new ImageIcon(myBlueTankIcon.getImage().getScaledInstance(50, 50, Image.SCALE_AREA_AVERAGING));
+
+		tanks[0] = new JLabel(blueTankIcon);
+		tanks[1] = new JLabel(redTankIcon);
+		tanks[2] = new JLabel(blueTankIcon);
+		tanks[3] = new JLabel(redTankIcon);
+
+
+
 		tanks[0].setBounds(10, 100 + 0, 50, 50);
 		tanks[1].setBounds(10, 100 + 50, 50, 50);
 		tanks[2].setBounds(60, 100 + 0, 50, 50);
 		tanks[3].setBounds(60, 100 + 50, 50, 50);
+
 		this.addMouseMotionListener(this);
-		tanks[0].setText("0");
-		tanks[1].setText("1");
-		tanks[2].setText("2");
-		tanks[3].setText("3");
 		this.addKeyListener(this);
+		this.addMouseListener(this);
 		setFocusable(true);
 		setVisible(true);
 
@@ -120,7 +134,36 @@ public class MyClient extends JFrame implements MouseMotionListener, KeyListener
 		out.println("MOVE " + MyClient.this.myTankId + " " + x + " " + y);
 	}
 
-    private class BulletThread extends Thread {
+	@Override
+	public void mouseClicked(MouseEvent e) {
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+		JLabel myTank = tanks[myTankId];
+		int tankX = myTank.getX();
+		int tankY = myTank.getY();
+		BulletThread bulletFlying = new BulletThread(tankX + 25, tankY + 25, mouseX - tankX, mouseY - tankY, true);
+		System.out.println("発射！");
+
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+
+	}
+
+	private class BulletThread extends Thread {
         private JLabel bulletLabel;
         private double x, y, dx, dy;
         private static final double SPEED = 5.0;
@@ -142,7 +185,7 @@ public class MyClient extends JFrame implements MouseMotionListener, KeyListener
             this.dx = normalizedDx * SPEED;
             this.dy = normalizedDy * SPEED;
 
-            bulletLabel = new JLabel(bulletIcon);
+            bulletLabel = new JLabel(blueBulletIcon);
             bulletLabel.setBounds((int)this.x, (int)this.y, 10, 10);
             c.add(bulletLabel);
             c.setComponentZOrder(bulletLabel, 0); // Ensure bullet is drawn on top
@@ -218,11 +261,11 @@ public class MyClient extends JFrame implements MouseMotionListener, KeyListener
 				System.out.println("MyClientNumber: " + myClientNumber); // Hello, Clientを受け取る
 
 				myTankId = MyClient.this.myClientNumber % 4;
-				tanks[myTankId].setIcon(myTankId % 2 == 0 ? lightBlackIcon : lightWhiteIcon);
+				tanks[myTankId].setIcon(myTankId % 2 == 0 ? myBlueTankIcon : myRedTankIcon);
 
 				out = new PrintWriter(socket.getOutputStream(), true);
 
-				JLabel myIconInfo = new JLabel(MyClient.this.myClientNumber % 2 == 0 ? "黒" : "白");
+				JLabel myIconInfo = new JLabel(MyClient.this.myClientNumber % 2 == 0 ? "青" : "赤");
 				myIconInfo.setBounds(110, 5, 50, 50);
 				c.add(myIconInfo);
 

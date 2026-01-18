@@ -71,7 +71,7 @@ class MyServer {
 	//全員にメッセージを送る
 	public static void SendAll(String str, String myName){
 		//送られた来たメッセージを接続している全員に配る
-		for(int i=1;i<=member;i++){
+		for(int i=0;i<=member;i++){
 			if(flag[i] == true){
 				out[i].println(str);
 				out[i].flush();//バッファをはき出す＝＞バッファにある全てのデータをすぐに送信する
