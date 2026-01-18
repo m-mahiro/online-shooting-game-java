@@ -8,14 +8,14 @@ import java.awt.event.*;
 public class MyClient extends JFrame implements MouseMotionListener, KeyListener, MouseListener {
 	private Container c;
 
-	ImageIcon blueTankIcon = new ImageIcon("assets/tank_grey_base.png");
-	ImageIcon redTankIcon = new ImageIcon("assets/tank_grey_base.png");
-	ImageIcon blueTankGunIcon = new ImageIcon("assets/tank_blue_gun.png");
-	ImageIcon redTankGunIcon = new ImageIcon("assets/tank_blue_gun.png");
-	ImageIcon myBlueTankIcon = new ImageIcon("assets/tank_grey_base.png");
-	ImageIcon myRedTankIcon = new ImageIcon("assets/tank_grey_base.png");
-	ImageIcon blueBulletIcon = new ImageIcon("assets/blue_bullet.png");
-	ImageIcon redBulletIcon = new ImageIcon("assets/blue_bullet.png");
+	ImageIcon blueTankIcon = new ImageIcon("assets/tank_grey_chassis.png");
+	ImageIcon redTankIcon = new ImageIcon("assets/tank_grey_chassis.png");
+	ImageIcon blueTankGunIcon = new ImageIcon("assets/gun_blue.png");
+	ImageIcon redTankGunIcon = new ImageIcon("assets/gun_blue.png");
+	ImageIcon myBlueTankIcon = new ImageIcon("assets/tank_grey_chassis.png");
+	ImageIcon myRedTankIcon = new ImageIcon("assets/tank_grey_chassis.png");
+	ImageIcon blueBulletIcon = new ImageIcon("assets/bullet_blue.png");
+	ImageIcon redBulletIcon = new ImageIcon("assets/bullet_blue.png");
 
 	PrintWriter out;//出力用のライター
 	private int myClientNumber;

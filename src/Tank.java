@@ -1,25 +1,54 @@
+import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.geom.Point2D;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.Objects;
 
 public class Tank {
 
 	// 戦車の特徴
-	private double speed = 3.0;
-	private BufferedImage baseImage, gunImage;
+	private double velocity = 3.0;
+	private Team team;
 
-	private double x, y;
+	private double x, y; // オブジェクトの中心の座標
+	private double chassisAngle; // ラジアン
+	private double gunAngle; // ラジアン
 
-	private double bodyAngle;
-	private double gunAngle;
+	private int hp;
 
+	private BufferedImage chassisImage, gunImage;
+	private static BufferedImage redChassisImage, redGunImage;
+	private static BufferedImage blueChassisImage, blueGunImage;
 
-	Tank(BufferedImage baseImage, BufferedImage gunImage) {
-		this.baseImage = baseImage;
-		this.gunImage = gunImage;
+	static {
+		try {
+			redChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_red.png")));
+			redGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_red.png")));
+			blueChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_blue.png")));
+			blueGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_blue.png")));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
-
+	Tank(int x, int y, Team team) {
+		switch (team) {
+			case RED: {
+				this.chassisImage = redChassisImage;
+				this.gunImage = redGunImage;
+				break;
+			}
+			case BLUE: {
+				this.chassisImage = blueChassisImage;
+				this.gunImage = blueGunImage;
+				break;
+			}
+			default: assert false;
+		}
+		this.x = x;
+		this.y = y;
+	}
 
 	/**
 	 * 座標x, yの方に砲塔を向ける。
@@ -29,7 +58,8 @@ public class Tank {
 	public void aimAt(int x, int y) {
 		double dx = x - this.x;
 		double dy = y - this.y;
-		this.gunAngle = Math.atan2(dy, dx);
+		this.gunAngle = Math.atan2(dy, dx) + Math.PI / 2.0;
+		System.out.println("dx: " + dx + ", dy: " + dy + ", gunAngle: " + gunAngle);
 	}
 
 	/**
@@ -39,14 +69,16 @@ public class Tank {
 	 */
 	public void move(double x, double y) {
 		double norm = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-		double dx = x / norm * this.speed;
-		double dy = y / norm * this.speed;
+		if (norm == 0) return;
+		double dx = x / norm * this.velocity;
+		double dy = y / norm * this.velocity;
 		this.x += dx;
 		this.y += dy;
 	}
 
-	public void update() {
-
+	public void setPosition(double x, double y) {
+		this.x = x;
+		this.y = y;
 	}
 
 	/**
@@ -55,6 +87,47 @@ public class Tank {
 	 */
 	public void fire(int bulletType) {
 
+	}
+
+	/**
+	 * フレームを更新する際に呼び出されます。
+	 */
+	public void update() {
+	}
+
+	public void onHit() {
+
+	}
+
+	public void onCollision() {
+
+	}
+
+	public void damaged(int damage) {
+		int newHp = this.hp - damage;
+		if (newHp <= 0) {
+			died();
+		}
+	}
+
+	public void died() {
+
+	}
+
+	public void draw(Graphics2D graphics2D) {
+		// 台車の描画
+		AffineTransform chassisTransform = new AffineTransform();
+		chassisTransform.translate(this.x, this.y);
+		chassisTransform.rotate(this.chassisAngle);
+		chassisTransform.translate(-this.chassisImage.getWidth() / 2.0, -this.chassisImage.getHeight() / 2.0);
+		graphics2D.drawImage(this.chassisImage, chassisTransform, null);
+
+		// 砲塔のの描画
+		AffineTransform gunTransform = new AffineTransform();
+		gunTransform.translate(this.x, this.y);
+		gunTransform.rotate(this.gunAngle);
+		gunTransform.translate(-this.gunImage.getWidth() / 2.0, -this.gunImage.getHeight() / 2.0);
+		graphics2D.drawImage(this.gunImage, gunTransform, null);
 	}
 
 
@@ -67,13 +140,24 @@ public class Tank {
 		return this.y;
 	}
 
-	public double getBodyAngle() {
-		return this.bodyAngle;
+	public double getChassisAngle() {
+		return this.chassisAngle;
 	}
 
 	public double getGunAngle() {
 		return this.gunAngle;
 	}
 
+	public void setVelocity(double velocity) {
+		this.velocity = velocity;
+	}
 
+	// ============================= ゲッター・セッター(テスト用) =============================
+	public void setChassisAngle(double theta) {
+		this.chassisAngle = theta;
+	}
+
+	public void setGunAngle(double theta) {
+		this.gunAngle = theta;
+	}
 }
