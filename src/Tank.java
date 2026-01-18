@@ -5,7 +5,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
 
-public class Tank {
+public class Tank implements GameObject {
 
 	// 戦車の特徴
 	private double velocity = 3.0;
@@ -33,7 +33,10 @@ public class Tank {
 	}
 
 	Tank(int x, int y, Team team) {
-		switch (team) {
+		this.x = x;
+		this.y = y;
+		this.team = team;
+		switch (this.team) {
 			case RED: {
 				this.chassisImage = redChassisImage;
 				this.gunImage = redGunImage;
@@ -46,8 +49,6 @@ public class Tank {
 			}
 			default: assert false;
 		}
-		this.x = x;
-		this.y = y;
 	}
 
 	/**
@@ -58,8 +59,7 @@ public class Tank {
 	public void aimAt(int x, int y) {
 		double dx = x - this.x;
 		double dy = y - this.y;
-		this.gunAngle = Math.atan2(dy, dx) + Math.PI / 2.0;
-		System.out.println("dx: " + dx + ", dy: " + dy + ", gunAngle: " + gunAngle);
+		this.gunAngle = Math.atan2(dy, dx);
 	}
 
 	/**
@@ -83,10 +83,11 @@ public class Tank {
 
 	/**
 	 * 現在の砲塔の方向に指定された弾丸を発射する。
-	 * @param bulletType 将来的に必要
 	 */
-	public void fire(int bulletType) {
-
+	public Bullet shootBullet() {
+		double bulletInitialX = this.x + this.getObjectRadius() * Math.cos(this.gunAngle);
+		double bulletInitialY = this.y + this.getObjectRadius() * Math.sin(this.gunAngle);
+		return new Bullet(bulletInitialX, bulletInitialY, this.gunAngle, this.team);
 	}
 
 	/**
@@ -151,6 +152,18 @@ public class Tank {
 	public void setVelocity(double velocity) {
 		this.velocity = velocity;
 	}
+
+	public double getObjectRadius() {
+		double chassis_a = this.chassisImage.getHeight() / 2.0;
+		double chassis_b = this.chassisImage.getWidth() / 2.0;
+		double gun_a = this.gunImage.getHeight() / 2.0;
+		double gun_b = this.gunImage.getWidth() / 2.0;
+		double chassisRadiusSqr = Math.pow(chassis_a, 2) + Math.pow(chassis_b, 2);
+		double gunRadiusSqr = Math.pow(gun_a, 2) + Math.pow(gun_b, 2);
+		double radiusSqr = Math.max(chassisRadiusSqr, gunRadiusSqr);
+		return Math.sqrt(radiusSqr);
+	}
+
 
 	// ============================= ゲッター・セッター(テスト用) =============================
 	public void setChassisAngle(double theta) {

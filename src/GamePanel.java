@@ -12,20 +12,24 @@ public class GamePanel extends JPanel implements Runnable {
 	public static final int HEIGHT = 600;
 	public static final int FPS = 60;
 	
-	private HashSet<Tank> tanks = new HashSet<>();
+	private HashSet<GameObject> objects = new HashSet<>();
 	private Tank myTank;
 
 	private Thread gameThread;
-	private InputHandler input = new InputHandler();
+	private MouseKeyboardInput input = new MouseKeyboardInput();
 
 	public GamePanel() {
-		// パネルの推奨サイズと背景色を設定
-		setPreferredSize(new Dimension(WIDTH, HEIGHT));
-		setBackground(Color.WHITE);
+		// パネルの設定
+		this.setPreferredSize(new Dimension(WIDTH, HEIGHT));
+		this.setBackground(Color.WHITE);
+		this.setDoubleBuffered(true);
 
-		// InputHandlerをパネルに登録して、入力を受け取れるようにする
+		// 入力ハンドラの登録
 		this.addKeyListener(input);
 		this.addMouseMotionListener(input);
+		this.addMouseListener(input);
+		this.setFocusable(true);
+		this.requestFocusInWindow();
 
 		// これがないとキー入力を受け取れません
 		setFocusable(true);
@@ -34,7 +38,7 @@ public class GamePanel extends JPanel implements Runnable {
 		for (int i = 0; i < 4; i++) {
 			Team team = (i % 2 == 0) ? Team.RED : Team.BLUE;
 			Tank tank = new Tank(200 * i + 200, 100, team);
-			this.tanks.add(tank);
+			this.objects.add(tank);
 			if (i == 0) myTank = tank;
 		}
 	}
@@ -45,8 +49,8 @@ public class GamePanel extends JPanel implements Runnable {
 
 		// より高度な描画機能を使うためにGraphics2Dにキャスト
 		Graphics2D g2d = (Graphics2D) g;
-		for (Tank tank : tanks) {
-			tank.draw(g2d);
+		for (GameObject object : objects) {
+			object.draw(g2d);
 		}
 	}
 
@@ -62,14 +66,10 @@ public class GamePanel extends JPanel implements Runnable {
 	public void run() {
 		// 1フレームの持ち時間 (ナノ秒)
 		// 1秒 = 1,000,000,000 ナノ秒
-		long drawInterval = 1000000000 / FPS;
-
-		long currentTime;
+		double drawInterval = 1000000000.0 / FPS;
+		double nextDrawTime = System.nanoTime() + drawInterval;
 
 		while (gameThread != null) {
-			// 現在時刻を取得
-			currentTime = System.nanoTime();
-
 			// 1. UPDATE: 計算
 			update();
 
@@ -77,44 +77,41 @@ public class GamePanel extends JPanel implements Runnable {
 			repaint();
 
 			// 3. SLEEP: 時間調整
-			// 処理にかかった時間を計算して、持ち時間から引く
-			long usedTime = System.nanoTime() - currentTime;
-			long sleepTime = drawInterval - usedTime;
+			double remainingTime = nextDrawTime - System.nanoTime();
 
 			try {
 				// 時間が余っていれば寝る
-				if (sleepTime > 0) {
-					// ナノ秒をミリ秒に変換してsleep
-					Thread.sleep(sleepTime / 1000000);
+				if (remainingTime > 0) {
+					Thread.sleep((long)remainingTime / 1000000);
 				}
+				nextDrawTime += drawInterval;
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
 	}
+
 	/**
 	 * ゲームの状態を更新する
 	 */
 	public void update() {
-		for (Tank tank : tanks) {
-			tank.update();
+		for (GameObject object : objects) {
+			object.update();
 		}
+
 		if (myTank != null) {
 
-			// 1. キー入力から移動方向を決める
-			double xDir = 0;
-			double yDir = 0;
+			// 戦車に移動命令を出す
+			double[] moveVector = input.getMoveVector();
+			myTank.move(moveVector[0], moveVector[1]);
 
-			if (input.up) yDir = -1;
-			if (input.down) yDir = 1;
-			if (input.left) xDir = -1;
-			if (input.right) xDir = 1;
-
-			// 2. 戦車に移動命令を出す
-			myTank.move(xDir, yDir);
-
-			// 3. マウス位置へ砲塔を向ける命令を出す
+			// マウス位置へ砲塔を向ける命令を出す
 			myTank.aimAt(input.mouseX, input.mouseY);
+
+			// 戦車に発砲命令を出す。
+			if (input.gunButtonPressed()) {
+				objects.add(myTank.shootBullet());
+			}
 		}
 	}
 }
