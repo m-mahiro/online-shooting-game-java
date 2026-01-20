@@ -1,5 +1,6 @@
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
@@ -7,15 +8,16 @@ import javax.imageio.ImageIO;
 
 public class Bullet implements GameObject {
 
-	// --- 定数 ---
-	private final double VELOCITY = 8.0;
-	private final int LIFE_TIME = 400; // 生存フレーム数（約6.6秒）
+	private final double VELOCITY = 15;
+	private final int LIFE_TIME = 400; // 生存フレーム数
+	public static final int OBJECT_RADIUS = 10;
+	public double damageAbility = 10.0;
 
 	// --- 状態 ---
-	private double x, y; // 弾丸オブジェクトの中心座標
+	private Point2D.Double translate = new Point2D.Double(0, 0); // 弾丸オブジェクトの中心座標
 	private double dx, dy; // 1フレームあたりの移動量
 	private int lifeCount; // 経過フレーム数
-	private boolean alive; // 生存フラグ
+	private boolean isExploded = false;
 
 	// --- 画像リソース（共有） ---
 	private BufferedImage bulletImage;
@@ -31,14 +33,12 @@ public class Bullet implements GameObject {
 
 	/**
 	 * コンストラクタ
-	 * @param x 初期X座標
+	 * @param x 初期X座標s
 	 * @param y 初期Y座標
 	 * @param angle 発射角度（ラジアン）
 	 */
 	public Bullet(double x, double y, double angle, Team team) {
-		this.x = x;
-		this.y = y;
-		this.alive = true;
+		this.translate.setLocation(x, y);
 		this.lifeCount = 0;
 
 		// 角度から速度ベクトルを計算
@@ -58,42 +58,65 @@ public class Bullet implements GameObject {
 		}
 	}
 
-	public void update() {
-		if (!alive) return;
+	public double getDamageAbility() {
+		return this.damageAbility;
+	}
 
-		// 移動
-		x += dx;
-		y += dy;
 
-		// 寿命チェック
-		lifeCount++;
-		if (lifeCount > LIFE_TIME) {
-			alive = false;
-		}
+	// ============================= GameObjectインタフェースの実装 =============================
 
-		// 画面外チェック（GamePanelのサイズ定数を使うか、引数で貰う）
-		if (x < 0 || x > GamePanel.WIDTH || y < 0 || y > GamePanel.HEIGHT) {
-			alive = false;
+	@Override
+	public double getRadius() {
+		return OBJECT_RADIUS;
+	}
+
+	@Override
+	public Point2D.Double getTranslate() {
+		return this.translate;
+	}
+
+	@Override
+	public void onCollision(GameObject other) {
+		if (!other.isTangible()) return;
+		this.explode();
+		if (other instanceof Tank) {
+			Tank tank = (Tank)other;
+			tank.onHit(this);
+		} else if (other instanceof Bullet) {
+			Bullet bullet = (Bullet)other;
+			bullet.explode();
 		}
 	}
 
-	public void draw(Graphics2D g2d) {
-		if (!alive) return;
+	// ============================= 描画系処理 =============================
 
+	public void draw(Graphics2D g2d) {
+		if (isExploded) return;
 		AffineTransform trans = new AffineTransform();
-		trans.translate(x, y);
+		trans.translate(this.translate.x, this.translate.y);
 		trans.rotate(Math.atan2(dy, dx));
 		trans.translate(-this.bulletImage.getWidth() / 2.0, -this.bulletImage.getHeight() / 2.0);
 		g2d.drawImage(this.bulletImage, trans, null);
 	}
 
-	// --- ゲッター ---
-	public boolean isAlive() { return alive; }
-	public double getX() { return x; }
-	public double getY() { return y; }
-
-	// 衝突時に弾を消すためのメソッド
-	public void destroy() {
-		this.alive = false;
+	public void update() {
+		if (!isExploded) {
+			this.translate.x += dx;
+			this.translate.y += dy;
+			lifeCount++;
+		}
 	}
+	public boolean shouldRemove() {
+		return lifeCount > LIFE_TIME || this.isExploded;
+	}
+
+	@Override
+	public boolean isTangible() {
+		return true;
+	}
+
+	public void explode() {
+		this.isExploded = true;
+	}
+
 }

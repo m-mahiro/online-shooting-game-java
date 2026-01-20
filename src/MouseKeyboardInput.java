@@ -1,18 +1,30 @@
 import java.awt.event.*;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
+import java.util.concurrent.TransferQueue;
 
-public class MouseKeyboardInput implements InputHandler, KeyListener, MouseMotionListener, MouseListener {
+public class MouseKeyboardInput
+		implements
+			InputHandler,
+			KeyListener,
+			MouseMotionListener,
+			MouseListener,
+			MouseWheelListener {
 
 	// キーが押されているかどうかのフラグ
-	public boolean up, down, left, right;
-	public boolean mousePressed;
+	private boolean up, down, left, right;
+	private boolean mousePressed;
 	// マウスの現在位置
-	public int mouseX, mouseY;
+	private int mouseX, mouseY;
+
+	private int scrollAmount;
 
 
 	// ============================= InputHandlerの実装 =============================
 
 	@Override
-	public double[] getMoveVector() {
+	public double[] getMoveVector(AffineTransform canvasTransform) {
 
 		// 1. キー入力から移動方向を決める
 		double x = 0;
@@ -27,8 +39,18 @@ public class MouseKeyboardInput implements InputHandler, KeyListener, MouseMotio
 	}
 
 	@Override
-	public double[] getGunVector() {
-		return new double[]{this.mouseX, this.mouseY};
+	public double[] getAimedCoordinate(AffineTransform canvasTransform) {
+		Point2D.Double sourcePoint = new Point2D.Double(this.mouseX, this.mouseY);
+		Point2D.Double destinationPoint = new Point2D.Double();
+		try {
+			canvasTransform.createInverse().transform(sourcePoint, destinationPoint);
+		} catch (NoninvertibleTransformException e) {
+			// なにもしない
+		}
+
+		double x = destinationPoint.x;
+		double y = destinationPoint.y;
+		return new double[]{x, y};
 	}
 
 	@Override
@@ -36,6 +58,13 @@ public class MouseKeyboardInput implements InputHandler, KeyListener, MouseMotio
 		boolean pressed = this.mousePressed;
 		this.mousePressed = false;
 		return pressed;
+	}
+
+	@Override
+	public int getZoomAmount() {
+		int zoomAmount = this.scrollAmount;
+		this.scrollAmount = 0;
+		return zoomAmount;
 	}
 
 
@@ -108,4 +137,10 @@ public class MouseKeyboardInput implements InputHandler, KeyListener, MouseMotio
 	public void mouseExited(MouseEvent e) {
 	}
 
+	// ============================= MouseWheelListenerの実装 =============================
+
+	@Override
+	public void mouseWheelMoved(MouseWheelEvent e) {
+		this.scrollAmount += e.getWheelRotation();
+	}
 }

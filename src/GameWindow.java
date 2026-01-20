@@ -17,6 +17,7 @@ public class GameWindow extends JFrame {
 		// 画面中央に表示
 		setLocationRelativeTo(null);
 		setVisible(true);
+		setResizable(true);
 		gamePanel.startGameThread();
 	}
 }
