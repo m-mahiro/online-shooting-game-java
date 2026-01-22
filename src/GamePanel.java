@@ -4,7 +4,6 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,6 +27,8 @@ public class GamePanel extends JPanel implements Runnable {
 	private int myTankID;
 
 	private double cameraZoom = 1;
+	private double CAMERA_ZOOM_UPPER_THRESHOLD = 10;
+	private double CAMERA_ZOOM_LOWER_THRESHOLD = 0.1;
 
 	public GamePanel() {
 
@@ -71,6 +72,11 @@ public class GamePanel extends JPanel implements Runnable {
 		}
 		myTankID = 0;
 
+
+		// カメラの初期設定
+		cameraZoom = 0.5;
+
+
 		this.networkManager = new NetworkManager(this);
 		this.networkManager.start();
 	}
@@ -93,6 +99,15 @@ public class GamePanel extends JPanel implements Runnable {
 		trans.scale(this.cameraZoom, this.cameraZoom);
 		trans.translate(-x, -y);
 		this.canvasTransform.setTransform(trans);
+	}
+
+	public void zoomCamera(double zoomDelta) {
+		this.cameraZoom -= zoomDelta;
+		if (this.cameraZoom < CAMERA_ZOOM_LOWER_THRESHOLD) {
+			this.cameraZoom = CAMERA_ZOOM_LOWER_THRESHOLD;
+		} else if (CAMERA_ZOOM_UPPER_THRESHOLD < this.cameraZoom) {
+			this.cameraZoom = CAMERA_ZOOM_UPPER_THRESHOLD;
+		}
 	}
 
 	public void startGameThread() {
@@ -156,7 +171,7 @@ public class GamePanel extends JPanel implements Runnable {
 			}
 
 			// カメラアングルを調整
-			cameraZoom += input.getZoomAmount() * 0.1;
+			zoomCamera(input.getZoomAmount() * 0.1);
 			setCameraLocation(myTank.getX(), myTank.getY());
 
 

@@ -9,7 +9,7 @@ import java.util.Objects;
 public class Tank implements GameObject {
 
 	// 戦車の特徴
-	private double velocity = 10;
+	private double velocity = 20;
 	private Team team;
 
 	public Point2D.Double translate = new Point2D.Double(0, 0); // オブジェクトの中心の座標
@@ -159,7 +159,6 @@ public class Tank implements GameObject {
 	@Override
 	public void onCollision(GameObject other) {
 		if(!this.alive) return;
-		System.out.println("衝突が起きました");
 		Point2D.Double vector = Util.subtract(this.translate, other.getTranslate());
 		vector = Util.normalize(vector);
 		this.moveFor(vector.x, vector.y);

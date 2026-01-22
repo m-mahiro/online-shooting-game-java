@@ -8,7 +8,7 @@ import javax.imageio.ImageIO;
 
 public class Bullet implements GameObject {
 
-	private final double VELOCITY = 15;
+	private final double VELOCITY = 30;
 	private final int LIFE_TIME = 400; // 生存フレーム数
 	public static final int OBJECT_RADIUS = 10;
 	public double damageAbility = 10.0;
@@ -22,6 +22,7 @@ public class Bullet implements GameObject {
 	// --- 画像リソース（共有） ---
 	private BufferedImage bulletImage;
 	private static BufferedImage blueBulletImage, redBulletImage;
+
 	static {
 		try {
 			blueBulletImage = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("assets/bullet_blue.png")));
@@ -33,8 +34,9 @@ public class Bullet implements GameObject {
 
 	/**
 	 * コンストラクタ
-	 * @param x 初期X座標s
-	 * @param y 初期Y座標
+	 *
+	 * @param x     初期X座標s
+	 * @param y     初期Y座標
 	 * @param angle 発射角度（ラジアン）
 	 */
 	public Bullet(double x, double y, double angle, Team team) {
@@ -54,7 +56,8 @@ public class Bullet implements GameObject {
 				this.bulletImage = blueBulletImage;
 				break;
 			}
-			default: assert false;
+			default:
+				assert false;
 		}
 	}
 
@@ -80,10 +83,10 @@ public class Bullet implements GameObject {
 		if (!other.isTangible()) return;
 		this.explode();
 		if (other instanceof Tank) {
-			Tank tank = (Tank)other;
+			Tank tank = (Tank) other;
 			tank.onHit(this);
 		} else if (other instanceof Bullet) {
-			Bullet bullet = (Bullet)other;
+			Bullet bullet = (Bullet) other;
 			bullet.explode();
 		}
 	}
@@ -106,6 +109,7 @@ public class Bullet implements GameObject {
 			lifeCount++;
 		}
 	}
+
 	public boolean shouldRemove() {
 		return lifeCount > LIFE_TIME || this.isExploded;
 	}
