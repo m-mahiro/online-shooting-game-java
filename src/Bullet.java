@@ -9,7 +9,7 @@ import javax.imageio.ImageIO;
 public class Bullet implements GameObject {
 
 	private final double VELOCITY = 30;
-	private final int LIFE_TIME = 400; // 生存フレーム数
+	private final int LIFE_TIME = GamePanel.FPS * 6; // 生存フレーム数
 	public static final int OBJECT_RADIUS = 10;
 	public double damageAbility = 10.0;
 
@@ -69,13 +69,18 @@ public class Bullet implements GameObject {
 	// ============================= GameObjectインタフェースの実装 =============================
 
 	@Override
-	public double getRadius() {
+	public double getCollisionRadius() {
 		return OBJECT_RADIUS;
 	}
 
 	@Override
 	public Point2D.Double getTranslate() {
 		return this.translate;
+	}
+
+	@Override
+	public void setTranslate(double x, double y) {
+		this.translate.setLocation(x, y);
 	}
 
 	@Override
@@ -93,13 +98,13 @@ public class Bullet implements GameObject {
 
 	// ============================= 描画系処理 =============================
 
-	public void draw(Graphics2D g2d) {
+	public void draw(Graphics2D graphics) {
 		if (isExploded) return;
 		AffineTransform trans = new AffineTransform();
 		trans.translate(this.translate.x, this.translate.y);
 		trans.rotate(Math.atan2(dy, dx));
 		trans.translate(-this.bulletImage.getWidth() / 2.0, -this.bulletImage.getHeight() / 2.0);
-		g2d.drawImage(this.bulletImage, trans, null);
+		graphics.drawImage(this.bulletImage, trans, null);
 	}
 
 	public void update() {

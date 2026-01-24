@@ -6,7 +6,6 @@ import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class GamePanel extends JPanel implements Runnable {
 
@@ -16,19 +15,18 @@ public class GamePanel extends JPanel implements Runnable {
 	public static final int FPS = 60;
 
 	private final AffineTransform canvasTransform = new AffineTransform();
-
-	private final List<GameObject> objects = Collections.synchronizedList(new ArrayList<>());
-	private final Map<Integer, Tank> tanks = new ConcurrentHashMap<>();
-
-	private Thread gameThread;
-	private MouseKeyboardInput input = new MouseKeyboardInput();
-
-	private NetworkManager networkManager;
-	private int myTankID;
-
 	private double cameraZoom = 1;
 	private double CAMERA_ZOOM_UPPER_THRESHOLD = 10;
 	private double CAMERA_ZOOM_LOWER_THRESHOLD = 0.1;
+
+	private Thread gameThread;
+	private MouseKeyboardInput input;
+
+	private NetworkManager networkManager;
+	private int networkClientID;
+	private StageGenerator stageGenerator = new StageGenerator1();
+	public GameStage gameStage;
+	private int myTankID;
 
 	public GamePanel() {
 
@@ -39,58 +37,40 @@ public class GamePanel extends JPanel implements Runnable {
 		this.setDoubleBuffered(true);
 
 		// 入力ハンドラの登録
+		this.input = new MouseKeyboardInput();
 		this.addKeyListener(input);
 		this.addMouseMotionListener(input);
 		this.addMouseListener(input);
 		this.addMouseWheelListener(input);
 		this.setFocusable(true);
 		this.requestFocusInWindow();
-
-		// これがないとキー入力を受け取れません
 		setFocusable(true);
 		requestFocusInWindow();
 
+		// サーバに接続、クライアントIDをもらう
+		this.networkManager = new NetworkManager(this);
+		networkClientID = this.networkManager.getNetworkClientID();
+//		myTankID = this.networkManager.getMyTankID();
+		myTankID = 1;
+
 		// ============================= オブジェクトの配置 =============================
-
-		Tank tank1 = new Tank(0, 0, Team.BLUE);
-		Tank tank2 = new Tank(100, 500, Team.BLUE);
-		Tank tank3 = new Tank(600, 200, Team.RED);
-		Tank tank4 = new Tank(600, 500, Team.RED);
-		this.addGameObject(tank1);
-		this.addGameObject(tank2);
-		this.addGameObject(tank3);
-		this.addGameObject(tank4);
-		this.tanks.put(0, tank1);
-		this.tanks.put(1, tank2);
-		this.tanks.put(2, tank3);
-		this.tanks.put(3, tank4);
-
-		// ブロック
-		for (int j = 0; j < 4; j++) {
-			Block block = new Block(350, 400 * j);
-			this.addGameObject(block);
-		}
-		myTankID = 0;
-
+		this.gameStage = new GameStage(networkClientID);
+		ArrayList<GameObject> objects = stageGenerator.generateStageObject(2, 2);
+		gameStage.addObjects(objects);
 
 		// カメラの初期設定
 		cameraZoom = 0.5;
 
-
-		this.networkManager = new NetworkManager(this);
+		// サーバからのメッセージ受け取り開始
 		this.networkManager.start();
 	}
 
 	@Override
-	protected void paintComponent(Graphics g) {
-		super.paintComponent(g);
-		Graphics2D g2d = (Graphics2D) g;
-		g2d.transform(this.canvasTransform);
-
-		// 画面上のオブジェクトを描画
-		for (GameObject object : objects) {
-			object.draw(g2d);
-		}
+	protected void paintComponent(Graphics graphics) {
+		super.paintComponent(graphics);
+		Graphics2D graphics2D = (Graphics2D) graphics;
+		graphics2D.transform(this.canvasTransform);
+		gameStage.draw(graphics2D);
 	}
 
 	public void setCameraLocation(double x, double y) {
@@ -128,6 +108,7 @@ public class GamePanel extends JPanel implements Runnable {
 		while (gameThread != null) {
 
 			update();
+			repaint();
 
 			// 3. SLEEP: 時間調整
 			double remainingTime = nextDrawTime - System.nanoTime();
@@ -141,6 +122,7 @@ public class GamePanel extends JPanel implements Runnable {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+			break;
 		}
 	}
 
@@ -149,105 +131,54 @@ public class GamePanel extends JPanel implements Runnable {
 	 */
 	public void update() {
 
-		checkObjectToRemove();
-		checkCollision();
-		repaint();
-
-
-		for (GameObject object : objects) {
-			object.update();
+		try {
+			gameStage.update();
+//			System.out.println("[GamePanel] update");
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		Tank myTank = this.getMyTank();
-		// 自分の操作
-		if (myTank != null) {
 
-			// 戦車に移動命令を出す
-			double[] moveVector = input.getMoveVector(this.canvasTransform);
-			double x = moveVector[0];
-			double y = moveVector[1];
-			if (x != 0 || y != 0) {
-				myTank.moveFor(moveVector[0], moveVector[1]);
-				networkManager.moveTank(myTankID, myTank.getX(), myTank.getY(), myTank.getChassisAngle());
-			}
+		// ============================= 自分の操作 =============================
+		Tank myTank = getMyTank();
 
-			// カメラアングルを調整
-			zoomCamera(input.getZoomAmount() * 0.1);
-			setCameraLocation(myTank.getX(), myTank.getY());
+		// 戦車に移動命令を出す
+		double[] moveVector = input.getMoveVector(this.canvasTransform);
+		double x = moveVector[0];
+		double y = moveVector[1];
+		if (x != 0 || y != 0) {
+			myTank.moveFor(moveVector[0], moveVector[1]);
+			networkManager.moveTank(myTankID, myTank.getX(), myTank.getY(), myTank.getChassisAngle());
+		}
 
+		// カメラアングルを調整
+		zoomCamera(input.getZoomAmount() * 0.1);
+		setCameraLocation(myTank.getX(), myTank.getY());
 
-			// マウス位置へ砲塔を向ける命令を出す
-			double[] aim = input.getAimedCoordinate(this.canvasTransform);
-			double gunTargetX = aim[0];
-			double gunTargetY = aim[1];
-			myTank.aimAt(gunTargetX, gunTargetY);
-			networkManager.aimAt(myTankID, gunTargetX, gunTargetY);
+		// マウス位置へ砲塔を向ける命令を出す
+		double[] aim = input.getAimedCoordinate(this.canvasTransform);
+		double gunTargetX = aim[0];
+		double gunTargetY = aim[1];
+		myTank.aimAt(gunTargetX, gunTargetY);
+		networkManager.aimAt(myTankID, gunTargetX, gunTargetY);
 
-			// 戦車に発砲命令を出す。
-			if (input.gunButtonPressed()) {
-				addGameObject(myTank.shootBullet());
-				networkManager.shootGun(myTankID, myTank.getX(), myTank.getY(), myTank.getGunAngle());
-			}
+		// 戦車に発砲命令を出す。
+		if (input.gunButtonPressed()) {
+			gameStage.addObject(myTank.shootBullet());
+			networkManager.shootGun(myTankID, myTank.getX(), myTank.getY(), myTank.getGunAngle());
 		}
 	}
 
-	public void checkCollision() {
-		for (int i = 0; i < objects.size(); i++) {
-			for (int j = i + 1; j < objects.size(); j++) {
-				GameObject a = objects.get(i);
-				GameObject b = objects.get(j);
-
-				if (a == b) continue;
-				if (!a.isTangible() || !b.isTangible()) continue;
-
-				// 衝突範囲の計算
-				double collisionRange = a.getRadius() + b.getRadius();
-
-				// オブジェクト間の距離の計算
-				Point2D.Double vector = Util.subtract(a.getTranslate(), b.getTranslate());
-				double diff = Util.getNorm(vector);
-
-				if (diff < collisionRange) {
-					a.onCollision(b);
-					b.onCollision(a);
-				}
-			}
+	private Tank getMyTank() {
+		GameObject object = this.gameStage.getObject(myTankID);
+		if (object instanceof Tank) {
+			return (Tank)object;
+		} else {
+			throw new RuntimeException("myTankIDに対応するobjectはTankのインスタンスではありませんでした。");
 		}
-	}
-
-	public void checkObjectToRemove() {
-		Iterator<GameObject> iterator = this.objects.iterator();
-		while (iterator.hasNext()) {
-			GameObject object = iterator.next();
-
-			if (object == null) {
-				iterator.remove();
-				continue;
-			}
-
-			if (object.shouldRemove()) {
-				iterator.remove();
-			}
-		}
-	}
-
-	public Tank getTankByID(int id) {
-		return this.tanks.get(id);
-	}
-
-	public Tank getMyTank() {
-		return getTankByID(getMyTankID());
 	}
 
 	public int getMyTankID() {
 		return this.myTankID;
 	}
 
-	public void setMyTankID(int myTankID) {
-		System.out.println("myTankID: " + myTankID);
-		this.myTankID = myTankID;
-	}
-
-	public void addGameObject(GameObject object) {
-		this.objects.add(object);
-	}
 }

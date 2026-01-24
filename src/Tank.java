@@ -12,6 +12,10 @@ public class Tank implements GameObject {
 	private double velocity = 20;
 	private Team team;
 
+	private static final int WIDTH = 150;
+	private static final int HEIGHT = 150;
+
+
 	public Point2D.Double translate = new Point2D.Double(0, 0); // オブジェクトの中心の座標
 	private double chassisAngle; // ラジアン
 	private double gunAngle; // ラジアン
@@ -20,21 +24,21 @@ public class Tank implements GameObject {
 	private int damageFlushCounter = 0;
 	private final int DAMAGE_FLUSH_FRAME = 70;
 
-	private BufferedImage chassisImage, gunImage;
-	private static BufferedImage redChassisImage, redGunImage, waterRedChassisImage, waterRedGunImage;
-	private static BufferedImage blueChassisImage, blueGunImage, waterBlueChassisImage, waterBlueGunImage;
+	private Image chassisImage, gunImage;
+	private static Image redChassisImage, redGunImage, waterRedChassisImage, waterRedGunImage;
+	private static Image blueChassisImage, blueGunImage, waterBlueChassisImage, waterBlueGunImage;
 
 	static {
 		try {
-			redChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_red.png")));
-			redGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_red.png")));
-			waterRedChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_water_red.png")));
-			waterRedGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_water_red.png")));
+			redChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_red.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
+			redGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_red.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
+			waterRedChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_water_red.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
+			waterRedGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_water_red.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
 
-			blueChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_blue.png")));
-			blueGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_blue.png")));
-			waterBlueChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_water_blue.png")));
-			waterBlueGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_water_blue.png")));
+			blueChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_blue.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
+			blueGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_blue.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
+			waterBlueChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_water_blue.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
+			waterBlueGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_water_blue.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -94,8 +98,8 @@ public class Tank implements GameObject {
 	 */
 	public Bullet shootBullet() {
 		if (!alive) return null; // smell
-		double initX = translate.x + (this.getRadius() + Bullet.OBJECT_RADIUS) * 1.2 * Math.cos(this.gunAngle);
-		double initY = translate.y + (this.getRadius() + Bullet.OBJECT_RADIUS) * 1.2 * Math.sin(this.gunAngle);
+		double initX = translate.x + (this.getCollisionRadius() + Bullet.OBJECT_RADIUS) * 1.2 * Math.cos(this.gunAngle);
+		double initY = translate.y + (this.getCollisionRadius() + Bullet.OBJECT_RADIUS) * 1.2 * Math.sin(this.gunAngle);
 		return new Bullet(initX, initY, this.gunAngle, this.team);
 	}
 
@@ -158,7 +162,7 @@ public class Tank implements GameObject {
 
 	@Override
 	public void onCollision(GameObject other) {
-		if(!this.alive) return;
+		if (!this.alive) return;
 		Point2D.Double vector = Util.subtract(this.translate, other.getTranslate());
 		vector = Util.normalize(vector);
 		this.moveFor(vector.x, vector.y);
@@ -174,20 +178,20 @@ public class Tank implements GameObject {
 		return this.alive;
 	}
 
-	public void draw(Graphics2D graphics2D) {
+	public void draw(Graphics2D graphics) {
 		// 台車の描画
 		AffineTransform chassisTransform = new AffineTransform();
 		chassisTransform.translate(translate.x, translate.y);
 		chassisTransform.rotate(this.chassisAngle);
-		chassisTransform.translate(-this.chassisImage.getWidth() / 2.0, -this.chassisImage.getHeight() / 2.0);
-		graphics2D.drawImage(this.chassisImage, chassisTransform, null);
+		chassisTransform.translate(-this.chassisImage.getWidth(null) / 2.0, -this.chassisImage.getHeight(null) / 2.0);
+		graphics.drawImage(this.chassisImage, chassisTransform, null);
 
 		// 砲塔のの描画
 		AffineTransform gunTransform = new AffineTransform();
 		gunTransform.translate(translate.x, translate.y);
 		gunTransform.rotate(this.gunAngle);
-		gunTransform.translate(-this.gunImage.getWidth() / 2.0, -this.gunImage.getHeight() / 2.0);
-		graphics2D.drawImage(this.gunImage, gunTransform, null);
+		gunTransform.translate(-this.gunImage.getWidth(null) / 2.0, -this.gunImage.getHeight(null) / 2.0);
+		graphics.drawImage(this.gunImage, gunTransform, null);
 	}
 
 
@@ -212,9 +216,9 @@ public class Tank implements GameObject {
 		this.velocity = velocity;
 	}
 
-	public double getRadius() {
-		double chassis_a = this.chassisImage.getHeight() / 2.0;
-		double chassis_b = this.chassisImage.getWidth() / 2.0;
+	public double getCollisionRadius() {
+		double chassis_a = this.chassisImage.getHeight(null) / 2.0;
+		double chassis_b = this.chassisImage.getWidth(null) / 2.0;
 		double chassisRadiusSqr = Math.pow(chassis_a, 2) + Math.pow(chassis_b, 2);
 		return Math.sqrt(chassisRadiusSqr);
 	}
@@ -222,6 +226,11 @@ public class Tank implements GameObject {
 	@Override
 	public Point2D.Double getTranslate() {
 		return this.translate;
+	}
+
+	@Override
+	public void setTranslate(double x, double y) {
+		this.translate.setLocation(x, y);
 	}
 
 	public Team getTeam() {

@@ -18,9 +18,7 @@ public class Block implements GameObject {
 	private static Image normalBlockImage;
 	static {
 		try {
-			normalBlockImage = ImageIO.read(
-					Objects.requireNonNull(Tank.class.getResource("assets/grey_block.png"))
-			).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
+			normalBlockImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/grey_block.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -34,11 +32,11 @@ public class Block implements GameObject {
 	// ============================= GameObjectの実装 =============================
 
 	@Override
-	public void draw(Graphics2D graphics2D) {
+	public void draw(Graphics2D graphics) {
 		AffineTransform trans = new AffineTransform();
 		trans.translate(this.translate.x, this.translate.y);
 		trans.translate(-WIDTH / 2.0, -HEIGHT / 2.0);
-		graphics2D.drawImage(this.blockImage, trans, null);
+		graphics.drawImage(this.blockImage, trans, null);
 	}
 
 	@Override
@@ -47,13 +45,18 @@ public class Block implements GameObject {
 	}
 
 	@Override
-	public double getRadius() {
-		return Math.sqrt(Math.pow(WIDTH / 2.0, 2) + Math.pow(HEIGHT / 2.0, 2));
+	public double getCollisionRadius() {
+			return Math.sqrt(Math.pow(WIDTH / 2.0, 2) + Math.pow(HEIGHT / 2.0, 2));
 	}
 
 	@Override
 	public Point2D.Double getTranslate() {
 		return this.translate;
+	}
+
+	@Override
+	public void setTranslate(double x, double y) {
+		this.translate.setLocation(x, y);
 	}
 
 	@Override

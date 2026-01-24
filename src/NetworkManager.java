@@ -11,12 +11,11 @@ public class NetworkManager extends Thread {
 	private PrintWriter out;
 	private BufferedReader in;
 
+	private int networkClientID;
+	private int myTankID;
+
 	public NetworkManager(GamePanel gamePanel) {
 		this.gamePanel = gamePanel;
-	}
-
-	@Override
-	public void run() {
 		try {
 			// サーバーに接続 (IPは localhost 固定、適宜変更)
 			socket = new Socket("localhost", 10000);
@@ -26,14 +25,14 @@ public class NetworkManager extends Thread {
 			System.out.println("サーバーに接続しました。");
 
 			// 1. 最初の行は "ID is client number" 形式で来る想定
-			// MyServer.java の仕様: "myOut.println(number + " is client number");"
 			String initMsg = in.readLine();
 			if (initMsg != null) {
 				String[] tokens = initMsg.split(" ");
-				int myTankID = Integer.parseInt(tokens[0]) % 4;
+				this.networkClientID = Integer.parseInt(tokens[0]) % 4;
 
-				// GamePanelに自分のIDを通知
-				gamePanel.setMyTankID(myTankID);
+
+				int myTankID = networkClientID % 4;
+				this.setMyTankID(myTankID);
 
 				// 名前送信（サーバーが期待しているので送る）
 				out.println("Player" + myTankID);
@@ -41,8 +40,26 @@ public class NetworkManager extends Thread {
 				// 色情報を受け取る（今回は読み捨てるか、後で利用）
 				in.readLine();
 			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-			// 2. メインループ: サーバーからのメッセージを監視
+	private void setMyTankID(int myTankID) {
+		this.myTankID = myTankID;
+	}
+
+	public int getMyTankID() {
+		return this.myTankID;
+	}
+
+	public int getNetworkClientID() {
+		return this.networkClientID;
+	}
+
+	@Override
+	public void run() {
+		try {
 			while (true) {
 				try {
 					String msg = in.readLine();
@@ -54,9 +71,6 @@ public class NetworkManager extends Thread {
 					e.printStackTrace();
 				}
 			}
-
-		} catch (IOException e) {
-			e.printStackTrace();
 		} finally {
 			try {
 				if (socket != null) socket.close();
@@ -80,7 +94,7 @@ public class NetworkManager extends Thread {
 					double y = Double.parseDouble(tokens[3]);
 					double angle = Double.parseDouble(tokens[4]);
 					if (gamePanel.getMyTankID() == id) return;
-					gamePanel.getTankByID(id).setPosition(x, y);
+					gamePanel.gameStage.getObject(id).setTranslate(x, y);
 					break;
 				}
 				case "BULLET": {
@@ -89,8 +103,9 @@ public class NetworkManager extends Thread {
 					double y = Double.parseDouble(tokens[3]);
 					double angle = Double.parseDouble(tokens[4]);
 					if (gamePanel.getMyTankID() == id) return;
-					Bullet bullet = gamePanel.getTankByID(id).shootBullet();
-					gamePanel.addGameObject(bullet);
+					Tank tank = (Tank) gamePanel.gameStage.getObject(id);
+					Bullet bullet = tank.shootBullet();
+					gamePanel.gameStage.addObject(bullet);
 					break;
 				}
 				case "AIM": {
@@ -98,7 +113,8 @@ public class NetworkManager extends Thread {
 					double targetX = Double.parseDouble(tokens[2]);
 					double targetY = Double.parseDouble(tokens[3]);
 					if (gamePanel.getMyTankID() == id) return;
-					gamePanel.getTankByID(id).aimAt(targetX, targetY);
+					Tank tank = (Tank) gamePanel.gameStage.getObject(id);
+					tank.aimAt(targetX, targetY);
 					break;
 				}
 			}
@@ -116,7 +132,7 @@ public class NetworkManager extends Thread {
 		}
 	}
 
-	public void shootGun(int id, double x, double y,double angle) {
+	public void shootGun(int id, double x, double y, double angle) {
 		if (out != null) {
 			// プロトコル: BULLET id x y angle
 			out.println("BULLET " + id + " " + x + " " + y + " " + angle);
