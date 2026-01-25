@@ -9,70 +9,79 @@ import javax.imageio.ImageIO;
 public class Bullet implements GameObject, DangerGameObject {
 
 	// 特徴
-	private final double VELOCITY = 30;
-	private final int LIFE_TIME = GamePanel.FPS * 6; // 生存フレーム数
+	private static final double VELOCITY = 30;
+	private static final int LIFE_TIME = GamePanel.FPS * 6; // 生存フレーム数
 	public static final int OBJECT_RADIUS = 10;
-	public double damageAbility = 10.0;
+	public static final double damageAbility = 10.0;
+
+	// 状態（クライアント間の同期に必要)
 	private Tank tank;
+	private final Point2D.Double translate = new Point2D.Double(0, 0); // 弾丸オブジェクトの中心座標
+	private final double dx, dy;
+	private int lifeFrame = LIFE_TIME;
 
-
-	// 状態
-	private Point2D.Double translate = new Point2D.Double(0, 0); // 弾丸オブジェクトの中心座標
-	private double dx, dy; // 1フレームあたりの移動量
-	private int lifeCount; // 経過フレーム数
-	private boolean isExploded = false;
+	// 演出用（クライアント間の同期は必要ない）
+	private double renderScale = 1.0;
+	private final int DEBRIS_LIFE_FRAME = GamePanel.FPS / 4;
+	private int debrisLifeFrame = 0;
 
 	// 画像リソース（共有）
-	private BufferedImage bulletImage;
-	private static BufferedImage blueBulletImage, redBulletImage;
+	private static BufferedImage blueNormalBulletImage, redNormalBulletImage, blueBulletDebris, redBulletDebris, noneImage;
+
+	private enum Status {
+		NORMAL, DEBRIS, SHOULD_REMOVE
+	}
 
 	static {
 		try {
-			blueBulletImage = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("assets/bullet_blue.png")));
-			redBulletImage = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("assets/bullet_red.png")));
+			noneImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/none_image.png")));
+			blueNormalBulletImage = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("assets/bullet_blue.png")));
+			redNormalBulletImage = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("assets/bullet_red_normal.png")));
+			blueBulletDebris = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("assets/bullet_blue_debris.png")));
+			redBulletDebris = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("assets/bullet_red_debris.png")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	/**
-	 * コンストラクタ
-	 *
-	 * @param x     初期X座標s
-	 * @param y     初期Y座標
-	 * @param angle 発射角度（ラジアン）
-	 */
 	public Bullet(double x, double y, double angle, Tank tank) {
 		this.translate.setLocation(x, y);
-		this.lifeCount = 0;
 		this.tank = tank;
 
 		// 角度から速度ベクトルを計算
 		this.dx = Math.cos(angle) * VELOCITY;
 		this.dy = Math.sin(angle) * VELOCITY;
-
-		switch (tank.getTeam()) {
-			case RED: {
-				this.bulletImage = redBulletImage;
-				break;
-			}
-			case BLUE: {
-				this.bulletImage = blueBulletImage;
-				break;
-			}
-			default:
-				assert false;
-		}
 	}
 
 	// ============================= Bulletクラス独自のメソッド =============================
 
 	private void explode() {
-		this.isExploded = true;
+		this.debrisLifeFrame = DEBRIS_LIFE_FRAME;
+		this.lifeFrame = 0;
 	}
 
 	public double getCollisionRadius() {
-		return bulletImage.getWidth();
+		return getImage().getWidth();
+	}
+
+	public BufferedImage getImage() {
+		boolean isRed = this.tank.getTeam() == Team.RED;
+		switch (getStatus()) {
+			case NORMAL:
+				return isRed ? redNormalBulletImage : blueNormalBulletImage;
+			case DEBRIS:
+				return isRed ? redBulletDebris : blueBulletDebris;
+			case SHOULD_REMOVE:
+				return noneImage;
+			default:
+				throw new RuntimeException();
+		}
+	}
+
+	public Status getStatus() {
+		if (debrisLifeFrame > 0) return Status.DEBRIS;
+		if (lifeFrame <= 0) return Status.SHOULD_REMOVE;
+		return Status.NORMAL;
 	}
 
 	// ============================= GameObjectインタフェースのメソッド =============================
@@ -80,22 +89,34 @@ public class Bullet implements GameObject, DangerGameObject {
 
 	@Override
 	public void update() {
-		if (!isExploded) {
-			this.translate.x += dx;
-			this.translate.y += dy;
-			lifeCount++;
+		lifeFrame--;
+		if (lifeFrame == 0) {
+			explode();
+			return;
+		}
+		switch (getStatus()) {
+			case NORMAL: {
+				this.translate.x += dx;
+				this.translate.y += dy;
+				break;
+			}
+			case DEBRIS: {
+				debrisLifeFrame--;
+				renderScale += (GamePanel.FPS / 120.0) * debrisLifeFrame / 100.0;
+			}
 		}
 	}
 
 
 	@Override
 	public void draw(Graphics2D graphics) {
-		if (isExploded) return;
+		BufferedImage image = getImage();
 		AffineTransform trans = new AffineTransform();
 		trans.translate(this.translate.x, this.translate.y);
 		trans.rotate(Math.atan2(dy, dx));
-		trans.translate(-this.bulletImage.getWidth() / 2.0, -this.bulletImage.getHeight() / 2.0);
-		graphics.drawImage(this.bulletImage, trans, null);
+		trans.scale(renderScale, renderScale);
+		trans.translate(-image.getWidth() / 2.0, -image.getHeight() / 2.0);
+		graphics.drawImage(image, trans, null);
 	}
 
 	@Override
@@ -111,17 +132,25 @@ public class Bullet implements GameObject, DangerGameObject {
 
 	@Override
 	public boolean shouldRemove() {
-		return lifeCount > LIFE_TIME || this.isExploded;
+		return getStatus() == Status.SHOULD_REMOVE;
 	}
 
 	@Override
 	public boolean isTangible() {
-		return true;
+		return getStatus() == Status.NORMAL;
 	}
 
 	@Override
 	public RenderLayer getRenderLayer() {
-		return RenderLayer.BULLET;
+		switch (getStatus()) {
+			case NORMAL:
+				return RenderLayer.BULLET;
+			case DEBRIS:
+			case SHOULD_REMOVE:
+				return RenderLayer.DEBRIS;
+			default:
+				throw new RuntimeException();
+		}
 	}
 
 	@Override

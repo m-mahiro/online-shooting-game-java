@@ -27,9 +27,22 @@ public class Tank implements GameObject {
 	private int debrisLifeFrame = 0;
 
 	// 画像リソース
-	private static BufferedImage redNormalChassisImage, redBrokenChassisImage, redBrokenGunImage, redNormalGunImage, redTransparentChassisImage, redTransparentGunImage, redTankDebris;
-	private static BufferedImage blueChassisImage, blueBrokenChassisImage, blueBrokenGunImage, blueGunImage, blueTransparentChassisImage, blueTransparentGunImage, blueTankDebris;
-	private static BufferedImage noneChassisImage, noneGunImage;
+	private static BufferedImage
+			redNormalChassisImage,
+			redNormalGunImage,
+			redBrokenChassisImage,
+			redBrokenGunImage,
+			redTransparentChassisImage,
+			redTransparentGunImage,
+			redTankDebris,
+			blueNormalChassisImage,
+			blueNormalGunImage,
+			blueBrokenChassisImage,
+			blueBrokenGunImage,
+			blueTransparentChassisImage,
+			blueTransparentGunImage,
+			blueTankDebris,
+			noneImage;
 
 	private enum Status {
 		NORMAL, BROKEN, DEBRIS, TRANSPARENT, NONE
@@ -38,8 +51,7 @@ public class Tank implements GameObject {
 	static {
 		try {
 			// 本当の本当に透明
-			noneChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_none.png")));
-			noneGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_none.png")));
+			noneImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/none_image.png")));
 
 			// debris
 			redTankDebris = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/tank_red_debris.png")));
@@ -51,7 +63,7 @@ public class Tank implements GameObject {
 			redTransparentChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_red_trans.png")));
 
 			// blue chassis
-			blueChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_blue_normal.png")));
+			blueNormalChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_blue_normal.png")));
 			blueBrokenChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_blue_broken.png")));
 			blueTransparentChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_blue_trans.png")));
 
@@ -61,7 +73,7 @@ public class Tank implements GameObject {
 			redTransparentGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_red_trans.png")));
 
 			// blue gun
-			blueGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_blue_normal.png")));
+			blueNormalGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_blue_normal.png")));
 			blueBrokenGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_blue_broken.png")));
 			blueTransparentGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_blue_trans.png")));
 
@@ -122,7 +134,7 @@ public class Tank implements GameObject {
 		boolean isRed = (team == Team.RED);
 		switch (getStatus()) {
 			case NORMAL:
-				return isRed ? redNormalChassisImage : blueChassisImage;
+				return isRed ? redNormalChassisImage : blueNormalChassisImage;
 			case BROKEN:
 				return isRed ? redBrokenChassisImage : blueBrokenChassisImage;
 			case TRANSPARENT:
@@ -130,7 +142,7 @@ public class Tank implements GameObject {
 			case DEBRIS:
 				return isRed ? redTankDebris : blueTankDebris;
 			case NONE:
-				return noneChassisImage;
+				return noneImage;
 			default:
 				throw new RuntimeException("未実装のTankImageStatus");
 		}
@@ -140,14 +152,14 @@ public class Tank implements GameObject {
 		boolean isRed = (team == Team.RED);
 		switch (getStatus()) {
 			case NORMAL:
-				return isRed ? redNormalGunImage : blueGunImage;
+				return isRed ? redNormalGunImage : blueNormalGunImage;
 			case BROKEN:
 				return isRed ? redBrokenGunImage : blueBrokenGunImage;
 			case TRANSPARENT:
 				return isRed ? redTransparentGunImage : blueTransparentGunImage;
 			case DEBRIS:
 			case NONE:
-				return noneGunImage;
+				return noneImage;
 			default:
 				throw new RuntimeException("未実装のTankImageStatus");
 		}

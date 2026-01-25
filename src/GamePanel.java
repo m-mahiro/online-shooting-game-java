@@ -10,8 +10,6 @@ import java.util.*;
 public class GamePanel extends JPanel implements Runnable {
 
 	// 画面サイズ定数
-	public static final int WIDTH = 1000;
-	public static final int HEIGHT = 400;
 	public static final int FPS = 60;
 
 	private final AffineTransform canvasTransform = new AffineTransform();
@@ -30,9 +28,8 @@ public class GamePanel extends JPanel implements Runnable {
 
 	public GamePanel() {
 
-		// ============================= 諸設定 =============================
+		// ============================= ウィンドウの諸設定 =============================
 		// パネルの設定
-		this.setPreferredSize(new Dimension(WIDTH, HEIGHT));
 		this.setBackground(Color.WHITE);
 		this.setDoubleBuffered(true);
 
@@ -75,7 +72,7 @@ public class GamePanel extends JPanel implements Runnable {
 
 	public void setCameraLocation(double x, double y) {
 		AffineTransform trans = new AffineTransform();
-		trans.translate(WIDTH / 2.0, HEIGHT / 2.0);
+		trans.translate(this.getWidth() / 2.0, this.getHeight() / 2.0);
 		trans.scale(this.cameraZoom, this.cameraZoom);
 		trans.translate(-x, -y);
 		this.canvasTransform.setTransform(trans);

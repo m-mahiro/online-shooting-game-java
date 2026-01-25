@@ -1,12 +1,25 @@
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class GameStage {
 
-	private final Map<Integer, GameObject> objects = new ConcurrentHashMap<>();
+	private static BufferedImage textureImage;
 
+	static {
+		try {
+			textureImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/floor_texture.png")));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private final Map<Integer, GameObject> objects = new ConcurrentHashMap<>();
 	private int myNetworkClientID;
 	private int lastPrivateObjectID = 0;
 
@@ -41,6 +54,14 @@ public class GameStage {
 
 
 	public void draw(Graphics2D graphics) {
+
+		// フローリングの描画
+		Rectangle2D anchor = new Rectangle2D.Double(0, 0, textureImage.getWidth(), textureImage.getHeight());
+		TexturePaint paint = new TexturePaint(textureImage, anchor);
+		graphics.setPaint(paint);
+		graphics.fillRect(0, 0, 6000, 6000);
+
+		// GameObjectの描画
 		for (RenderLayer layer : RenderLayer.values()) {
 			for (GameObject object : objects.values()) {
 				if (object.getRenderLayer() != layer) continue;
