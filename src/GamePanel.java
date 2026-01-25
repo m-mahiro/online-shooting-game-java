@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.util.*;
 
 public class GamePanel extends JPanel implements Runnable {
@@ -140,12 +141,10 @@ public class GamePanel extends JPanel implements Runnable {
 		Tank myTank = getMyTank();
 
 		// 戦車に移動命令を出す
-		double[] moveVector = input.getMoveVector(this.canvasTransform);
-		double x = moveVector[0];
-		double y = moveVector[1];
-		if (x != 0 || y != 0) {
-			myTank.move(moveVector[0], moveVector[1]);
-			networkManager.moveTank(myTankID, myTank.getX(), myTank.getY(), myTank.getChassisAngle());
+		Point2D.Double moveVector = input.getMoveVector(this.canvasTransform);
+		if (moveVector.x != 0 || moveVector.y != 0) {
+			myTank.move(moveVector);
+			networkManager.moveTank(myTankID, myTank.getX(), myTank.getY());
 		}
 
 		// カメラアングルを調整
@@ -153,15 +152,13 @@ public class GamePanel extends JPanel implements Runnable {
 		setCameraLocation(myTank.getX(), myTank.getY());
 
 		// マウス位置へ砲塔を向ける命令を出す
-		double[] aim = input.getAimedCoordinate(this.canvasTransform);
-		double gunTargetX = aim[0];
-		double gunTargetY = aim[1];
-		myTank.aimAt(gunTargetX, gunTargetY);
-		networkManager.aimAt(myTankID, gunTargetX, gunTargetY);
+		Point2D.Double coordinate = input.getAimedCoordinate(this.canvasTransform);
+		myTank.aimAt(coordinate);
+		networkManager.aimAt(myTankID, coordinate.x, coordinate.y);
 
 		// 戦車に発砲命令を出す。
 		if (input.gunButtonPressed()) {
-			gameStage.addObject(myTank.shootBullet());
+			gameStage.addObject(myTank.shotBullet());
 			networkManager.shootGun(myTankID, myTank.getX(), myTank.getY(), myTank.getGunAngle());
 		}
 	}

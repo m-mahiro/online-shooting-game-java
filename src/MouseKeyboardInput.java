@@ -24,7 +24,7 @@ public class MouseKeyboardInput
 	// ============================= InputHandlerの実装 =============================
 
 	@Override
-	public double[] getMoveVector(AffineTransform canvasTransform) {
+	public Point2D.Double getMoveVector(AffineTransform canvasTransform) {
 
 		// 1. キー入力から移動方向を決める
 		double x = 0;
@@ -35,11 +35,11 @@ public class MouseKeyboardInput
 		if (this.left) x = -1;
 		if (this.right) x = 1;
 
-		return new double[]{x, y};
+		return new Point2D.Double(x, y);
 	}
 
 	@Override
-	public double[] getAimedCoordinate(AffineTransform canvasTransform) {
+	public Point2D.Double getAimedCoordinate(AffineTransform canvasTransform) {
 		Point2D.Double sourcePoint = new Point2D.Double(this.mouseX, this.mouseY);
 		Point2D.Double destinationPoint = new Point2D.Double();
 		try {
@@ -50,7 +50,7 @@ public class MouseKeyboardInput
 
 		double x = destinationPoint.x;
 		double y = destinationPoint.y;
-		return new double[]{x, y};
+		return new Point2D.Double(x, y);
 	}
 
 	@Override

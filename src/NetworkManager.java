@@ -1,3 +1,4 @@
+import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -92,7 +93,6 @@ public class NetworkManager extends Thread {
 					int id = Integer.parseInt(tokens[1]);
 					double x = Double.parseDouble(tokens[2]);
 					double y = Double.parseDouble(tokens[3]);
-					double angle = Double.parseDouble(tokens[4]);
 					if (gamePanel.getMyTankID() == id) return;
 					gamePanel.gameStage.getObject(id).setTranslate(x, y);
 					break;
@@ -104,7 +104,7 @@ public class NetworkManager extends Thread {
 					double angle = Double.parseDouble(tokens[4]);
 					if (gamePanel.getMyTankID() == id) return;
 					Tank tank = (Tank) gamePanel.gameStage.getObject(id);
-					Bullet bullet = tank.shootBullet();
+					Bullet bullet = tank.shotBullet();
 					gamePanel.gameStage.addObject(bullet);
 					break;
 				}
@@ -114,7 +114,8 @@ public class NetworkManager extends Thread {
 					double targetY = Double.parseDouble(tokens[3]);
 					if (gamePanel.getMyTankID() == id) return;
 					Tank tank = (Tank) gamePanel.gameStage.getObject(id);
-					tank.aimAt(targetX, targetY);
+					Point2D.Double targetCoordinate = new Point2D.Double(targetX, targetY);
+					tank.aimAt(targetCoordinate);
 					break;
 				}
 			}
@@ -125,10 +126,10 @@ public class NetworkManager extends Thread {
 
 	// --- 送信メソッド ---
 
-	public void moveTank(int id, double x, double y, double angle) {
+	public void moveTank(int id, double x, double y) {
 		if (out != null) {
-			// プロトコル: MOVE id x y angle
-			out.println("MOVE " + id + " " + x + " " + y + " " + angle);
+			// プロトコル: MOVE id x y
+			out.println("MOVE " + id + " " + x + " " + y);
 		}
 	}
 

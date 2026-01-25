@@ -1,10 +1,11 @@
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 
 public interface InputHandler {
 
-	double[] getMoveVector(AffineTransform canvasTransform);
+	Point2D.Double getMoveVector(AffineTransform canvasTransform);
 
-	double[] getAimedCoordinate(AffineTransform canvasTransform);
+	Point2D.Double getAimedCoordinate(AffineTransform canvasTransform);
 
 	boolean gunButtonPressed();
 

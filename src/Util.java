@@ -10,7 +10,7 @@ public class Util {
 		double x = p.x;
 		double y = p.y;
 
-		double norm = getNorm(p);
+		double norm = norm(p);
 		if (norm == 0) return new Point2D.Double(0, 0);
 
 		double x_dash = x / norm;
@@ -23,7 +23,7 @@ public class Util {
 		return new Point2D.Double(p.x * number, p.y * number);
 	}
 
-	public static double getNorm(Point2D.Double p) {
+	public static double norm(Point2D.Double p) {
 		return Math.sqrt(Math.pow(p.x, 2) + Math.pow(p.y, 2));
 	}
 

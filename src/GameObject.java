@@ -3,19 +3,22 @@ import java.awt.geom.Point2D;
 
 public interface GameObject {
 
-	void draw(Graphics2D graphics);
-
 	void update();
 
-	double getCollisionRadius();
+	void draw(Graphics2D graphics);
+
+	void onCollision(GameObject other);
+
+	void onHitBy(DangerGameObject other);
+
+	boolean shouldRemove();
+
+	boolean isTangible();
+
+	Shape getShape();
 
 	Point2D.Double getTranslate();
 
 	void setTranslate(double x, double y);
 
-	void onCollision(GameObject other);
-
-	boolean shouldRemove();
-
-	boolean isTangible();
 }

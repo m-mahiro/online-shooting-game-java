@@ -6,20 +6,23 @@ import java.io.IOException;
 import java.util.Objects;
 import javax.imageio.ImageIO;
 
-public class Bullet implements GameObject {
+public class Bullet implements GameObject, DangerGameObject {
 
+	// 特徴
 	private final double VELOCITY = 30;
 	private final int LIFE_TIME = GamePanel.FPS * 6; // 生存フレーム数
 	public static final int OBJECT_RADIUS = 10;
 	public double damageAbility = 10.0;
+	private Tank tank;
 
-	// --- 状態 ---
+
+	// 状態
 	private Point2D.Double translate = new Point2D.Double(0, 0); // 弾丸オブジェクトの中心座標
 	private double dx, dy; // 1フレームあたりの移動量
 	private int lifeCount; // 経過フレーム数
 	private boolean isExploded = false;
 
-	// --- 画像リソース（共有） ---
+	// 画像リソース（共有）
 	private BufferedImage bulletImage;
 	private static BufferedImage blueBulletImage, redBulletImage;
 
@@ -39,15 +42,16 @@ public class Bullet implements GameObject {
 	 * @param y     初期Y座標
 	 * @param angle 発射角度（ラジアン）
 	 */
-	public Bullet(double x, double y, double angle, Team team) {
+	public Bullet(double x, double y, double angle, Tank tank) {
 		this.translate.setLocation(x, y);
 		this.lifeCount = 0;
+		this.tank = tank;
 
 		// 角度から速度ベクトルを計算
 		this.dx = Math.cos(angle) * VELOCITY;
 		this.dy = Math.sin(angle) * VELOCITY;
 
-		switch (team) {
+		switch (tank.getTeam()) {
 			case RED: {
 				this.bulletImage = redBulletImage;
 				break;
@@ -61,43 +65,30 @@ public class Bullet implements GameObject {
 		}
 	}
 
-	public double getDamageAbility() {
-		return this.damageAbility;
+	// ============================= Bulletクラス独自のメソッド =============================
+
+	private void explode() {
+		this.isExploded = true;
 	}
 
-
-	// ============================= GameObjectインタフェースの実装 =============================
-
-	@Override
 	public double getCollisionRadius() {
-		return OBJECT_RADIUS;
+		return bulletImage.getWidth();
 	}
 
-	@Override
-	public Point2D.Double getTranslate() {
-		return this.translate;
-	}
+	// ============================= GameObjectインタフェースのメソッド =============================
+
 
 	@Override
-	public void setTranslate(double x, double y) {
-		this.translate.setLocation(x, y);
-	}
-
-	@Override
-	public void onCollision(GameObject other) {
-		if (!other.isTangible()) return;
-		this.explode();
-		if (other instanceof Tank) {
-			Tank tank = (Tank) other;
-			tank.onHit(this);
-		} else if (other instanceof Bullet) {
-			Bullet bullet = (Bullet) other;
-			bullet.explode();
+	public void update() {
+		if (!isExploded) {
+			this.translate.x += dx;
+			this.translate.y += dy;
+			lifeCount++;
 		}
 	}
 
-	// ============================= 描画系処理 =============================
 
+	@Override
 	public void draw(Graphics2D graphics) {
 		if (isExploded) return;
 		AffineTransform trans = new AffineTransform();
@@ -107,14 +98,18 @@ public class Bullet implements GameObject {
 		graphics.drawImage(this.bulletImage, trans, null);
 	}
 
-	public void update() {
-		if (!isExploded) {
-			this.translate.x += dx;
-			this.translate.y += dy;
-			lifeCount++;
-		}
+	@Override
+	public void onCollision(GameObject other) {
+		this.explode();     // とりあえず自身が爆発
+		other.onHitBy(this); // 相手に被弾を通知する
 	}
 
+	@Override
+	public void onHitBy(DangerGameObject other) {
+		// 何もしない
+	}
+
+	@Override
 	public boolean shouldRemove() {
 		return lifeCount > LIFE_TIME || this.isExploded;
 	}
@@ -124,8 +119,26 @@ public class Bullet implements GameObject {
 		return true;
 	}
 
-	public void explode() {
-		this.isExploded = true;
+	@Override
+	public Shape getShape() {
+		return new Circle(this.translate, this.getCollisionRadius());
+	}
+
+	@Override
+	public Point2D.Double getTranslate() {
+		return (Point2D.Double) this.translate.clone();
+	}
+
+	@Override
+	public void setTranslate(double x, double y) {
+		this.translate.setLocation(x, y);
+	}
+
+
+	// ============================= DangerGameObjectインタフェースのメソッド =============================
+
+	public double getDamageAbility() {
+		return this.damageAbility;
 	}
 
 }
