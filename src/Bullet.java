@@ -120,6 +120,11 @@ public class Bullet implements GameObject, DangerGameObject {
 	}
 
 	@Override
+	public RenderLayer getRenderLayer() {
+		return RenderLayer.BULLET;
+	}
+
+	@Override
 	public Shape getShape() {
 		return new Circle(this.translate, this.getCollisionRadius());
 	}

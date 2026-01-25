@@ -15,10 +15,11 @@ public interface GameObject {
 
 	boolean isTangible();
 
+	RenderLayer getRenderLayer();
+
 	Shape getShape();
 
 	Point2D.Double getTranslate();
 
 	void setTranslate(double x, double y);
-
 }

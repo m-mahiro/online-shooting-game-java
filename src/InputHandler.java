@@ -9,5 +9,7 @@ public interface InputHandler {
 
 	boolean gunButtonPressed();
 
+	boolean blockButtonPressed();
+
 	int getZoomAmount();
 }

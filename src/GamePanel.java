@@ -139,6 +139,11 @@ public class GamePanel extends JPanel implements Runnable {
 
 		// ============================= 自分の操作 =============================
 		Tank myTank = getMyTank();
+		if (myTank.isDead()) return;
+
+		// カメラアングルを調整
+		zoomCamera(input.getZoomAmount() * 0.1);
+		setCameraLocation(myTank.getX(), myTank.getY());
 
 		// 戦車に移動命令を出す
 		Point2D.Double moveVector = input.getMoveVector(this.canvasTransform);
@@ -146,10 +151,6 @@ public class GamePanel extends JPanel implements Runnable {
 			myTank.move(moveVector);
 			networkManager.moveTank(myTankID, myTank.getX(), myTank.getY());
 		}
-
-		// カメラアングルを調整
-		zoomCamera(input.getZoomAmount() * 0.1);
-		setCameraLocation(myTank.getX(), myTank.getY());
 
 		// マウス位置へ砲塔を向ける命令を出す
 		Point2D.Double coordinate = input.getAimedCoordinate(this.canvasTransform);
@@ -160,6 +161,11 @@ public class GamePanel extends JPanel implements Runnable {
 		if (input.gunButtonPressed()) {
 			gameStage.addObject(myTank.shotBullet());
 			networkManager.shootGun(myTankID, myTank.getX(), myTank.getY(), myTank.getGunAngle());
+		}
+
+		// 戦車のブロック作成命令を出す。
+		if (input.blockButtonPressed()) {
+			gameStage.addObject(myTank.createBlock());
 		}
 	}
 

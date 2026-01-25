@@ -2,7 +2,6 @@ import java.awt.event.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
-import java.util.concurrent.TransferQueue;
 
 public class MouseKeyboardInput
 		implements
@@ -14,7 +13,7 @@ public class MouseKeyboardInput
 
 	// キーが押されているかどうかのフラグ
 	private boolean up, down, left, right;
-	private boolean mousePressed;
+	private boolean leftClicked, rightClicked;
 	// マウスの現在位置
 	private int mouseX, mouseY;
 
@@ -55,8 +54,15 @@ public class MouseKeyboardInput
 
 	@Override
 	public boolean gunButtonPressed() {
-		boolean pressed = this.mousePressed;
-		this.mousePressed = false;
+		boolean pressed = this.leftClicked;
+		this.leftClicked = false;
+		return pressed;
+	}
+
+	@Override
+	public boolean blockButtonPressed() {
+		boolean pressed = this.rightClicked;
+		this.rightClicked = false;
 		return pressed;
 	}
 
@@ -117,12 +123,20 @@ public class MouseKeyboardInput
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		this.mousePressed = true;
+		int button = e.getButton();
+		switch (button) {
+			case MouseEvent.BUTTON1:
+				this.leftClicked = true;
+				break;
+			case MouseEvent.BUTTON3:
+				this.rightClicked = true;
+				break;
+		}
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		this.mousePressed = false;
+		this.leftClicked = false;
 	}
 
 	@Override

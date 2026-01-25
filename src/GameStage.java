@@ -41,8 +41,11 @@ public class GameStage {
 
 
 	public void draw(Graphics2D graphics) {
-		for (GameObject object : objects.values()) {
-			object.draw(graphics);
+		for (RenderLayer layer : RenderLayer.values()) {
+			for (GameObject object : objects.values()) {
+				if (object.getRenderLayer() != layer) continue;
+				object.draw(graphics);
+			}
 		}
 	}
 

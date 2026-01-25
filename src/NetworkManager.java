@@ -118,6 +118,15 @@ public class NetworkManager extends Thread {
 					tank.aimAt(targetCoordinate);
 					break;
 				}
+				case "BLOCK": {
+					int id = Integer.parseInt(tokens[1]);
+					double targetX = Double.parseDouble(tokens[2]);
+					double targetY = Double.parseDouble(tokens[3]);
+					if (gamePanel.getMyTankID() == id) return;
+					Tank tank = (Tank) gamePanel.gameStage.getObject(id);
+					tank.createBlock();
+					break;
+				}
 			}
 		} catch (NumberFormatException e) {
 			System.err.println("パースエラー: " + msg);
@@ -127,22 +136,22 @@ public class NetworkManager extends Thread {
 	// --- 送信メソッド ---
 
 	public void moveTank(int id, double x, double y) {
-		if (out != null) {
-			// プロトコル: MOVE id x y
-			out.println("MOVE " + id + " " + x + " " + y);
-		}
+		if (out == null) return;
+		out.println("MOVE " + id + " " + x + " " + y);
 	}
 
 	public void shootGun(int id, double x, double y, double angle) {
-		if (out != null) {
-			// プロトコル: BULLET id x y angle
-			out.println("BULLET " + id + " " + x + " " + y + " " + angle);
-		}
+		if (out == null) return;
+		out.println("BULLET " + id + " " + x + " " + y + " " + angle);
 	}
 
 	public void aimAt(int id, double targetX, double targetY) {
-		if (out != null) {
-			out.println("AIM " + id + " " + targetX + " " + targetY);
-		}
+		if (out == null) return;
+		out.println("AIM " + id + " " + targetX + " " + targetY);
+	}
+
+	public void createBlock(int id, Point2D.Double spawnPoint) {
+		if (out == null) return;
+		out.println("BLOCK " + id + " " + spawnPoint.x + " " + spawnPoint.y);
 	}
 }
