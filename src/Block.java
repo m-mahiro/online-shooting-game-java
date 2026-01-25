@@ -8,17 +8,15 @@ import java.util.Objects;
 
 public class Block implements GameObject {
 
-	private static final int WIDTH = 200;
-	private static final int HEIGHT = 200;
-
 	private final Point2D.Double translate = new Point2D.Double(0, 0);
 
 	// 画像
-	private Image blockImage;
-	private static Image normalBlockImage;
+	private BufferedImage blockImage;
+	private static BufferedImage normalBlockImage, transparentBlockImage;
 	static {
 		try {
-			normalBlockImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/grey_block.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
+			normalBlockImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/block_grey.png")));
+			transparentBlockImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/block_water_grey.png")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -35,8 +33,8 @@ public class Block implements GameObject {
 	public void draw(Graphics2D graphics) {
 		AffineTransform trans = new AffineTransform();
 		trans.translate(this.translate.x, this.translate.y);
-		trans.translate(-WIDTH / 2.0, -HEIGHT / 2.0);
-		graphics.drawImage(this.blockImage, trans, null);
+		trans.translate(-getWidth() / 2.0, -getHeight() / 2.0);
+		graphics.drawImage(getBlockImage(), trans, null);
 	}
 
 	@Override
@@ -46,7 +44,7 @@ public class Block implements GameObject {
 
 	@Override
 	public double getCollisionRadius() {
-			return Math.sqrt(Math.pow(WIDTH / 2.0, 2) + Math.pow(HEIGHT / 2.0, 2));
+		return Math.sqrt(Math.pow(getWidth() / 2.0, 2) + Math.pow(getWidth() / 2.0, 2));
 	}
 
 	@Override
@@ -76,10 +74,14 @@ public class Block implements GameObject {
 
 	// =============================  =============================
 	public int getWidth() {
-		return WIDTH;
+		return blockImage.getWidth();
 	}
 
 	public int getHeight() {
-		return HEIGHT;
+		return blockImage.getHeight();
+	}
+
+	private BufferedImage getBlockImage() {
+		return isTangible() ? normalBlockImage : transparentBlockImage;
 	}
 }

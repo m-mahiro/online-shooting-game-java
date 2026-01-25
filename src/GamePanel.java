@@ -4,7 +4,6 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
 import java.util.*;
 
 public class GamePanel extends JPanel implements Runnable {
@@ -122,7 +121,6 @@ public class GamePanel extends JPanel implements Runnable {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			break;
 		}
 	}
 
@@ -146,7 +144,7 @@ public class GamePanel extends JPanel implements Runnable {
 		double x = moveVector[0];
 		double y = moveVector[1];
 		if (x != 0 || y != 0) {
-			myTank.moveFor(moveVector[0], moveVector[1]);
+			myTank.move(moveVector[0], moveVector[1]);
 			networkManager.moveTank(myTankID, myTank.getX(), myTank.getY(), myTank.getChassisAngle());
 		}
 
@@ -171,7 +169,7 @@ public class GamePanel extends JPanel implements Runnable {
 	private Tank getMyTank() {
 		GameObject object = this.gameStage.getObject(myTankID);
 		if (object instanceof Tank) {
-			return (Tank)object;
+			return (Tank) object;
 		} else {
 			throw new RuntimeException("myTankIDに対応するobjectはTankのインスタンスではありませんでした。");
 		}

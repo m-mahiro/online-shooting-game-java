@@ -5,6 +5,7 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Random;
 
 public class Tank implements GameObject {
 
@@ -12,33 +13,29 @@ public class Tank implements GameObject {
 	private double velocity = 20;
 	private Team team;
 
-	private static final int WIDTH = 150;
-	private static final int HEIGHT = 150;
-
-
 	public Point2D.Double translate = new Point2D.Double(0, 0); // オブジェクトの中心の座標
-	private double chassisAngle; // ラジアン
 	private double gunAngle; // ラジアン
+	private double tankScale = 1.0;
 	private double hp = 100.0;
 	private boolean alive = true;
 	private int damageFlushCounter = 0;
 	private final int DAMAGE_FLUSH_FRAME = 70;
 
-	private Image chassisImage, gunImage;
-	private static Image redChassisImage, redGunImage, waterRedChassisImage, waterRedGunImage;
-	private static Image blueChassisImage, blueGunImage, waterBlueChassisImage, waterBlueGunImage;
+	private BufferedImage chassisImage, gunImage;
+	private static BufferedImage redChassisImage, redGunImage, waterRedChassisImage, waterRedGunImage;
+	private static BufferedImage blueChassisImage, blueGunImage, waterBlueChassisImage, waterBlueGunImage;
 
 	static {
 		try {
-			redChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_red.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
-			redGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_red.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
-			waterRedChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_water_red.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
-			waterRedGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_water_red.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
+			redChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_red.png")));
+			blueChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_blue.png")));
+			waterRedChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_water_red.png")));
+			waterBlueChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_water_blue.png")));
 
-			blueChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_blue.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
-			blueGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_blue.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
-			waterBlueChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_water_blue.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
-			waterBlueGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_water_blue.png"))).getScaledInstance(WIDTH, HEIGHT, BufferedImage.SCALE_SMOOTH);
+			redGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_red.png")));
+			blueGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_blue.png")));
+			waterRedGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_water_red.png")));
+			waterBlueGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_water_blue.png")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -78,11 +75,11 @@ public class Tank implements GameObject {
 	/**
 	 * 戦車を与えられベクトルを正規化して、その方向に移動させる。
 	 *
-	 * @param x
-	 * @param y
+	 * @param dx
+	 * @param dy
 	 */
-	public void moveFor(double x, double y) {
-		Point2D.Double p = new Point2D.Double(x, y);
+	public void move(double dx, double dy) {
+		Point2D.Double p = new Point2D.Double(dx, dy);
 		p = Util.normalize(p);
 		p = Util.multiple(p, this.velocity);
 		p = Util.addition(this.translate, p);
@@ -164,8 +161,13 @@ public class Tank implements GameObject {
 	public void onCollision(GameObject other) {
 		if (!this.alive) return;
 		Point2D.Double vector = Util.subtract(this.translate, other.getTranslate());
+		if (vector.x == 0 && vector.y == 0) {
+			Random random = new Random();
+			vector.x = random.nextDouble();
+			vector.x = random.nextDouble();
+		}
 		vector = Util.normalize(vector);
-		this.moveFor(vector.x, vector.y);
+		this.move(vector.x, vector.y);
 	}
 
 	@Override
@@ -182,7 +184,6 @@ public class Tank implements GameObject {
 		// 台車の描画
 		AffineTransform chassisTransform = new AffineTransform();
 		chassisTransform.translate(translate.x, translate.y);
-		chassisTransform.rotate(this.chassisAngle);
 		chassisTransform.translate(-this.chassisImage.getWidth(null) / 2.0, -this.chassisImage.getHeight(null) / 2.0);
 		graphics.drawImage(this.chassisImage, chassisTransform, null);
 
@@ -202,10 +203,6 @@ public class Tank implements GameObject {
 
 	public double getY() {
 		return translate.y;
-	}
-
-	public double getChassisAngle() {
-		return this.chassisAngle;
 	}
 
 	public double getGunAngle() {
@@ -237,12 +234,11 @@ public class Tank implements GameObject {
 		return this.team;
 	}
 
-	// ============================= ゲッター・セッター(テスト用) =============================
-	public void setChassisAngle(double theta) {
-		this.chassisAngle = theta;
+	public double getHeight() {
+		return chassisImage.getHeight() * tankScale;
 	}
 
-	public void setGunAngle(double theta) {
-		this.gunAngle = theta;
+	public double getWidth() {
+		return chassisImage.getWidth() + tankScale;
 	}
 }

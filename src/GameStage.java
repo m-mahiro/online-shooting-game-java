@@ -15,13 +15,14 @@ public class GameStage {
 	}
 
 	public void addObject(GameObject gameObject) {
-		objects.put(getNextPrivateObjectID(), gameObject);
+		int id = getNextPrivateObjectID();
+		objects.put(id, gameObject);
 	}
 
 	public void addObjects(Collection<GameObject> gameObjects) {
 		synchronized (this) {
 			for (GameObject object : gameObjects) {
-				this.objects.put(getNextPrivateObjectID(), object);
+				this.addObject(object);
 			}
 		}
 	}
