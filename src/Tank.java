@@ -22,7 +22,7 @@ public class Tank implements GameObject {
 	private boolean alive = true;
 
 	// 演出用
-	private final int DAMAGE_FLUSH_FRAME = 70;
+	private final int DAMAGE_FLUSH_FRAME = 30;
 	private int damageFlushCounter = 0;
 	private double tankScale = 1.0;
 
@@ -125,28 +125,13 @@ public class Tank implements GameObject {
 	@Override
 	public void update() {
 		damageFlushCounter--;
-		if (damageFlushCounter > 0) {
-			boolean flag = damageFlushCounter % 10 == 0;
-			switch (this.team) {
-				case RED: {
-					this.chassisImage = flag ? waterRedChassisImage : redChassisImage;
-					this.gunImage = flag ? waterRedGunImage : redGunImage;
-					break;
-				}
-				case BLUE: {
-					this.chassisImage = flag ? waterBlueChassisImage : blueChassisImage;
-					this.gunImage = flag ? waterBlueGunImage : blueGunImage;
-					break;
-				}
-				default:
-					assert false;
-			}
-		}
+		if (damageFlushCounter < 0) damageFlushCounter = 0;
 	}
 
 
 	@Override
 	public void draw(Graphics2D graphics) {
+		if (damageFlushCounter > 0 && damageFlushCounter % 10 == 0) return;
 		// 台車の描画
 		AffineTransform chassisTransform = new AffineTransform();
 		chassisTransform.translate(translate.x, translate.y);
