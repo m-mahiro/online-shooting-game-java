@@ -1,5 +1,3 @@
-import jdk.nashorn.internal.runtime.SharedPropertyMap;
-
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -14,11 +12,12 @@ public class Tank implements GameObject {
 	// 特徴
 	public static final double velocity = 20;
 	private Team team;
+	private double MAX_HP = 100.0;
 
 	// 状態
 	public Point2D.Double translate = new Point2D.Double(0, 0); // オブジェクトの中心の座標
 	private double gunAngle; // ラジアン
-	private double hp = 100.0;
+	private double hp = MAX_HP;
 	private boolean alive = true;
 
 	// 演出用
@@ -27,43 +26,43 @@ public class Tank implements GameObject {
 	private double tankScale = 1.0;
 
 	// 画像リソース
-	private BufferedImage chassisImage, gunImage;
-	private static BufferedImage redChassisImage, redGunImage, waterRedChassisImage, waterRedGunImage;
-	private static BufferedImage blueChassisImage, blueGunImage, waterBlueChassisImage, waterBlueGunImage;
-
+	private static BufferedImage redNormalChassisImage, redBrokenChassisImage, redBrokenGunImage, redNormalGunImage, redTransparentChassisImage, redTransparentGunImage;
+	private static BufferedImage blueChassisImage, blueBrokenChassisImage, blueBrokenGunImage, blueGunImage, blueTransparentChassisImage, blueTransparentGunImage;
 	static {
 		try {
-			redChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_red.png")));
-			blueChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_blue.png")));
-			waterRedChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_water_red.png")));
-			waterBlueChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_water_blue.png")));
+			// red chassis
+			redNormalChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_red_normal.png")));
+			redBrokenChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_red_broken.png")));
+			redTransparentChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_red_trans.png")));
 
-			redGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_red.png")));
-			blueGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_blue.png")));
-			waterRedGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_water_red.png")));
-			waterBlueGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_water_blue.png")));
+			// blue chassis
+			blueChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_blue_normal.png")));
+			blueBrokenChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_blue_broken.png")));
+			blueTransparentChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/chassis_blue_trans.png")));
+
+			// red gun
+			redNormalGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_red_normal.png")));
+			redBrokenGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_red_broken.png")));
+			redTransparentGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_red_trans.png")));
+
+			// blue gun
+			blueGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_blue_normal.png")));
+			blueBrokenGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_blue_broken.png")));
+			blueTransparentGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/gun_blue_trans.png")));
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
+
+	private enum TankImageType {
+		NORMAL, BROKEN, TRANSPARENT, NONE
+	}
+
 	Tank(double x, double y, Team team) {
 		this.translate.setLocation(x, y);
 		this.team = team;
-		switch (this.team) {
-			case RED: {
-				this.chassisImage = redChassisImage;
-				this.gunImage = redGunImage;
-				break;
-			}
-			case BLUE: {
-				this.chassisImage = blueChassisImage;
-				this.gunImage = blueGunImage;
-				break;
-			}
-			default:
-				assert false;
-		}
 	}
 
 	// ============================= Tankクラス独自のメソッド =============================
@@ -78,10 +77,6 @@ public class Tank implements GameObject {
 		p = Util.multiple(p, this.velocity);
 		p = Util.addition(this.translate, p);
 		this.translate.setLocation(p);
-	}
-
-	public void setPosition(Point2D.Double coordinate) {
-		this.translate.setLocation(coordinate);
 	}
 
 	public Bullet shotBullet() {
@@ -102,23 +97,41 @@ public class Tank implements GameObject {
 	public void die() {
 		this.alive = false;
 		this.damageFlushCounter = 0;
-		switch (this.team) {
-			case RED: {
-				this.chassisImage = waterRedChassisImage;
-				this.gunImage = waterRedGunImage;
-				break;
-			}
-			case BLUE: {
-				this.chassisImage = waterBlueChassisImage;
-				this.gunImage = waterBlueGunImage;
-				break;
-			}
-			default:
-				assert false;
-		}
-
 	}
 
+	private BufferedImage getChassisImage() {
+
+		boolean isRed = (team == Team.RED);
+		switch (getImageType()) {
+			case NORMAL: return isRed ? redNormalChassisImage : blueChassisImage;
+			case BROKEN: return isRed ? redBrokenChassisImage : blueBrokenChassisImage;
+			case TRANSPARENT: return isRed ? redTransparentChassisImage : blueTransparentChassisImage;
+			case NONE: return null;
+			default: throw new RuntimeException("未実装のTankImageType");
+		}
+	}
+
+	private BufferedImage getGunImage() {
+		boolean isRed = (team == Team.RED);
+		switch (getImageType()) {
+			case NORMAL: return isRed ? redNormalGunImage : blueGunImage;
+			case BROKEN: return isRed ? redBrokenGunImage : blueBrokenGunImage;
+			case TRANSPARENT: return isRed ? redTransparentGunImage : blueTransparentGunImage;
+			case NONE: return null;
+			default: throw new RuntimeException("未実装のTankImageType");
+		}
+	}
+
+	private TankImageType getImageType() {
+
+		// 被弾演出
+		if (damageFlushCounter > 0 && damageFlushCounter % 10 == 0) return TankImageType.NONE;
+
+		// 死亡演出
+		if (hp <= 0) return TankImageType.TRANSPARENT;
+
+		return TankImageType.NORMAL;
+	}
 
 	// ============================= GameObjectインタフェースのメソッド =============================
 
@@ -131,11 +144,10 @@ public class Tank implements GameObject {
 
 	@Override
 	public void draw(Graphics2D graphics) {
-		if (damageFlushCounter > 0 && damageFlushCounter % 10 == 0) return;
 		// 台車の描画
 		AffineTransform chassisTransform = new AffineTransform();
 		chassisTransform.translate(translate.x, translate.y);
-		chassisTransform.translate(-this.chassisImage.getWidth(null) / 2.0, -this.chassisImage.getHeight(null) / 2.0);
+		chassisTransform.translate(-getChassisImage().getWidth(null) / 2.0, -this.chassisImage.getHeight(null) / 2.0);
 		graphics.drawImage(this.chassisImage, chassisTransform, null);
 
 		// 砲塔のの描画

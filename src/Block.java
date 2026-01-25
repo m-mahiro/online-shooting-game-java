@@ -19,8 +19,8 @@ public class Block implements GameObject {
 	private static BufferedImage normalBlockImage, transparentBlockImage;
 	static {
 		try {
-			normalBlockImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/block_grey.png")));
-			transparentBlockImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/block_water_grey.png")));
+			normalBlockImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/block_normal.png")));
+			transparentBlockImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/block_trans.png")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

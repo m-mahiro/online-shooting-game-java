@@ -10,8 +10,8 @@ public class MyClient extends JFrame implements MouseMotionListener, KeyListener
 
 	ImageIcon blueTankIcon = new ImageIcon("assets/tank_grey_chassis.png");
 	ImageIcon redTankIcon = new ImageIcon("assets/tank_grey_chassis.png");
-	ImageIcon blueTankGunIcon = new ImageIcon("assets/gun_blue.png");
-	ImageIcon redTankGunIcon = new ImageIcon("assets/gun_blue.png");
+	ImageIcon blueTankGunIcon = new ImageIcon("assets/gun_blue_normal.png");
+	ImageIcon redTankGunIcon = new ImageIcon("assets/gun_blue_normal.png");
 	ImageIcon myBlueTankIcon = new ImageIcon("assets/tank_grey_chassis.png");
 	ImageIcon myRedTankIcon = new ImageIcon("assets/tank_grey_chassis.png");
 	ImageIcon blueBulletIcon = new ImageIcon("assets/bullet_blue.png");
