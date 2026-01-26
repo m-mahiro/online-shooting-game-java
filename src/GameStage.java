@@ -9,11 +9,17 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class GameStage {
 
-	private static BufferedImage textureImage;
+	private static BufferedImage floorTexture, outerStageTexture;
+
+	private final int stageWidth = 6000;
+	private final int stageHeight = 6000;
+	private int displayWidth = 2000;
+	private int displayHeight = 1000;
 
 	static {
 		try {
-			textureImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/floor_texture.png")));
+			floorTexture = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/floor_texture.png")));
+			outerStageTexture = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/ocean_texture.png")));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -21,10 +27,51 @@ public class GameStage {
 
 	private final Map<Integer, GameObject> objects = new ConcurrentHashMap<>();
 	private int myNetworkClientID;
-	private int lastPrivateObjectID = 0;
+	private int nextPrivateObjectID = 0;
 
-	public GameStage(int myNetworkClientID) {
+	public GameStage(int myNetworkClientID, int players) {
 		this.myNetworkClientID = myNetworkClientID;
+
+		ArrayList<GameObject> objects = new ArrayList<>();
+
+		// まず最初に戦車
+		for (int i = 0; i < players; i++) {
+			Team team = (i % 2 == 0 ) ? Team.RED : Team.BLUE;
+			switch (team) {
+				case RED: {
+					Tank tank = new Tank(-2000, -2000, team);
+					objects.add(tank);
+					break;
+				}
+				case BLUE: {
+					Tank tank = new Tank(2000, 2000, team);
+					objects.add(tank);
+					break;
+
+				}
+			}
+		}
+
+		// 壁
+		int verticalWall = stageHeight / Wall.HEIGHT;
+		int horizontalWall = stageWidth / Wall.WIDTH;
+		for (int i = 0; i <= verticalWall; i++) {
+			for (int j = 0; j <= horizontalWall; j++) {
+				if (i != 0 && i != verticalWall && j != 0 && j != horizontalWall) continue;
+				double x = Wall.WIDTH * i - stageWidth / 2.0;
+				double y = Wall.HEIGHT * j - stageHeight / 2.0;
+				Point2D.Double point = new Point2D.Double(x, y);
+				Wall wall = new Wall(point);
+				objects.add(wall);
+			}
+		}
+
+		addObjects(objects);
+	}
+
+	public void setDisplayRange(int width, int height) {
+		this.displayWidth = width;
+		this.displayHeight = height;
 	}
 
 	public void addObject(GameObject gameObject) {
@@ -46,8 +93,9 @@ public class GameStage {
 
 	private int getNextPrivateObjectID() {
 		synchronized (this) {
-			lastPrivateObjectID++;
-			return lastPrivateObjectID;
+			int id = nextPrivateObjectID;
+			nextPrivateObjectID++;
+			return id;
 //			return myNetworkClientID * 100000 + lastPrivateObjectID;
 		}
 	}
@@ -55,11 +103,19 @@ public class GameStage {
 
 	public void draw(Graphics2D graphics) {
 
+		// ステージ外の描画
+		Rectangle2D outerStageAnchor = new Rectangle2D.Double(0, 0, 1000, 1000);
+		TexturePaint outerStagePaint = new TexturePaint(outerStageTexture, outerStageAnchor);
+		graphics.setPaint(outerStagePaint);
+		int fillWidth = stageWidth + displayWidth;
+		int fillHeight = stageHeight + displayHeight;
+		graphics.fillRect(-fillWidth / 2, -fillHeight / 2, fillWidth, fillHeight);
+
 		// フローリングの描画
-		Rectangle2D anchor = new Rectangle2D.Double(0, 0, textureImage.getWidth(), textureImage.getHeight());
-		TexturePaint paint = new TexturePaint(textureImage, anchor);
-		graphics.setPaint(paint);
-		graphics.fillRect(0, 0, 6000, 6000);
+		Rectangle2D floorAnchor = new Rectangle2D.Double(0, 0, floorTexture.getWidth(), floorTexture.getHeight());
+		TexturePaint floorPaint = new TexturePaint(floorTexture, floorAnchor);
+		graphics.setPaint(floorPaint);
+		graphics.fillRect(-stageWidth / 2, -stageHeight / 2, stageWidth, stageHeight);
 
 		// GameObjectの描画
 		for (RenderLayer layer : RenderLayer.values()) {
@@ -69,7 +125,6 @@ public class GameStage {
 			}
 		}
 	}
-
 
 	/**
 	 * ゲームの状態を更新する

@@ -29,7 +29,7 @@ public class NetworkManager extends Thread {
 			String initMsg = in.readLine();
 			if (initMsg != null) {
 				String[] tokens = initMsg.split(" ");
-				this.networkClientID = Integer.parseInt(tokens[0]) % 4;
+				this.networkClientID = Integer.parseInt(tokens[0]);
 
 
 				int myTankID = networkClientID % 4;
@@ -124,7 +124,8 @@ public class NetworkManager extends Thread {
 					double targetY = Double.parseDouble(tokens[3]);
 					if (gamePanel.getMyTankID() == id) return;
 					Tank tank = (Tank) gamePanel.gameStage.getObject(id);
-					tank.createBlock();
+					Block block = tank.createBlock();
+					gamePanel.gameStage.addObject(block);
 					break;
 				}
 			}

@@ -14,15 +14,14 @@ public class GamePanel extends JPanel implements Runnable {
 
 	private final AffineTransform canvasTransform = new AffineTransform();
 	private double cameraZoom = 1;
-	private double CAMERA_ZOOM_UPPER_THRESHOLD = 10;
-	private double CAMERA_ZOOM_LOWER_THRESHOLD = 0.1;
+	public double CAMERA_ZOOM_UPPER_THRESHOLD = 10;
+	public double CAMERA_ZOOM_LOWER_THRESHOLD = 0.1;
 
 	private Thread gameThread;
 	private MouseKeyboardInput input;
 
 	private NetworkManager networkManager;
 	private int networkClientID;
-	private StageGenerator stageGenerator = new StageGenerator1();
 	public GameStage gameStage;
 	private int myTankID;
 
@@ -32,6 +31,7 @@ public class GamePanel extends JPanel implements Runnable {
 		// パネルの設定
 		this.setBackground(Color.WHITE);
 		this.setDoubleBuffered(true);
+//		this.setPreferredSize(new Dimension(500, 300));
 
 		// 入力ハンドラの登録
 		this.input = new MouseKeyboardInput();
@@ -47,16 +47,15 @@ public class GamePanel extends JPanel implements Runnable {
 		// サーバに接続、クライアントIDをもらう
 		this.networkManager = new NetworkManager(this);
 		networkClientID = this.networkManager.getNetworkClientID();
-//		myTankID = this.networkManager.getMyTankID();
-		myTankID = 1;
+		myTankID = this.networkManager.getMyTankID();
+//		myTankID = 1;
 
 		// ============================= オブジェクトの配置 =============================
-		this.gameStage = new GameStage(networkClientID);
-		ArrayList<GameObject> objects = stageGenerator.generateStageObject(2, 2);
-		gameStage.addObjects(objects);
+		this.gameStage = new GameStage(networkClientID, 20);
 
 		// カメラの初期設定
 		cameraZoom = 0.5;
+		setCameraLocation(getMyTank().getX(), getMyTank().getY());
 
 		// サーバからのメッセージ受け取り開始
 		this.networkManager.start();
@@ -90,6 +89,9 @@ public class GamePanel extends JPanel implements Runnable {
 	public void startGameThread() {
 		this.gameThread = new Thread(this);
 		gameThread.start();
+		int displayWidth = (int) (this.getWidth() / CAMERA_ZOOM_LOWER_THRESHOLD);
+		int displayHeight = (int) (this.getHeight() / CAMERA_ZOOM_LOWER_THRESHOLD);
+		gameStage.setDisplayRange(displayWidth, displayHeight);
 	}
 
 	/**
@@ -102,8 +104,10 @@ public class GamePanel extends JPanel implements Runnable {
 		double drawInterval = 1000000000.0 / FPS;
 		double nextDrawTime = System.nanoTime() + drawInterval;
 
-		while (gameThread != null) {
+		int frame = 0;
 
+
+		while (gameThread != null) {
 			update();
 			repaint();
 
@@ -129,7 +133,6 @@ public class GamePanel extends JPanel implements Runnable {
 
 		try {
 			gameStage.update();
-//			System.out.println("[GamePanel] update");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -146,8 +149,8 @@ public class GamePanel extends JPanel implements Runnable {
 		Point2D.Double moveVector = input.getMoveVector(this.canvasTransform);
 		if (moveVector.x != 0 || moveVector.y != 0) {
 			myTank.move(moveVector);
-			networkManager.moveTank(myTankID, myTank.getX(), myTank.getY());
 		}
+		networkManager.moveTank(myTankID, myTank.getX(), myTank.getY());
 
 		// マウス位置へ砲塔を向ける命令を出す
 		Point2D.Double coordinate = input.getAimedCoordinate(this.canvasTransform);
@@ -163,6 +166,7 @@ public class GamePanel extends JPanel implements Runnable {
 		// 戦車のブロック作成命令を出す。
 		if (input.blockButtonPressed()) {
 			gameStage.addObject(myTank.createBlock());
+			networkManager.createBlock(myTankID, myTank.getTranslate());
 		}
 	}
 

@@ -1,5 +1,5 @@
 public interface DangerGameObject {
 
-	double getDamageAbility();
+	int getDamageAbility();
 
 }

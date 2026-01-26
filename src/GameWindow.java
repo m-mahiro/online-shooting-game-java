@@ -22,6 +22,7 @@ public class GameWindow extends JFrame {
 		GraphicsDevice device = env.getDefaultScreenDevice();
 
 		if (device.isFullScreenSupported()) {
+//		if (false) {
 			// 自分自身(this)をフルスクリーンウィンドウに設定
 			device.setFullScreenWindow(this);
 		} else {

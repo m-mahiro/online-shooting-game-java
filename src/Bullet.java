@@ -12,7 +12,7 @@ public class Bullet implements GameObject, DangerGameObject {
 	private static final double VELOCITY = 30;
 	private static final int LIFE_TIME = GamePanel.FPS * 6; // 生存フレーム数
 	public static final int OBJECT_RADIUS = 10;
-	public static final double damageAbility = 10.0;
+	public static final int damageAbility = 10;
 
 	// 状態（クライアント間の同期に必要)
 	private Tank tank;
@@ -171,7 +171,7 @@ public class Bullet implements GameObject, DangerGameObject {
 
 	// ============================= DangerGameObjectインタフェースのメソッド =============================
 
-	public double getDamageAbility() {
+	public int getDamageAbility() {
 		return this.damageAbility;
 	}
 

@@ -9,11 +9,11 @@ import java.util.Objects;
 public class Block implements GameObject {
 
 	// 特徴
-	private static final double INITIAL_HP = 40.0;
+	private static final int INITIAL_HP = 40;
 
 	// 状態（クライアント間の同期に必要)
 	private final Point2D.Double translate;
-	private double hp = INITIAL_HP;
+	private int hp = INITIAL_HP;
 
 	// 演出用（クライアント間の同期は必要ない）
 	private final int DEBRIS_LIFE_FRAME = GamePanel.FPS / 4;
@@ -43,10 +43,6 @@ public class Block implements GameObject {
 	public Block(double x, double y, boolean isBaby) {
 		this.translate = new Point2D.Double(x, y);
 		if (isBaby) babyBlockLifeFrame = BABY_BLOCK_LIFE_FRAME;
-	}
-
-	public Block(double x, double y) {
-		this.translate = new Point2D.Double(x, y);
 	}
 
 	// ============================= Blockクラス独自のメソッド =============================

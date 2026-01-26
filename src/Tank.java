@@ -11,20 +11,24 @@ public class Tank implements GameObject {
 
 	// 特徴
 	public static final double VELOCITY = 20;
-	private static final double INITIAL_HP = 100.0;
+	private static final int INITIAL_HP = 50
+			;
+	private final Point2D.Double spawnPoint;
 
 	// 状態（クライアント間の同期に必要)
 	private Team team;
 	private final Point2D.Double translate; // オブジェクトの中心の座標
 	private double gunAngle; // ラジアン
-	private double hp = INITIAL_HP;
+	private int hp = INITIAL_HP;
 
 	// 演出用（クライアント間の同期は必要ない）
 	private double tankScale = 1.0;
 	private final int DAMAGE_FLUSH_FRAME = GamePanel.FPS / 2;
 	private final int DEBRIS_LIFE_FRAME = GamePanel.FPS / 4;
+	private final int RESPAWN_FRAME = GamePanel.FPS * 3;
 	private int damageFlushFrame = 0;
 	private int debrisLifeFrame = 0;
+	private int respawnFrame = 0;
 
 	// 画像リソース
 	private static BufferedImage
@@ -84,6 +88,7 @@ public class Tank implements GameObject {
 
 	Tank(double x, double y, Team team) {
 		this.translate = new Point2D.Double(x, y);
+		this.spawnPoint = this.getTranslate();
 		this.team = team;
 	}
 
@@ -123,6 +128,14 @@ public class Tank implements GameObject {
 		this.hp = 0;
 		this.damageFlushFrame = 0;
 		this.debrisLifeFrame = DEBRIS_LIFE_FRAME;
+		this.respawnFrame = RESPAWN_FRAME;
+	}
+
+	public void respawn() {
+		if (true) return;
+		this.hp = INITIAL_HP;
+		this.tankScale = 1.0;
+		this.setTranslate(spawnPoint.x, spawnPoint.y);
 	}
 
 	public boolean isDead() {
@@ -167,6 +180,8 @@ public class Tank implements GameObject {
 
 	private Status getStatus() {
 
+		if (respawnFrame <= 0 && isDead()) return Status.NONE;
+
 		// 死亡演出
 		if (isDead()) return Status.DEBRIS;
 
@@ -185,6 +200,13 @@ public class Tank implements GameObject {
 	public void update() {
 		if (damageFlushFrame > 0) damageFlushFrame--;
 		if (debrisLifeFrame > 0) debrisLifeFrame--;
+		if (respawnFrame > 0) {
+			respawnFrame--;
+		} else {
+			if (hp == 0) {
+				respawn();
+			}
+		}
 		if (getStatus() == Status.DEBRIS) {
 			tankScale += (GamePanel.FPS / 120.0) * debrisLifeFrame / 100.0;
 		}
@@ -273,7 +295,7 @@ public class Tank implements GameObject {
 
 	@Override
 	public boolean shouldRemove() {
-		return hp <= 0 && debrisLifeFrame <= 0;
+		return false;
 	}
 
 	@Override
