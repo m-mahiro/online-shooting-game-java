@@ -31,7 +31,7 @@ public class GamePanel extends JPanel implements Runnable {
 		// パネルの設定
 		this.setBackground(Color.WHITE);
 		this.setDoubleBuffered(true);
-//		this.setPreferredSize(new Dimension(500, 300));
+		this.setPreferredSize(new Dimension(1000, 700));
 
 		// 入力ハンドラの登録
 		this.input = new MouseKeyboardInput();
@@ -48,10 +48,10 @@ public class GamePanel extends JPanel implements Runnable {
 		this.networkManager = new NetworkManager(this);
 		networkClientID = this.networkManager.getNetworkClientID();
 		myTankID = this.networkManager.getMyTankID();
-//		myTankID = 1;
+//		myTankID = 0;
 
 		// ============================= オブジェクトの配置 =============================
-		this.gameStage = new GameStage(networkClientID, 20);
+		this.gameStage = new GameStage(networkClientID, 10);
 
 		// カメラの初期設定
 		cameraZoom = 0.5;

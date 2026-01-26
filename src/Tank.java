@@ -29,6 +29,9 @@ public class Tank implements GameObject {
 	private int damageFlushFrame = 0;
 	private int debrisLifeFrame = 0;
 	private int respawnFrame = 0;
+	private boolean isBroken = false;
+
+	private SoundManager sound = new SoundManager();
 
 	// 画像リソース
 	private static BufferedImage
@@ -107,12 +110,14 @@ public class Tank implements GameObject {
 	}
 
 	public Bullet shotBullet() {
+		sound.shot();
 		double initY = translate.y + (this.getBulletReleaseRadius() + Bullet.OBJECT_RADIUS) * 1.3 * Math.sin(this.gunAngle);
 		double initX = translate.x + (this.getBulletReleaseRadius() + Bullet.OBJECT_RADIUS) * 1.3 * Math.cos(this.gunAngle);
 		return new Bullet(initX, initY, this.gunAngle, this);
 	}
 
 	public Block createBlock() {
+		sound.createBlock();
 		return new Block(this.translate.x, this.translate.y, true);
 	}
 
@@ -125,6 +130,7 @@ public class Tank implements GameObject {
 	}
 
 	public void onDie() {
+		sound.objectExplosion();
 		this.hp = 0;
 		this.damageFlushFrame = 0;
 		this.debrisLifeFrame = DEBRIS_LIFE_FRAME;
@@ -198,6 +204,10 @@ public class Tank implements GameObject {
 
 	@Override
 	public void update() {
+		if (hp < INITIAL_HP / 2 && !isBroken) {
+			sound.objectBreak();
+			isBroken = true;
+		}
 		if (damageFlushFrame > 0) damageFlushFrame--;
 		if (debrisLifeFrame > 0) debrisLifeFrame--;
 		if (respawnFrame > 0) {

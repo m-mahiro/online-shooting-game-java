@@ -35,15 +35,18 @@ public class GameStage {
 		ArrayList<GameObject> objects = new ArrayList<>();
 
 		// まず最初に戦車
-		for (int i = 0; i < players; i++) {
+		objects.add(new Tank(-2000, -2000, Team.RED));
+		for (int i = 1; i < players; i++) {
 			Team team = (i % 2 == 0 ) ? Team.RED : Team.BLUE;
 			switch (team) {
 				case RED: {
+//					Tank tank = new AutoTank(-2000, -2000, team, this);
 					Tank tank = new Tank(-2000, -2000, team);
 					objects.add(tank);
 					break;
 				}
 				case BLUE: {
+//					Tank tank = new AutoTank(2000, 2000, team, this);
 					Tank tank = new Tank(2000, 2000, team);
 					objects.add(tank);
 					break;

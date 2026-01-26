@@ -25,6 +25,8 @@ public class Bullet implements GameObject, DangerGameObject {
 	private final int DEBRIS_LIFE_FRAME = GamePanel.FPS / 4;
 	private int debrisLifeFrame = 0;
 
+	private SoundManager sound = new SoundManager();
+
 	// 画像リソース（共有）
 	private static BufferedImage blueNormalBulletImage, redNormalBulletImage, blueBulletDebris, redBulletDebris, noneImage;
 
@@ -56,6 +58,7 @@ public class Bullet implements GameObject, DangerGameObject {
 	// ============================= Bulletクラス独自のメソッド =============================
 
 	private void explode() {
+		sound.bulletExplosion();
 		this.debrisLifeFrame = DEBRIS_LIFE_FRAME;
 		this.lifeFrame = 0;
 	}

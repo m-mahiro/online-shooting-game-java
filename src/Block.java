@@ -9,7 +9,7 @@ import java.util.Objects;
 public class Block implements GameObject {
 
 	// 特徴
-	private static final int INITIAL_HP = 40;
+	private static final int INITIAL_HP = 50;
 
 	// 状態（クライアント間の同期に必要)
 	private final Point2D.Double translate;
@@ -21,6 +21,9 @@ public class Block implements GameObject {
 	private int debrisLifeFrame = 0;
 	private int babyBlockLifeFrame = 0;
 	private double blockScale = 1.0;
+	private boolean isBroken = false;
+
+	private SoundManager sound = new SoundManager();
 
 	// 画像リソース
 	private static BufferedImage normalBlockImage, brokenBlockImage, blockDebrisImage, transparentBlockImage;
@@ -48,6 +51,7 @@ public class Block implements GameObject {
 	// ============================= Blockクラス独自のメソッド =============================
 
 	public void OnDie() {
+		sound.objectExplosion();
 		this.hp = 0;
 		this.debrisLifeFrame = DEBRIS_LIFE_FRAME;
 	}
@@ -80,6 +84,10 @@ public class Block implements GameObject {
 
 	@Override
 	public void update() {
+		if (hp < INITIAL_HP / 2 && !isBroken) {
+			sound.objectBreak();
+			isBroken = true;
+		}
 		if (debrisLifeFrame > 0) debrisLifeFrame--;
 		if (babyBlockLifeFrame > 0) babyBlockLifeFrame--;
 		if (getStatus() == Status.DEBRIS) {
