@@ -104,8 +104,28 @@ public class NetworkManager extends Thread {
 					double angle = Double.parseDouble(tokens[4]);
 					if (gamePanel.getMyTankID() == id) return;
 					Tank tank = (Tank) gamePanel.gameStage.getObject(id);
-					Bullet bullet = tank.shotBullet();
+					Bullet bullet = tank.shootBullet();
 					gamePanel.gameStage.addObject(bullet);
+					break;
+				}
+				case "LAUNCH_MISSILE": {
+					int id = Integer.parseInt(tokens[1]);
+					double x = Double.parseDouble(tokens[2]);
+					double y = Double.parseDouble(tokens[3]);
+					double angle = Double.parseDouble(tokens[4]);
+					if (gamePanel.getMyTankID() == id) return;
+					Tank tank = (Tank) gamePanel.gameStage.getObject(id);
+					tank.launchMissile();
+					break;
+				}
+				case "READY_MISSILE": {
+					int id = Integer.parseInt(tokens[1]);
+					double x = Double.parseDouble(tokens[2]);
+					double y = Double.parseDouble(tokens[3]);
+					double angle = Double.parseDouble(tokens[4]);
+					if (gamePanel.getMyTankID() == id) return;
+					Tank tank = (Tank) gamePanel.gameStage.getObject(id);
+					tank.readyMissile();
 					break;
 				}
 				case "AIM": {
@@ -144,6 +164,16 @@ public class NetworkManager extends Thread {
 	public void shootGun(int id, double x, double y, double angle) {
 		if (out == null) return;
 		out.println("BULLET " + id + " " + x + " " + y + " " + angle);
+	}
+
+	public void readyMissile(int id, double x, double y, double angle) {
+		if (out == null) return;
+		out.println("READY_MISSILE " + id + " " + x + " " + y + " " + angle);
+	}
+
+	public void launchMissile(int id, double x, double y, double angle) {
+		if (out == null) return;
+		out.println("LAUNCH_MISSILE " + id + " " + x + " " + y + " " + angle);
 	}
 
 	public void aimAt(int id, double targetX, double targetY) {

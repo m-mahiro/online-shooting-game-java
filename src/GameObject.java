@@ -22,4 +22,6 @@ public interface GameObject {
 	Point2D.Double getPosition();
 
 	void setPosition(double x, double y);
+
+	double getHP();
 }

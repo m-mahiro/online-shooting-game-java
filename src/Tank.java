@@ -1,3 +1,5 @@
+import com.sun.istack.internal.Nullable;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -18,6 +20,7 @@ public class Tank implements GameObject {
 	private final Point2D.Double position; // オブジェクトの中心の座標
 	private double gunAngle; // ラジアン
 	private int hp = INITIAL_HP;
+	@Nullable private Missile holdingMissile;
 
 	// 演出用定数
 	private final static int DAMAGE_FLUSH_FRAME = (int) (GamePanel.FPS * 1.5);
@@ -31,10 +34,6 @@ public class Tank implements GameObject {
 	private int respawnLagFrame = 0;
 	private int respawnAnimateFrame = 0;
 	private boolean hadBroken = false;
-
-	// 計算時間削減用のキャッシュ（1フレームの間保持）
-//	private double objectScaleCache; // getObjectScale()から与えられる値が正
-//	private boolean objectScaleCacheIsValid = false;
 
 	private SoundManager sound = new SoundManager();
 
@@ -93,10 +92,12 @@ public class Tank implements GameObject {
 	// ============================= Tankクラス独自のメソッド =============================
 
 	public void aimAt(Point2D.Double coordinate) {
+		if (holdingMissile != null) return;
 		this.gunAngle = Math.atan2(coordinate.y - this.position.y, coordinate.x - this.position.x);
 	}
 
 	public void move(Point2D.Double vector) {
+		if (holdingMissile != null) return;
 		Point2D.Double p = new Point2D.Double(vector.x, vector.y);
 		p = Util.normalize(p);
 		p = Util.multiple(p, this.VELOCITY);
@@ -104,11 +105,21 @@ public class Tank implements GameObject {
 		this.position.setLocation(p);
 	}
 
-	public Bullet shotBullet() {
-		sound.shot();
-		double initY = position.y + (this.getBulletReleaseRadius() + Bullet.OBJECT_RADIUS) * 1.3 * Math.sin(this.gunAngle);
-		double initX = position.x + (this.getBulletReleaseRadius() + Bullet.OBJECT_RADIUS) * 1.3 * Math.cos(this.gunAngle);
-		return new Bullet(initX, initY, this.gunAngle, this);
+	public Bullet shootBullet() {
+		sound.shootGun();
+		return new Bullet(this.getPosition(), this.gunAngle, this);
+	}
+
+	public Missile readyMissile() {
+		Missile missile = new Missile(this.getPosition(), this.gunAngle, this);
+		this.holdingMissile = missile;
+		return missile;
+	}
+
+	public void launchMissile() {
+		if (holdingMissile == null) return;
+		this.holdingMissile.launch();
+		this.holdingMissile = null;
 	}
 
 	public Block createBlock() {
@@ -145,21 +156,14 @@ public class Tank implements GameObject {
 	}
 
 	private double getObjectScale() {
-//		if (objectScaleCacheIsValid) {
-//			return objectScaleCache;
-//		}
-//		objectScaleCacheIsValid = true;
 		switch (getStatus()) {
 			case RESPAWNING:
-//				return objectScaleCache = 1.0 - respawnAnimateFrame / (double)RESPAWN_ANIMATE_FRAME;
 				return 1.0 - respawnAnimateFrame / (double) RESPAWN_ANIMATE_FRAME;
 			case NORMAL:
 			case BROKEN:
 			case NONE:
-//				return objectScaleCache = 1.0;
 				return 1.0;
 			case DEBRIS:
-//				return objectScaleCache = (GamePanel.FPS / 240.0) * Math.pow(debrisLifeFrame, 2) / 100.0;
 				return (GamePanel.FPS / 240.0) * Math.pow(debrisLifeFrame, 2) / 100.0;
 			default:
 				throw new RuntimeException();
@@ -229,7 +233,6 @@ public class Tank implements GameObject {
 	@Override
 	public void update() {
 
-//		objectScaleCacheIsValid = false;
 
 		if (getStatus() == Status.BROKEN && !hadBroken) {
 			sound.objectBreak();
@@ -378,6 +381,11 @@ public class Tank implements GameObject {
 	@Override
 	public void setPosition(double x, double y) {
 		this.position.setLocation(x, y);
+	}
+
+	@Override
+	public double getHP() {
+		return this.hp;
 	}
 
 	// ============================= ゲッター・セッター =============================

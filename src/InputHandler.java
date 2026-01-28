@@ -7,9 +7,17 @@ public interface InputHandler {
 
 	Point2D.Double getAimedCoordinate(AffineTransform canvasTransform);
 
-	boolean gunButtonPressed();
+	boolean shootBullet();
 
-	boolean blockButtonPressed();
+	boolean startEnergyCharge();
+
+	boolean cancelEnergyCharge();
+
+	boolean launchMissile();
+
+	boolean createBlock();
 
 	int getZoomAmount();
+
+	void onFrameUpdate();
 }

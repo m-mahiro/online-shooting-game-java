@@ -63,7 +63,7 @@ public class SoundManager {
 		play(objectExplosion);
 	}
 
-	public void shot() {
+	public void shootGun() {
 		play(shot);
 	}
 

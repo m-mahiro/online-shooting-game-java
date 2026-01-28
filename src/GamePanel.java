@@ -17,7 +17,7 @@ public class GamePanel extends JPanel implements Runnable {
 	public double CAMERA_ZOOM_LOWER_THRESHOLD = 0.1;
 
 	private Thread gameThread;
-	private MouseKeyboardInput input;
+	private InputHandler input;
 
 	private NetworkManager networkManager;
 	private int networkClientID;
@@ -33,15 +33,7 @@ public class GamePanel extends JPanel implements Runnable {
 		this.setPreferredSize(new Dimension(1000, 700));
 
 		// 入力ハンドラの登録
-		this.input = new MouseKeyboardInput();
-		this.addKeyListener(input);
-		this.addMouseMotionListener(input);
-		this.addMouseListener(input);
-		this.addMouseWheelListener(input);
-		this.setFocusable(true);
-		this.requestFocusInWindow();
-		setFocusable(true);
-		requestFocusInWindow();
+		this.input = new MouseKeyboardInput(this);
 
 		// サーバに接続、クライアントIDをもらう
 		this.networkManager = new NetworkManager(this);
@@ -137,6 +129,8 @@ public class GamePanel extends JPanel implements Runnable {
 		}
 
 		// ============================= 自分の操作 =============================
+		input.onFrameUpdate();
+
 		Tank myTank = getMyTank();
 		if (myTank.isDead()) return;
 
@@ -157,13 +151,29 @@ public class GamePanel extends JPanel implements Runnable {
 		networkManager.aimAt(myTankID, coordinate.x, coordinate.y);
 
 		// 戦車に発砲命令を出す。
-		if (input.gunButtonPressed()) {
-			gameStage.addObject(myTank.shotBullet());
+		if (input.shootBullet()) {
+			Bullet bullet = myTank.shootBullet();
+			gameStage.addObject(bullet);
 			networkManager.shootGun(myTankID, myTank.getX(), myTank.getY(), myTank.getGunAngle());
 		}
 
+		// 戦車にミサイル準備命令を出す
+		if (input.startEnergyCharge()) {
+			Missile missile = myTank.readyMissile();
+			gameStage.addObject(missile);
+		}
+
+		if (input.cancelEnergyCharge()) {
+			System.out.println("チャージキャンセル!");
+		}
+
+		if (input.launchMissile()) {
+			myTank.launchMissile();
+			System.out.println("ミサイル発射！");
+		}
+
 		// 戦車のブロック作成命令を出す。
-		if (input.blockButtonPressed()) {
+		if (input.createBlock()) {
 			gameStage.addObject(myTank.createBlock());
 			networkManager.createBlock(myTankID, myTank.getPosition());
 		}

@@ -11,14 +11,36 @@ public class MouseKeyboardInput
 			MouseListener,
 			MouseWheelListener {
 
+
+	public MouseKeyboardInput(GamePanel gamePanel) {
+		gamePanel.addKeyListener(this);
+		gamePanel.addMouseMotionListener(this);
+		gamePanel.addMouseListener(this);
+		gamePanel.addMouseWheelListener(this);
+		gamePanel.setFocusable(true);
+		gamePanel.requestFocusInWindow();
+		gamePanel.setFocusable(true);
+		gamePanel.requestFocusInWindow();
+	}
+
+	// 定数
+	private final int CHARGE_START_COUNT = (int) (GamePanel.FPS * 0.5);
+
 	// キーが押されているかどうかのフラグ
 	private boolean up, down, left, right;
 	private boolean leftClicked, rightClicked;
 	// マウスの現在位置
 	private int mouseX, mouseY;
 
-	private int scrollAmount;
+	private int scrollAmount = 0;
 
+	private boolean canShootBullet = true;
+
+	private int continuousLeftPressedCount = 0;
+	private ChargeStatus chargeStatus = ChargeStatus.STAND_BY;
+	private enum ChargeStatus {
+		STAND_BY, IS_CHARGING, IS_READY
+	}
 
 	// ============================= InputHandlerの実装 =============================
 
@@ -53,14 +75,47 @@ public class MouseKeyboardInput
 	}
 
 	@Override
-	public boolean gunButtonPressed() {
+	public boolean shootBullet() {
 		boolean pressed = this.leftClicked;
-		this.leftClicked = false;
-		return pressed;
+		boolean result = canShootBullet && pressed;
+		canShootBullet = false;
+		return result;
 	}
 
 	@Override
-	public boolean blockButtonPressed() {
+	public boolean startEnergyCharge() {
+		if (chargeStatus == ChargeStatus.STAND_BY && continuousLeftPressedCount > CHARGE_START_COUNT) {
+			this.chargeStatus = ChargeStatus.IS_CHARGING;
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean cancelEnergyCharge() {
+		if (chargeStatus == ChargeStatus.IS_CHARGING) {
+			boolean result = !leftClicked;
+			chargeStatus = ChargeStatus.STAND_BY;
+			return result;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean launchMissile() {
+		if (chargeStatus == ChargeStatus.IS_READY) {
+			if (!leftClicked) {
+				chargeStatus = ChargeStatus.STAND_BY;
+				return true;
+			} else {
+				return false;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public boolean createBlock() {
 		boolean pressed = this.rightClicked;
 		this.rightClicked = false;
 		return pressed;
@@ -71,6 +126,16 @@ public class MouseKeyboardInput
 		int zoomAmount = this.scrollAmount;
 		this.scrollAmount = 0;
 		return zoomAmount;
+	}
+
+	//　hack: フレームが更新されてから、他のどのInputHandlerメソッドよりも先に呼ばれる必要がある。
+	@Override
+	public void onFrameUpdate() {
+		if (leftClicked) {
+			continuousLeftPressedCount++;
+		} else {
+			continuousLeftPressedCount = 0;
+		}
 	}
 
 
@@ -127,6 +192,7 @@ public class MouseKeyboardInput
 		switch (button) {
 			case MouseEvent.BUTTON1:
 				this.leftClicked = true;
+				canShootBullet = true;
 				break;
 			case MouseEvent.BUTTON3:
 				this.rightClicked = true;
@@ -137,6 +203,8 @@ public class MouseKeyboardInput
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		this.leftClicked = false;
+		canShootBullet = true;
+		continuousLeftPressedCount = 0;
 	}
 
 	@Override

@@ -229,4 +229,9 @@ public class Base implements GameObject {
 	public void setPosition(double x, double y) {
 		this.position.setLocation(x, y);
 	}
+
+	@Override
+	public double getHP() {
+		return hp;
+	}
 }

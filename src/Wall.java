@@ -84,4 +84,9 @@ public class Wall implements GameObject {
 		this.position.x = x;
 		this.position.y = y;
 	}
+
+	@Override
+	public double getHP() {
+		return Double.MAX_VALUE;
+	}
 }

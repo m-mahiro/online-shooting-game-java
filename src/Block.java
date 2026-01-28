@@ -172,6 +172,11 @@ public class Block implements GameObject {
 		this.position.setLocation(x, y);
 	}
 
+	@Override
+	public double getHP() {
+		return hp;
+	}
+
 	// ============================= ゲッターセッター =============================
 	public double getWidth() {
 		return getImage().getWidth() * objectScale;
