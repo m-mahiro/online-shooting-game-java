@@ -34,26 +34,33 @@ public class GameStage {
 
 		ArrayList<GameObject> objects = new ArrayList<>();
 
+		Base redBase = new Base(-2000, -2000, Team.RED);
+		Base blueBase = new Base(2000, 2000, Team.BLUE);
+
 		// まず最初に戦車
-		objects.add(new Tank(-2000, -2000, Team.RED));
+		objects.add(new Tank(redBase));
 		for (int i = 1; i < players; i++) {
 			Team team = (i % 2 == 0 ) ? Team.RED : Team.BLUE;
 			switch (team) {
 				case RED: {
-//					Tank tank = new AutoTank(-2000, -2000, team, this);
-					Tank tank = new Tank(-2000, -2000, team);
+//					Tank tank = new AutoTank(redBase, this);
+					Tank tank = new Tank(redBase);
 					objects.add(tank);
 					break;
 				}
 				case BLUE: {
-//					Tank tank = new AutoTank(2000, 2000, team, this);
-					Tank tank = new Tank(2000, 2000, team);
+//					Tank tank = new AutoTank(blueBase, this);
+					Tank tank = new Tank(blueBase);
 					objects.add(tank);
 					break;
 
 				}
 			}
 		}
+
+		objects.add(redBase);
+		objects.add(blueBase);
+
 
 		// 壁
 		int verticalWall = stageHeight / Wall.HEIGHT;
@@ -147,11 +154,12 @@ public class GameStage {
 			for (int j = i + 1; j < objectList.size(); j++) {
 				GameObject o1 = objectList.get(i);
 				GameObject o2 = objectList.get(j);
-				Shape shape1 = o1.getShape();
-				Shape shape2 = o2.getShape();
 
 				if (o1 == o2) continue;
 				if (!o1.isTangible() || !o2.isTangible()) continue;
+
+				Shape shape1 = o1.getShape();
+				Shape shape2 = o2.getShape();
 
 				boolean isCollided = false;
 

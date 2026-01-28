@@ -12,21 +12,26 @@ public class Block implements GameObject {
 	private static final int INITIAL_HP = 50;
 
 	// 状態（クライアント間の同期に必要)
-	private final Point2D.Double translate;
+	private final Point2D.Double position;
 	private int hp = INITIAL_HP;
 
-	// 演出用（クライアント間の同期は必要ない）
-	private final int DEBRIS_LIFE_FRAME = GamePanel.FPS / 4;
-	private final int BABY_BLOCK_LIFE_FRAME = GamePanel.FPS;
+	// 演出用定数
+	private static final int DAMAGE_FLUSH_FRAME = (int)(GamePanel.FPS * 1.5);
+	private static final int DEBRIS_LIFE_FRAME = GamePanel.FPS / 4;
+	private static final int BABY_BLOCK_LIFE_FRAME = GamePanel.FPS;
+
+	// 演出用変数（クライアント間の同期は必要ない）
 	private int debrisLifeFrame = 0;
+	private int damageFlushFrame = 0;
 	private int babyBlockLifeFrame = 0;
-	private double blockScale = 1.0;
+	private double objectScale = 1.0;
 	private boolean isBroken = false;
 
 	private SoundManager sound = new SoundManager();
 
 	// 画像リソース
 	private static BufferedImage normalBlockImage, brokenBlockImage, blockDebrisImage, transparentBlockImage;
+	private static BufferedImage noneImage;
 
 	private enum Status {
 		BABY, NORMAL, BROKEN, DEBRIS, SHOULD_REMOVE
@@ -38,13 +43,14 @@ public class Block implements GameObject {
 			brokenBlockImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/block_broken.png")));
 			blockDebrisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/block_debris.png")));
 			transparentBlockImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/block_trans.png")));
+			noneImage = ImageIO.read(Objects.requireNonNull(Block.class.getResource("assets/none_image.png")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
 	public Block(double x, double y, boolean isBaby) {
-		this.translate = new Point2D.Double(x, y);
+		this.position = new Point2D.Double(x, y);
 		if (isBaby) babyBlockLifeFrame = BABY_BLOCK_LIFE_FRAME;
 	}
 
@@ -56,11 +62,20 @@ public class Block implements GameObject {
 		this.debrisLifeFrame = DEBRIS_LIFE_FRAME;
 	}
 
-	private BufferedImage getBlockImage() {
+	public void damage(int damage) {
+		damageFlushFrame = DAMAGE_FLUSH_FRAME;
+		hp -= damage;
+		if (hp <= 0) this.OnDie();
+	}
+
+	private BufferedImage getImage() {
+		boolean isFlushing = (damageFlushFrame > 0) && damageFlushFrame % 20 == 0;
 		switch (getStatus()) {
 			case NORMAL:
+				if (isFlushing) return noneImage;
 				return normalBlockImage;
 			case BROKEN:
+				if (isFlushing) return noneImage;
 				return brokenBlockImage;
 			case BABY:
 				return transparentBlockImage;
@@ -90,19 +105,22 @@ public class Block implements GameObject {
 		}
 		if (debrisLifeFrame > 0) debrisLifeFrame--;
 		if (babyBlockLifeFrame > 0) babyBlockLifeFrame--;
+
+		if (damageFlushFrame > 0) damageFlushFrame--;
+
 		if (getStatus() == Status.DEBRIS) {
-			blockScale += (GamePanel.FPS / 60.0) * debrisLifeFrame / 100.0;
+			objectScale += (GamePanel.FPS / 60.0) * debrisLifeFrame / 100.0;
 		}
 	}
 
 	@Override
 	public void draw(Graphics2D graphics) {
-		BufferedImage image = getBlockImage();
+		BufferedImage image = getImage();
 		AffineTransform trans = new AffineTransform();
-		trans.translate(this.translate.x, this.translate.y);
-		trans.scale(blockScale, blockScale);
+		trans.translate(this.position.x, this.position.y);
+		trans.scale(objectScale, objectScale);
 		trans.translate(-image.getWidth() / 2.0, -image.getHeight() / 2.0);
-		graphics.drawImage(getBlockImage(), trans, null);
+		graphics.drawImage(getImage(), trans, null);
 	}
 
 	@Override
@@ -111,8 +129,7 @@ public class Block implements GameObject {
 
 	@Override
 	public void onHitBy(DangerGameObject other) {
-		hp -= other.getDamageAbility();
-		if (hp <= 0) this.OnDie();
+		damage(other.getDamageAbility());
 	}
 
 	@Override
@@ -142,25 +159,25 @@ public class Block implements GameObject {
 
 	@Override
 	public Shape getShape() {
-		return new Rectangle(this.translate, this.getWidth(), this.getHeight());
+		return new Rectangle(this.position, this.getWidth(), this.getHeight());
 	}
 
 	@Override
-	public Point2D.Double getTranslate() {
-		return (Point2D.Double) this.translate.clone();
+	public Point2D.Double getPosition() {
+		return (Point2D.Double) this.position.clone();
 	}
 
 	@Override
-	public void setTranslate(double x, double y) {
-		this.translate.setLocation(x, y);
+	public void setPosition(double x, double y) {
+		this.position.setLocation(x, y);
 	}
 
 	// ============================= ゲッターセッター =============================
 	public double getWidth() {
-		return getBlockImage().getWidth() * blockScale;
+		return getImage().getWidth() * objectScale;
 	}
 
 	public double getHeight() {
-		return getBlockImage().getHeight() * blockScale;
+		return getImage().getHeight() * objectScale;
 	}
 }

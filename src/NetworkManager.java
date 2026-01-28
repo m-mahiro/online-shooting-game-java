@@ -94,7 +94,7 @@ public class NetworkManager extends Thread {
 					double x = Double.parseDouble(tokens[2]);
 					double y = Double.parseDouble(tokens[3]);
 					if (gamePanel.getMyTankID() == id) return;
-					gamePanel.gameStage.getObject(id).setTranslate(x, y);
+					gamePanel.gameStage.getObject(id).setPosition(x, y);
 					break;
 				}
 				case "BULLET": {

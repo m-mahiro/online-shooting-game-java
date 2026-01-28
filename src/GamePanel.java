@@ -5,7 +5,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
-import java.util.*;
 
 public class GamePanel extends JPanel implements Runnable {
 
@@ -166,7 +165,7 @@ public class GamePanel extends JPanel implements Runnable {
 		// 戦車のブロック作成命令を出す。
 		if (input.blockButtonPressed()) {
 			gameStage.addObject(myTank.createBlock());
-			networkManager.createBlock(myTankID, myTank.getTranslate());
+			networkManager.createBlock(myTankID, myTank.getPosition());
 		}
 	}
 

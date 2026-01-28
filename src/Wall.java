@@ -2,7 +2,6 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
 
@@ -13,7 +12,7 @@ public class Wall implements GameObject {
 	public static final int HEIGHT = 100;
 
 	// 状態（クライアント間の同期に必要)
-	private final Point2D.Double translate;
+	private final Point2D.Double position;
 
 	// 画像リソース
 	private static final Image wallImage;
@@ -27,7 +26,7 @@ public class Wall implements GameObject {
 	}
 
 	public Wall(Point2D.Double coordinate) {
-		this.translate = (Point2D.Double) coordinate.clone();
+		this.position = (Point2D.Double) coordinate.clone();
 	}
 
 	// ============================= GameObjectインタフェースのメソッド =============================
@@ -40,8 +39,8 @@ public class Wall implements GameObject {
 	@Override
 	public void draw(Graphics2D graphics) {
 		AffineTransform trans = new AffineTransform();
-		trans.translate(this.translate.x, this.translate.y);
-		trans.translate(-WIDTH, -HEIGHT);
+		trans.translate(this.position.x, this.position.y);
+		trans.translate(-WIDTH / 2.0, -HEIGHT / 2.0);
 		graphics.drawImage(wallImage, trans, null);
 	}
 
@@ -72,17 +71,17 @@ public class Wall implements GameObject {
 
 	@Override
 	public Shape getShape() {
-		return new Rectangle(this.translate, WIDTH, HEIGHT);
+		return new Rectangle(this.position, WIDTH, HEIGHT);
 	}
 
 	@Override
-	public Point2D.Double getTranslate() {
-		return (Point2D.Double) this.translate.clone();
+	public Point2D.Double getPosition() {
+		return (Point2D.Double) this.position.clone();
 	}
 
 	@Override
-	public void setTranslate(double x, double y) {
-		this.translate.x = x;
-		this.translate.y = y;
+	public void setPosition(double x, double y) {
+		this.position.x = x;
+		this.position.y = y;
 	}
 }

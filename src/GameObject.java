@@ -19,7 +19,7 @@ public interface GameObject {
 
 	Shape getShape();
 
-	Point2D.Double getTranslate();
+	Point2D.Double getPosition();
 
-	void setTranslate(double x, double y);
+	void setPosition(double x, double y);
 }

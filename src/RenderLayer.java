@@ -1,6 +1,6 @@
 public enum RenderLayer {
 	FLOUR,
 	DEBRIS,
-	BULLET,
+	PROJECTILE,
 	TANGIBLE_OBJECT,
 }

@@ -11,12 +11,12 @@ public class Bullet implements GameObject, DangerGameObject {
 	// 特徴
 	private static final double VELOCITY = 30;
 	private static final int LIFE_TIME = GamePanel.FPS * 6; // 生存フレーム数
-	public static final int OBJECT_RADIUS = 10;
+	public static final int OBJECT_RADIUS = 5;
 	public static final int damageAbility = 10;
 
 	// 状態（クライアント間の同期に必要)
 	private Tank tank;
-	private final Point2D.Double translate = new Point2D.Double(0, 0); // 弾丸オブジェクトの中心座標
+	private final Point2D.Double position; // 弾丸オブジェクトの中心座標
 	private final double dx, dy;
 	private int lifeFrame = LIFE_TIME;
 
@@ -47,7 +47,7 @@ public class Bullet implements GameObject, DangerGameObject {
 	}
 
 	public Bullet(double x, double y, double angle, Tank tank) {
-		this.translate.setLocation(x, y);
+		this.position = new Point2D.Double(x, y);
 		this.tank = tank;
 
 		// 角度から速度ベクトルを計算
@@ -99,8 +99,8 @@ public class Bullet implements GameObject, DangerGameObject {
 		}
 		switch (getStatus()) {
 			case NORMAL: {
-				this.translate.x += dx;
-				this.translate.y += dy;
+				this.position.x += dx;
+				this.position.y += dy;
 				break;
 			}
 			case DEBRIS: {
@@ -115,7 +115,7 @@ public class Bullet implements GameObject, DangerGameObject {
 	public void draw(Graphics2D graphics) {
 		BufferedImage image = getImage();
 		AffineTransform trans = new AffineTransform();
-		trans.translate(this.translate.x, this.translate.y);
+		trans.translate(this.position.x, this.position.y);
 		trans.rotate(Math.atan2(dy, dx));
 		trans.scale(renderScale, renderScale);
 		trans.translate(-image.getWidth() / 2.0, -image.getHeight() / 2.0);
@@ -147,7 +147,7 @@ public class Bullet implements GameObject, DangerGameObject {
 	public RenderLayer getRenderLayer() {
 		switch (getStatus()) {
 			case NORMAL:
-				return RenderLayer.BULLET;
+				return RenderLayer.PROJECTILE;
 			case DEBRIS:
 			case SHOULD_REMOVE:
 				return RenderLayer.DEBRIS;
@@ -158,17 +158,17 @@ public class Bullet implements GameObject, DangerGameObject {
 
 	@Override
 	public Shape getShape() {
-		return new Circle(this.translate, this.getCollisionRadius());
+		return new Circle(this.position, this.getCollisionRadius());
 	}
 
 	@Override
-	public Point2D.Double getTranslate() {
-		return (Point2D.Double) this.translate.clone();
+	public Point2D.Double getPosition() {
+		return (Point2D.Double) this.position.clone();
 	}
 
 	@Override
-	public void setTranslate(double x, double y) {
-		this.translate.setLocation(x, y);
+	public void setPosition(double x, double y) {
+		this.position.setLocation(x, y);
 	}
 
 

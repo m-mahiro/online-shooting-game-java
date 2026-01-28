@@ -10,8 +10,8 @@ public class GameWindow extends JFrame {
 
 		// 1. ウィンドウの枠（タイトルバーなど）を削除
 		// これをしないとフルスクリーン時に枠が残ってしまいます
-//		setUndecorated(true);
-//		setResizable(false);
+		setUndecorated(true);
+		setResizable(false);
 
 		// GamePanelを作成してウィンドウに追加
 		GamePanel gamePanel = new GamePanel();
@@ -21,8 +21,8 @@ public class GameWindow extends JFrame {
 		GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
 		GraphicsDevice device = env.getDefaultScreenDevice();
 
-//		if (device.isFullScreenSupported()) {
-		if (false) {
+		if (device.isFullScreenSupported()) {
+//		if (false) {
 			// 自分自身(this)をフルスクリーンウィンドウに設定
 			device.setFullScreenWindow(this);
 		} else {

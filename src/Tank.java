@@ -9,50 +9,46 @@ import java.util.Random;
 
 public class Tank implements GameObject {
 
-	// 特徴
+	// 特徴（定数）
 	public static final double VELOCITY = 20;
-	private static final int INITIAL_HP = 50
-			;
-	private final Point2D.Double spawnPoint;
+	private static final int INITIAL_HP = 50;
 
 	// 状態（クライアント間の同期に必要)
-	private Team team;
-	private final Point2D.Double translate; // オブジェクトの中心の座標
+	private final Base base;
+	private final Point2D.Double position; // オブジェクトの中心の座標
 	private double gunAngle; // ラジアン
 	private int hp = INITIAL_HP;
 
-	// 演出用（クライアント間の同期は必要ない）
-	private double tankScale = 1.0;
-	private final int DAMAGE_FLUSH_FRAME = GamePanel.FPS / 2;
-	private final int DEBRIS_LIFE_FRAME = GamePanel.FPS / 4;
-	private final int RESPAWN_FRAME = GamePanel.FPS * 3;
+	// 演出用定数
+	private final static int DAMAGE_FLUSH_FRAME = (int) (GamePanel.FPS * 1.5);
+	private final static int DEBRIS_LIFE_FRAME = (int) (GamePanel.FPS * 0.25);
+	private final static int RESPAWN_LAG_FRAME = GamePanel.FPS * 3;
+	private final static int RESPAWN_ANIMATE_FRAME = GamePanel.FPS;
+
+	// 演出用変数（クライアント間の同期は必要ない）
 	private int damageFlushFrame = 0;
 	private int debrisLifeFrame = 0;
-	private int respawnFrame = 0;
-	private boolean isBroken = false;
+	private int respawnLagFrame = 0;
+	private int respawnAnimateFrame = 0;
+	private boolean hadBroken = false;
+
+	// 計算時間削減用のキャッシュ（1フレームの間保持）
+//	private double objectScaleCache; // getObjectScale()から与えられる値が正
+//	private boolean objectScaleCacheIsValid = false;
 
 	private SoundManager sound = new SoundManager();
 
 	// 画像リソース
-	private static BufferedImage
-			redNormalChassisImage,
-			redNormalGunImage,
-			redBrokenChassisImage,
-			redBrokenGunImage,
-			redTransparentChassisImage,
-			redTransparentGunImage,
-			redTankDebris,
-			blueNormalChassisImage,
-			blueNormalGunImage,
-			blueBrokenChassisImage,
-			blueBrokenGunImage,
-			blueTransparentChassisImage,
-			blueTransparentGunImage,
-			blueTankDebris,
-			noneImage;
+	private static BufferedImage redNormalChassisImage, redBrokenChassisImage, redTransparentChassisImage;
+	private static BufferedImage blueNormalChassisImage, blueBrokenChassisImage, blueTransparentChassisImage;
+	private static BufferedImage redNormalGunImage, redBrokenGunImage, redTransparentGunImage;
+	private static BufferedImage blueNormalGunImage, blueBrokenGunImage, blueTransparentGunImage;
+	private static BufferedImage redTankDebris;
+	private static BufferedImage blueTankDebris;
+	private static BufferedImage noneImage;
 
 	private enum Status {
-		NORMAL, BROKEN, DEBRIS, TRANSPARENT, NONE
+		RESPAWNING, NORMAL, BROKEN, DEBRIS, NONE
 	}
 
 	static {
@@ -89,39 +85,38 @@ public class Tank implements GameObject {
 		}
 	}
 
-	Tank(double x, double y, Team team) {
-		this.translate = new Point2D.Double(x, y);
-		this.spawnPoint = this.getTranslate();
-		this.team = team;
+	Tank(Base base) {
+		this.position = base.getPosition();
+		this.base = base;
 	}
 
 	// ============================= Tankクラス独自のメソッド =============================
 
 	public void aimAt(Point2D.Double coordinate) {
-		this.gunAngle = Math.atan2(coordinate.y - this.translate.y, coordinate.x - this.translate.x);
+		this.gunAngle = Math.atan2(coordinate.y - this.position.y, coordinate.x - this.position.x);
 	}
 
 	public void move(Point2D.Double vector) {
 		Point2D.Double p = new Point2D.Double(vector.x, vector.y);
 		p = Util.normalize(p);
 		p = Util.multiple(p, this.VELOCITY);
-		p = Util.addition(this.translate, p);
-		this.translate.setLocation(p);
+		p = Util.addition(this.position, p);
+		this.position.setLocation(p);
 	}
 
 	public Bullet shotBullet() {
 		sound.shot();
-		double initY = translate.y + (this.getBulletReleaseRadius() + Bullet.OBJECT_RADIUS) * 1.3 * Math.sin(this.gunAngle);
-		double initX = translate.x + (this.getBulletReleaseRadius() + Bullet.OBJECT_RADIUS) * 1.3 * Math.cos(this.gunAngle);
+		double initY = position.y + (this.getBulletReleaseRadius() + Bullet.OBJECT_RADIUS) * 1.3 * Math.sin(this.gunAngle);
+		double initX = position.x + (this.getBulletReleaseRadius() + Bullet.OBJECT_RADIUS) * 1.3 * Math.cos(this.gunAngle);
 		return new Bullet(initX, initY, this.gunAngle, this);
 	}
 
 	public Block createBlock() {
 		sound.createBlock();
-		return new Block(this.translate.x, this.translate.y, true);
+		return new Block(this.position.x, this.position.y, true);
 	}
 
-	public void damage(double damage) {
+	public void damage(int damage) {
 		this.damageFlushFrame = DAMAGE_FLUSH_FRAME;
 		this.hp -= damage;
 		if (this.hp <= 0) {
@@ -134,30 +129,56 @@ public class Tank implements GameObject {
 		this.hp = 0;
 		this.damageFlushFrame = 0;
 		this.debrisLifeFrame = DEBRIS_LIFE_FRAME;
-		this.respawnFrame = RESPAWN_FRAME;
+		this.respawnLagFrame = RESPAWN_LAG_FRAME;
 	}
 
 	public void respawn() {
-		if (true) return;
+		if (base.isDebris()) return;
 		this.hp = INITIAL_HP;
-		this.tankScale = 1.0;
-		this.setTranslate(spawnPoint.x, spawnPoint.y);
+		this.respawnAnimateFrame = RESPAWN_ANIMATE_FRAME;
+		Point2D.Double spawnPoint = base.getPosition();
+		this.setPosition(spawnPoint.x, spawnPoint.y);
 	}
 
 	public boolean isDead() {
 		return this.hp <= 0;
 	}
 
+	private double getObjectScale() {
+//		if (objectScaleCacheIsValid) {
+//			return objectScaleCache;
+//		}
+//		objectScaleCacheIsValid = true;
+		switch (getStatus()) {
+			case RESPAWNING:
+//				return objectScaleCache = 1.0 - respawnAnimateFrame / (double)RESPAWN_ANIMATE_FRAME;
+				return 1.0 - respawnAnimateFrame / (double) RESPAWN_ANIMATE_FRAME;
+			case NORMAL:
+			case BROKEN:
+			case NONE:
+//				return objectScaleCache = 1.0;
+				return 1.0;
+			case DEBRIS:
+//				return objectScaleCache = (GamePanel.FPS / 240.0) * Math.pow(debrisLifeFrame, 2) / 100.0;
+				return (GamePanel.FPS / 240.0) * Math.pow(debrisLifeFrame, 2) / 100.0;
+			default:
+				throw new RuntimeException();
+		}
+	}
+
 	private BufferedImage getChassisImage() {
 
-		boolean isRed = (team == Team.RED);
+		boolean isRed = (base.getTeam() == Team.RED);
+		boolean isFlushing = (damageFlushFrame > 0) && damageFlushFrame % 20 == 0;
 		switch (getStatus()) {
+			case RESPAWNING: return isRed ? redTransparentChassisImage : blueTransparentChassisImage;
+//			case RESPAWNING: return isRed ? redNormalChassisImage : blueNormalChassisImage;
 			case NORMAL:
+				if (isFlushing) return noneImage;
 				return isRed ? redNormalChassisImage : blueNormalChassisImage;
 			case BROKEN:
+				if (isFlushing) return noneImage;
 				return isRed ? redBrokenChassisImage : blueBrokenChassisImage;
-			case TRANSPARENT:
-				return isRed ? redTransparentChassisImage : blueTransparentChassisImage;
 			case DEBRIS:
 				return isRed ? redTankDebris : blueTankDebris;
 			case NONE:
@@ -168,14 +189,17 @@ public class Tank implements GameObject {
 	}
 
 	private BufferedImage getGunImage() {
-		boolean isRed = (team == Team.RED);
+		boolean isRed = (base.getTeam() == Team.RED);
+		boolean isFlushing = (damageFlushFrame > 0) && damageFlushFrame % 20 == 0;
 		switch (getStatus()) {
+			case RESPAWNING: return isRed ? redTransparentGunImage : blueTransparentGunImage;
+//			case RESPAWNING: return isRed ? redNormalGunImage : blueNormalGunImage;
 			case NORMAL:
+				if (isFlushing) return noneImage;
 				return isRed ? redNormalGunImage : blueNormalGunImage;
 			case BROKEN:
+				if (isFlushing) return noneImage;
 				return isRed ? redBrokenGunImage : blueBrokenGunImage;
-			case TRANSPARENT:
-				return isRed ? redTransparentGunImage : blueTransparentGunImage;
 			case DEBRIS:
 			case NONE:
 				return noneImage;
@@ -186,15 +210,15 @@ public class Tank implements GameObject {
 
 	private Status getStatus() {
 
-		if (respawnFrame <= 0 && isDead()) return Status.NONE;
+		if (respawnAnimateFrame > 0) return Status.RESPAWNING;
 
-		// 死亡演出
+		// 残骸は一定時間経過後画面から消える
+		if (debrisLifeFrame <= 0 && isDead()) return Status.NONE;
+
+		// 破壊されたときに、画面に残骸が表示される
 		if (isDead()) return Status.DEBRIS;
 
-		// 被弾演出
-		if (damageFlushFrame > 0 && damageFlushFrame % 10 == 0) return Status.NONE;
-
-		// ダメージ演出
+		// ダメージが蓄積されると戦車にひびが入る演出
 		if (hp < INITIAL_HP / 2.0) return Status.BROKEN;
 
 		return Status.NORMAL;
@@ -204,21 +228,20 @@ public class Tank implements GameObject {
 
 	@Override
 	public void update() {
-		if (hp < INITIAL_HP / 2 && !isBroken) {
+
+//		objectScaleCacheIsValid = false;
+
+		if (getStatus() == Status.BROKEN && !hadBroken) {
 			sound.objectBreak();
-			isBroken = true;
+			hadBroken = true;
 		}
+		if (respawnAnimateFrame > 0) respawnAnimateFrame--;
 		if (damageFlushFrame > 0) damageFlushFrame--;
 		if (debrisLifeFrame > 0) debrisLifeFrame--;
-		if (respawnFrame > 0) {
-			respawnFrame--;
+		if (respawnLagFrame > 0) {
+			respawnLagFrame--;
 		} else {
-			if (hp == 0) {
-				respawn();
-			}
-		}
-		if (getStatus() == Status.DEBRIS) {
-			tankScale += (GamePanel.FPS / 120.0) * debrisLifeFrame / 100.0;
+			if (hp == 0) respawn();
 		}
 	}
 
@@ -227,30 +250,34 @@ public class Tank implements GameObject {
 	public void draw(Graphics2D graphics) {
 		BufferedImage chassisImage = this.getChassisImage();
 		BufferedImage gunImage = this.getGunImage();
+		double objectScale = getObjectScale();
+
 
 		// 台車の描画
 		AffineTransform chassisTransform = new AffineTransform();
-		chassisTransform.translate(translate.x, translate.y);
-		chassisTransform.scale(tankScale, tankScale);
+		chassisTransform.translate(position.x, position.y);
+		chassisTransform.scale(objectScale, objectScale);
 		chassisTransform.translate(-chassisImage.getWidth() / 2.0, -chassisImage.getHeight() / 2.0);
 		graphics.drawImage(chassisImage, chassisTransform, null);
 
 		// 砲塔のの描画
 		AffineTransform gunTransform = new AffineTransform();
-		gunTransform.translate(translate.x, translate.y);
+		gunTransform.translate(position.x, position.y);
 		gunTransform.rotate(this.gunAngle);
-		gunTransform.translate(-tankScale * gunImage.getWidth() / 2.0, -tankScale * gunImage.getHeight() / 2.0);
-		gunTransform.scale(tankScale, tankScale);
+		gunTransform.scale(objectScale, objectScale);
+		gunTransform.translate(-gunImage.getWidth() / 2.0, -gunImage.getHeight() / 2.0);
 		graphics.drawImage(gunImage, gunTransform, null);
 	}
 
 	@Override
 	public void onCollision(GameObject other) {
 
+		if (other instanceof Base) return;
+
 		// ============================= オブジェクトがのめりこまないように、適切な方向に逃げる =============================
 
 		// 相対的な位置関係を取得 (相手 - 自分)
-		Point2D.Double vector = Util.subtract(other.getTranslate(), this.getTranslate());
+		Point2D.Double vector = Util.subtract(other.getPosition(), this.getPosition());
 
 		// 全く同じ位置だった場合、少しだけずらす
 		if (vector.x == 0 && vector.y == 0) {
@@ -310,17 +337,27 @@ public class Tank implements GameObject {
 
 	@Override
 	public boolean isTangible() {
-		return !isDead();
+		switch (getStatus()) {
+			case RESPAWNING:
+			case NORMAL:
+			case BROKEN:
+				return true;
+			case DEBRIS:
+			case NONE:
+				return false;
+			default:
+				throw new RuntimeException();
+		}
 	}
 
 	@Override
 	public RenderLayer getRenderLayer() {
 		switch (getStatus()) {
+			case RESPAWNING:
 			case NORMAL:
 			case BROKEN:
 				return RenderLayer.TANGIBLE_OBJECT;
 			case DEBRIS:
-			case TRANSPARENT:
 			case NONE:
 				return RenderLayer.DEBRIS;
 			default:
@@ -330,55 +367,47 @@ public class Tank implements GameObject {
 
 	@Override
 	public Shape getShape() {
-		return new Rectangle(this.translate, getWidth(), getHeight());
+		return new Rectangle(this.position, getWidth(), getHeight());
 	}
 
 	@Override
-	public Point2D.Double getTranslate() {
-		return (Point2D.Double) this.translate.clone();
+	public Point2D.Double getPosition() {
+		return (Point2D.Double) this.position.clone();
 	}
 
 	@Override
-	public void setTranslate(double x, double y) {
-		this.translate.setLocation(x, y);
+	public void setPosition(double x, double y) {
+		this.position.setLocation(x, y);
 	}
 
 	// ============================= ゲッター・セッター =============================
 	public double getX() {
-		return translate.x;
+		return position.x;
 	}
 
 	public double getY() {
-		return translate.y;
+		return position.y;
 	}
 
 	public double getGunAngle() {
 		return this.gunAngle;
 	}
 
-	public void setVelocity(double velocity) {
-		velocity = velocity;
-	}
-
 	public Team getTeam() {
-		return this.team;
+		return this.base.getTeam();
 	}
 
 	public double getHeight() {
-		return getChassisImage().getHeight() * tankScale;
+		return getChassisImage().getHeight() * getObjectScale();
 	}
 
 	public double getWidth() {
-		return getChassisImage().getWidth() * tankScale;
+		return getChassisImage().getWidth() * getObjectScale();
 	}
 
 	public double getBulletReleaseRadius() {
 		double gunLength = getGunImage().getWidth() / 2.0;
 		double chassisRadius = Math.max(getWidth(), getHeight()) / 2.0;
 		return Math.max(gunLength, chassisRadius);
-	}
-
-	public int getDebrisLifeFrame() {
-		return this.debrisLifeFrame;
 	}
 }
