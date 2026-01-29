@@ -213,12 +213,12 @@ public class Tank implements GameObject {
 	public boolean isDead() {
 		switch (this.getState()) {
 			case RESPAWNING:
-			case DEBRIS:
-			case NONE:
-				return true;
 			case NORMAL:
 			case BROKEN:
 				return false;
+			case DEBRIS:
+			case NONE:
+				return true;
 			default:
 				throw new IllegalStateException("Unexpected value: " + this.getState());
 		}

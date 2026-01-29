@@ -169,15 +169,15 @@ public class GamePanel extends JPanel implements Runnable {
 			networkManager.shootGun(myTankID);
 		}
 
-//		// 戦車にエネルギーチャージ命令を出す
-//		if (input.chargeButtonPressed()) {
-//			Missile missile = myTank.startEnergyCharge();
-//			gameStage.addObject(missile);
-//			System.out.println("チャージ開始");
-//		} else {
-//			myTank.finishEnergyCharge();
-//			System.out.println("チャージ終了");
-//		}
+		// 戦車にエネルギーチャージ命令を出す
+		if (input.chargeButtonPressed()) {
+			Missile missile = myTank.startEnergyCharge();
+			gameStage.addObject(missile);
+			System.out.println("チャージ開始");
+		} else {
+			myTank.finishEnergyCharge();
+			System.out.println("チャージ終了");
+		}
 
 		// 戦車のブロック作成命令を出す。
 		if (input.createBlock()) {

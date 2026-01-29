@@ -52,8 +52,8 @@ public class Bullet implements GameObject, DangerGameObject {
 	public Bullet(Tank shooter) {
 		double angle = shooter.getGunAngle();
 		Point2D.Double tankPosition = shooter.getPosition();
-		double x = tankPosition.x + (shooter.getBulletReleaseRadius() + this.getCollisionRadius()) * 1.3 * Math.cos(shooter.getGunAngle());
-		double y = tankPosition.y + (shooter.getBulletReleaseRadius() + this.getCollisionRadius()) * 1.3 * Math.sin(shooter.getGunAngle());
+		double x = tankPosition.x + (shooter.getBulletReleaseRadius() + this.getCollisionRadius()) * Math.cos(shooter.getGunAngle());
+		double y = tankPosition.y + (shooter.getBulletReleaseRadius() + this.getCollisionRadius()) * Math.sin(shooter.getGunAngle());
 		this.position = new Point2D.Double(x, y);
 		this.shooter = shooter;
 
@@ -140,6 +140,10 @@ public class Bullet implements GameObject, DangerGameObject {
 
 	@Override
 	public void onCollision(GameObject other) {
+		if (other instanceof Tank) {
+			Tank tank = (Tank) other;
+			if (tank.getTeam() == shooter.getTeam()) return;
+		}
 		this.explode();     // とりあえず自身が爆発
 		other.onHitBy(this); // 相手に被弾を通知する
 	}

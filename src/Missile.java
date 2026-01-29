@@ -89,8 +89,8 @@ public class Missile implements GameObject, DangerGameObject {
 		double shooterRadius = shooter.getBulletReleaseRadius();
 		double missileRadius = this.getCollisionRadius();
 		Point2D.Double tankPosition = (Point2D.Double) shooter.getPosition().clone();
-		double x = tankPosition.x + (shooterRadius + missileRadius) * 1.3 * Math.cos(this.angle);
-		double y = tankPosition.y + (shooterRadius + missileRadius) * 1.3 * Math.sin(this.angle);
+		double x = tankPosition.x + (shooterRadius + missileRadius) * Math.cos(this.angle);
+		double y = tankPosition.y + (shooterRadius + missileRadius) * Math.sin(this.angle);
 		this.setPosition(x, y);
 	}
 
@@ -175,6 +175,10 @@ public class Missile implements GameObject, DangerGameObject {
 
 	@Override
 	public void onCollision(GameObject other) {
+		if (other instanceof Tank) {
+			Tank tank = (Tank) other;
+			if (tank.getTeam() == shooter.getTeam()) return;
+		}
 
 		// 相手に被弾を知らせる
 		if (this.state == Status.FLYING) other.onHitBy(this);
