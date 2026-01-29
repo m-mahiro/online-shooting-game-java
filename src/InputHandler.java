@@ -9,11 +9,7 @@ public interface InputHandler {
 
 	boolean shootBullet();
 
-	boolean startEnergyCharge();
-
-	boolean cancelEnergyCharge();
-
-	boolean launchMissile();
+	boolean chargeButtonPressed();
 
 	boolean createBlock();
 

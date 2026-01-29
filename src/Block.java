@@ -33,7 +33,7 @@ public class Block implements GameObject {
 	private static BufferedImage normalBlockImage, brokenBlockImage, blockDebrisImage, transparentBlockImage;
 	private static BufferedImage noneImage;
 
-	private enum Status {
+	private enum State {
 		BABY, NORMAL, BROKEN, DEBRIS, SHOULD_REMOVE
 	}
 
@@ -70,7 +70,7 @@ public class Block implements GameObject {
 
 	private BufferedImage getImage() {
 		boolean isFlushing = (damageFlushFrame > 0) && damageFlushFrame % 20 == 0;
-		switch (getStatus()) {
+		switch (getState()) {
 			case NORMAL:
 				if (isFlushing) return noneImage;
 				return normalBlockImage;
@@ -83,16 +83,16 @@ public class Block implements GameObject {
 			case SHOULD_REMOVE:
 				return blockDebrisImage;
 			default:
-				throw new RuntimeException("未実装のImageStatusです。");
+				throw new IllegalStateException("Unexpected value: " + getState());
 		}
 	}
 
-	private Status getStatus() {
-		if (debrisLifeFrame <= 0 && hp <= 0) return Status.SHOULD_REMOVE;
-		if (babyBlockLifeFrame > 0) return Status.BABY;
-		if (hp <= 0) return Status.DEBRIS;
-		if (this.hp < INITIAL_HP / 2.0) return Status.BROKEN;
-		return Status.NORMAL;
+	private State getState() {
+		if (debrisLifeFrame <= 0 && hp <= 0) return State.SHOULD_REMOVE;
+		if (babyBlockLifeFrame > 0) return State.BABY;
+		if (hp <= 0) return State.DEBRIS;
+		if (this.hp < INITIAL_HP / 2.0) return State.BROKEN;
+		return State.NORMAL;
 	}
 
 	// ============================= GameObjectインタフェースのメソッド =============================
@@ -108,7 +108,7 @@ public class Block implements GameObject {
 
 		if (damageFlushFrame > 0) damageFlushFrame--;
 
-		if (getStatus() == Status.DEBRIS) {
+		if (getState() == State.DEBRIS) {
 			objectScale += (GamePanel.FPS / 60.0) * debrisLifeFrame / 100.0;
 		}
 	}
@@ -134,18 +134,18 @@ public class Block implements GameObject {
 
 	@Override
 	public boolean shouldRemove() {
-		return getStatus() == Status.SHOULD_REMOVE;
+		return getState() == State.SHOULD_REMOVE;
 	}
 
 	@Override
 	public boolean isTangible() {
-		Status s = getStatus();
-		return s == Status.NORMAL || s == Status.BROKEN;
+		State s = getState();
+		return s == State.NORMAL || s == State.BROKEN;
 	}
 
 	@Override
 	public RenderLayer getRenderLayer() {
-		switch (getStatus()) {
+		switch (getState()) {
 			case BABY:
 			case DEBRIS:
 			case SHOULD_REMOVE:
@@ -173,8 +173,8 @@ public class Block implements GameObject {
 	}
 
 	@Override
-	public double getHP() {
-		return hp;
+	public int getHP() {
+		return this.hp;
 	}
 
 	// ============================= ゲッターセッター =============================

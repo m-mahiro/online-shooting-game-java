@@ -19,7 +19,7 @@ public class NetworkManager extends Thread {
 		this.gamePanel = gamePanel;
 		try {
 			// サーバーに接続 (IPは localhost 固定、適宜変更)
-			socket = new Socket("localhost", 10000);
+			socket = new Socket("10.75.200.52", 10000);
 			out = new PrintWriter(socket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
@@ -86,66 +86,42 @@ public class NetworkManager extends Thread {
 		// メッセージ例: "MOVE 1 100.5 200.5 1.57"
 		String[] tokens = msg.split(" ");
 		String cmd = tokens[0];
+		GameStage stage = gamePanel.gameStage;
+		int tankID = Integer.parseInt(tokens[1]);
+		if (gamePanel.getMyTankID() == tankID) return;
+		Tank tank = (Tank) gamePanel.gameStage.getObject(tankID);
 
 		try {
 			switch (cmd) {
 				case "MOVE": {
-					int id = Integer.parseInt(tokens[1]);
 					double x = Double.parseDouble(tokens[2]);
 					double y = Double.parseDouble(tokens[3]);
-					if (gamePanel.getMyTankID() == id) return;
-					gamePanel.gameStage.getObject(id).setPosition(x, y);
+					stage.getObject(tankID).setPosition(x, y);
 					break;
 				}
 				case "BULLET": {
-					int id = Integer.parseInt(tokens[1]);
-					double x = Double.parseDouble(tokens[2]);
-					double y = Double.parseDouble(tokens[3]);
-					double angle = Double.parseDouble(tokens[4]);
-					if (gamePanel.getMyTankID() == id) return;
-					Tank tank = (Tank) gamePanel.gameStage.getObject(id);
 					Bullet bullet = tank.shootBullet();
-					gamePanel.gameStage.addObject(bullet);
+					stage.addObject(bullet);
 					break;
 				}
-				case "LAUNCH_MISSILE": {
-					int id = Integer.parseInt(tokens[1]);
-					double x = Double.parseDouble(tokens[2]);
-					double y = Double.parseDouble(tokens[3]);
-					double angle = Double.parseDouble(tokens[4]);
-					if (gamePanel.getMyTankID() == id) return;
-					Tank tank = (Tank) gamePanel.gameStage.getObject(id);
-					tank.launchMissile();
+				case "START_CHARGE": {
+					tank.startEnergyCharge();
 					break;
 				}
-				case "READY_MISSILE": {
-					int id = Integer.parseInt(tokens[1]);
-					double x = Double.parseDouble(tokens[2]);
-					double y = Double.parseDouble(tokens[3]);
-					double angle = Double.parseDouble(tokens[4]);
-					if (gamePanel.getMyTankID() == id) return;
-					Tank tank = (Tank) gamePanel.gameStage.getObject(id);
-					tank.readyMissile();
+				case "FINISH_CHARGE": {
+					tank.finishEnergyCharge();
 					break;
 				}
 				case "AIM": {
-					int id = Integer.parseInt(tokens[1]);
-					double targetX = Double.parseDouble(tokens[2]);
-					double targetY = Double.parseDouble(tokens[3]);
-					if (gamePanel.getMyTankID() == id) return;
-					Tank tank = (Tank) gamePanel.gameStage.getObject(id);
-					Point2D.Double targetCoordinate = new Point2D.Double(targetX, targetY);
+					double x = Double.parseDouble(tokens[2]);
+					double y = Double.parseDouble(tokens[3]);
+					Point2D.Double targetCoordinate = new Point2D.Double(x, y);
 					tank.aimAt(targetCoordinate);
 					break;
 				}
 				case "BLOCK": {
-					int id = Integer.parseInt(tokens[1]);
-					double targetX = Double.parseDouble(tokens[2]);
-					double targetY = Double.parseDouble(tokens[3]);
-					if (gamePanel.getMyTankID() == id) return;
-					Tank tank = (Tank) gamePanel.gameStage.getObject(id);
 					Block block = tank.createBlock();
-					gamePanel.gameStage.addObject(block);
+					stage.addObject(block);
 					break;
 				}
 			}
@@ -156,33 +132,33 @@ public class NetworkManager extends Thread {
 
 	// --- 送信メソッド ---
 
-	public void moveTank(int id, double x, double y) {
+	public void locateTank(int id, Point2D.Double position) {
 		if (out == null) return;
-		out.println("MOVE " + id + " " + x + " " + y);
+		out.println("MOVE " + id + " " + position.x + " " + position.y);
 	}
 
-	public void shootGun(int id, double x, double y, double angle) {
+	public void shootGun(int tankID) {
 		if (out == null) return;
-		out.println("BULLET " + id + " " + x + " " + y + " " + angle);
+		out.println("BULLET " + tankID);
 	}
 
-	public void readyMissile(int id, double x, double y, double angle) {
+	public void startCharge(int tankID) {
 		if (out == null) return;
-		out.println("READY_MISSILE " + id + " " + x + " " + y + " " + angle);
+		out.println("START_CHARGE " + tankID);
 	}
 
-	public void launchMissile(int id, double x, double y, double angle) {
+	public void finishCharge(int tankID) {
 		if (out == null) return;
-		out.println("LAUNCH_MISSILE " + id + " " + x + " " + y + " " + angle);
+		out.println("FINISH_CHARGE " + tankID);
 	}
 
-	public void aimAt(int id, double targetX, double targetY) {
+	public void aimAt(int id, Point2D.Double aimPosition) {
 		if (out == null) return;
-		out.println("AIM " + id + " " + targetX + " " + targetY);
+		out.println("AIM " + id + " " + aimPosition.x + " " + aimPosition.y);
 	}
 
-	public void createBlock(int id, Point2D.Double spawnPoint) {
+	public void createBlock(int tankID) {
 		if (out == null) return;
-		out.println("BLOCK " + id + " " + spawnPoint.x + " " + spawnPoint.y);
+		out.println("BLOCK " + tankID);
 	}
 }

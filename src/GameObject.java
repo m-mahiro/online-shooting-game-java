@@ -23,5 +23,5 @@ public interface GameObject {
 
 	void setPosition(double x, double y);
 
-	double getHP();
+	int getHP();
 }

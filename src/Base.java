@@ -231,7 +231,7 @@ public class Base implements GameObject {
 	}
 
 	@Override
-	public double getHP() {
+	public int getHP() {
 		return hp;
 	}
 }

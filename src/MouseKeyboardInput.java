@@ -37,9 +37,9 @@ public class MouseKeyboardInput
 	private boolean canShootBullet = true;
 
 	private int continuousLeftPressedCount = 0;
-	private ChargeStatus chargeStatus = ChargeStatus.STAND_BY;
-	private enum ChargeStatus {
-		STAND_BY, IS_CHARGING, IS_READY
+	private ChargeState chargeState = ChargeState.STAND_BY;
+	private enum ChargeState {
+		STAND_BY, IS_CHARGING
 	}
 
 	// ============================= InputHandlerの実装 =============================
@@ -83,35 +83,22 @@ public class MouseKeyboardInput
 	}
 
 	@Override
-	public boolean startEnergyCharge() {
-		if (chargeStatus == ChargeStatus.STAND_BY && continuousLeftPressedCount > CHARGE_START_COUNT) {
-			this.chargeStatus = ChargeStatus.IS_CHARGING;
-			return true;
+	public boolean chargeButtonPressed() {
+		switch (chargeState) {
+			case STAND_BY:
+				if (continuousLeftPressedCount > CHARGE_START_COUNT) {
+					this.chargeState = ChargeState.IS_CHARGING;
+					return true;
+				} else {
+					return false;
+				}
+			case IS_CHARGING:
+				boolean result = !leftClicked;
+				chargeState = ChargeState.STAND_BY;
+				return result;
+			default:
+				throw new IllegalStateException("Unexpected value: " + chargeState);
 		}
-		return false;
-	}
-
-	@Override
-	public boolean cancelEnergyCharge() {
-		if (chargeStatus == ChargeStatus.IS_CHARGING) {
-			boolean result = !leftClicked;
-			chargeStatus = ChargeStatus.STAND_BY;
-			return result;
-		}
-		return false;
-	}
-
-	@Override
-	public boolean launchMissile() {
-		if (chargeStatus == ChargeStatus.IS_READY) {
-			if (!leftClicked) {
-				chargeStatus = ChargeStatus.STAND_BY;
-				return true;
-			} else {
-				return false;
-			}
-		}
-		return false;
 	}
 
 	@Override

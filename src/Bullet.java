@@ -15,7 +15,7 @@ public class Bullet implements GameObject, DangerGameObject {
 	private static final int DAMAGE_ABILITY = 10;
 
 	// 状態（クライアント間の同期に必要)
-	private Tank tank;
+	private Tank shooter;
 	private final Point2D.Double position; // 弾丸オブジェクトの中心座標
 	private final double dx, dy;
 	private int lifeFrame = LIFE_TIME;
@@ -33,7 +33,7 @@ public class Bullet implements GameObject, DangerGameObject {
 	// 画像リソース（共有）
 	private static BufferedImage blueNormalBulletImage, redNormalBulletImage, blueBulletDebris, redBulletDebris, noneImage;
 
-	protected enum Status {
+	private enum State {
 		NORMAL, DEBRIS, SHOULD_REMOVE
 	}
 
@@ -49,11 +49,13 @@ public class Bullet implements GameObject, DangerGameObject {
 		}
 	}
 
-	public Bullet(Point2D.Double tankPosition, double angle, Tank tank) {
-		double x = tankPosition.x + (tank.getBulletReleaseRadius() + this.getCollisionRadius()) * 1.3 * Math.cos(tank.getGunAngle());
-		double y = tankPosition.y + (tank.getBulletReleaseRadius() + this.getCollisionRadius()) * 1.3 * Math.sin(tank.getGunAngle());
+	public Bullet(Tank shooter) {
+		double angle = shooter.getGunAngle();
+		Point2D.Double tankPosition = shooter.getPosition();
+		double x = tankPosition.x + (shooter.getBulletReleaseRadius() + this.getCollisionRadius()) * 1.3 * Math.cos(shooter.getGunAngle());
+		double y = tankPosition.y + (shooter.getBulletReleaseRadius() + this.getCollisionRadius()) * 1.3 * Math.sin(shooter.getGunAngle());
 		this.position = new Point2D.Double(x, y);
-		this.tank = tank;
+		this.shooter = shooter;
 
 		// 角度から速度ベクトルを計算
 		this.dx = Math.cos(angle) * getVelocity();
@@ -62,27 +64,27 @@ public class Bullet implements GameObject, DangerGameObject {
 
 	// ============================= Bulletクラス独自のメソッド =============================
 
-	protected void explode() {
+	private void explode() {
 		sound.bulletExplosion();
 		this.debrisLifeFrame = DEBRIS_LIFE_FRAME;
 		this.lifeFrame = 0;
 	}
 
-	protected double getCollisionRadius() {
+	private double getCollisionRadius() {
 		return COLLISION_RADIUS;
 	}
 
-	protected double getVelocity() {
+	private double getVelocity() {
 		return VELOCITY;
 	}
 
-	protected Team getTeam() {
-		return this.tank.getTeam();
+	private Team getTeam() {
+		return this.shooter.getTeam();
 	}
 
-	protected BufferedImage getImage() {
+	private BufferedImage getImage() {
 		boolean isRed = this.getTeam() == Team.RED;
-		switch (getStatus()) {
+		switch (getState()) {
 			case NORMAL:
 				return isRed ? redNormalBulletImage : blueNormalBulletImage;
 			case DEBRIS:
@@ -94,10 +96,10 @@ public class Bullet implements GameObject, DangerGameObject {
 		}
 	}
 
-	protected Status getStatus() {
-		if (debrisLifeFrame > 0) return Status.DEBRIS;
-		if (lifeFrame <= 0) return Status.SHOULD_REMOVE;
-		return Status.NORMAL;
+	private State getState() {
+		if (debrisLifeFrame > 0) return State.DEBRIS;
+		if (lifeFrame <= 0) return State.SHOULD_REMOVE;
+		return State.NORMAL;
 	}
 
 	// ============================= GameObjectインタフェースのメソッド =============================
@@ -110,7 +112,7 @@ public class Bullet implements GameObject, DangerGameObject {
 			explode();
 			return;
 		}
-		switch (getStatus()) {
+		switch (getState()) {
 			case NORMAL: {
 				this.position.x += dx;
 				this.position.y += dy;
@@ -144,22 +146,22 @@ public class Bullet implements GameObject, DangerGameObject {
 
 	@Override
 	public void onHitBy(DangerGameObject other) {
-		// 何もしない
+
 	}
 
 	@Override
 	public boolean shouldRemove() {
-		return getStatus() == Status.SHOULD_REMOVE;
+		return getState() == State.SHOULD_REMOVE;
 	}
 
 	@Override
 	public boolean isTangible() {
-		return getStatus() == Status.NORMAL;
+		return getState() == State.NORMAL;
 	}
 
 	@Override
 	public RenderLayer getRenderLayer() {
-		switch (getStatus()) {
+		switch (getState()) {
 			case NORMAL:
 				return RenderLayer.PROJECTILE;
 			case DEBRIS:
@@ -186,7 +188,7 @@ public class Bullet implements GameObject, DangerGameObject {
 	}
 
 	@Override
-	public double getHP() {
+	public int getHP() {
 		return 10;
 	}
 

@@ -46,7 +46,7 @@ public class GamePanel extends JPanel implements Runnable {
 
 		// カメラの初期設定
 		cameraZoom = 0.5;
-		setCameraLocation(getMyTank().getX(), getMyTank().getY());
+		setCameraPosition(getMyTank().getPosition());
 
 		// サーバからのメッセージ受け取り開始
 		this.networkManager.start();
@@ -56,15 +56,25 @@ public class GamePanel extends JPanel implements Runnable {
 	protected void paintComponent(Graphics graphics) {
 		super.paintComponent(graphics);
 		Graphics2D graphics2D = (Graphics2D) graphics;
+
+		// カメラの位置・ズーム度合いに合わせてあらかじめキャンバスをずらしておく。
 		graphics2D.transform(this.canvasTransform);
+
+		// Windowから見える範囲を更新する
+		updateVisibleRange();
+
+		// GameObjectの描画
 		gameStage.draw(graphics2D);
+
+		// GUIの描画
+		// todo: ここでGUIを描画
 	}
 
-	public void setCameraLocation(double x, double y) {
+	public void setCameraPosition(Point2D.Double position) {
 		AffineTransform trans = new AffineTransform();
 		trans.translate(this.getWidth() / 2.0, this.getHeight() / 2.0);
 		trans.scale(this.cameraZoom, this.cameraZoom);
-		trans.translate(-x, -y);
+		trans.translate(-position.x, -position.y);
 		this.canvasTransform.setTransform(trans);
 	}
 
@@ -80,9 +90,13 @@ public class GamePanel extends JPanel implements Runnable {
 	public void startGameThread() {
 		this.gameThread = new Thread(this);
 		gameThread.start();
+		updateVisibleRange();
+	}
+
+	public void updateVisibleRange() {
 		int displayWidth = (int) (this.getWidth() / CAMERA_ZOOM_LOWER_THRESHOLD);
 		int displayHeight = (int) (this.getHeight() / CAMERA_ZOOM_LOWER_THRESHOLD);
-		gameStage.setDisplayRange(displayWidth, displayHeight);
+		gameStage.setVisibleRange(displayWidth, displayHeight);
 	}
 
 	/**
@@ -117,9 +131,6 @@ public class GamePanel extends JPanel implements Runnable {
 		}
 	}
 
-	/**
-	 * ゲームの状態を更新する
-	 */
 	public void update() {
 
 		try {
@@ -136,46 +147,42 @@ public class GamePanel extends JPanel implements Runnable {
 
 		// カメラアングルを調整
 		zoomCamera(input.getZoomAmount() * 0.1);
-		setCameraLocation(myTank.getX(), myTank.getY());
+		setCameraPosition(myTank.getPosition());
 
 		// 戦車に移動命令を出す
 		Point2D.Double moveVector = input.getMoveVector(this.canvasTransform);
 		if (moveVector.x != 0 || moveVector.y != 0) {
 			myTank.move(moveVector);
 		}
-		networkManager.moveTank(myTankID, myTank.getX(), myTank.getY());
+		networkManager.locateTank(myTankID, myTank.getPosition());
 
 		// マウス位置へ砲塔を向ける命令を出す
 		Point2D.Double coordinate = input.getAimedCoordinate(this.canvasTransform);
 		myTank.aimAt(coordinate);
-		networkManager.aimAt(myTankID, coordinate.x, coordinate.y);
+		networkManager.aimAt(myTankID, coordinate);
 
 		// 戦車に発砲命令を出す。
 		if (input.shootBullet()) {
 			Bullet bullet = myTank.shootBullet();
 			gameStage.addObject(bullet);
-			networkManager.shootGun(myTankID, myTank.getX(), myTank.getY(), myTank.getGunAngle());
+			networkManager.shootGun(myTankID);
 		}
 
-		// 戦車にミサイル準備命令を出す
-		if (input.startEnergyCharge()) {
-			Missile missile = myTank.readyMissile();
-			gameStage.addObject(missile);
-		}
-
-		if (input.cancelEnergyCharge()) {
-			System.out.println("チャージキャンセル!");
-		}
-
-		if (input.launchMissile()) {
-			myTank.launchMissile();
-			System.out.println("ミサイル発射！");
-		}
+//		// 戦車にエネルギーチャージ命令を出す
+//		if (input.chargeButtonPressed()) {
+//			Missile missile = myTank.startEnergyCharge();
+//			gameStage.addObject(missile);
+//			System.out.println("チャージ開始");
+//		} else {
+//			myTank.finishEnergyCharge();
+//			System.out.println("チャージ終了");
+//		}
 
 		// 戦車のブロック作成命令を出す。
 		if (input.createBlock()) {
-			gameStage.addObject(myTank.createBlock());
-			networkManager.createBlock(myTankID, myTank.getPosition());
+			Block block = myTank.createBlock();
+			gameStage.addObject(block);
+			networkManager.createBlock(myTankID);
 		}
 	}
 

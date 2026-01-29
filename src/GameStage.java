@@ -13,8 +13,8 @@ public class GameStage {
 
 	private final int stageWidth = 6000;
 	private final int stageHeight = 6000;
-	private int displayWidth = 2000;
-	private int displayHeight = 1000;
+	private int visibleWidth = 2000;
+	private int visibleHeight = 1000;
 
 	static {
 		try {
@@ -79,9 +79,9 @@ public class GameStage {
 		addObjects(objects);
 	}
 
-	public void setDisplayRange(int width, int height) {
-		this.displayWidth = width;
-		this.displayHeight = height;
+	public void setVisibleRange(int width, int height) {
+		this.visibleWidth = width;
+		this.visibleHeight = height;
 	}
 
 	public void addObject(GameObject gameObject) {
@@ -117,8 +117,8 @@ public class GameStage {
 		Rectangle2D outerStageAnchor = new Rectangle2D.Double(0, 0, 1000, 1000);
 		TexturePaint outerStagePaint = new TexturePaint(outerStageTexture, outerStageAnchor);
 		graphics.setPaint(outerStagePaint);
-		int fillWidth = stageWidth + displayWidth;
-		int fillHeight = stageHeight + displayHeight;
+		int fillWidth = stageWidth + visibleWidth;
+		int fillHeight = stageHeight + visibleHeight;
 		graphics.fillRect(-fillWidth / 2, -fillHeight / 2, fillWidth, fillHeight);
 
 		// フローリングの描画

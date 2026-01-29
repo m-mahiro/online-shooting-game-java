@@ -86,7 +86,7 @@ public class Wall implements GameObject {
 	}
 
 	@Override
-	public double getHP() {
-		return Double.MAX_VALUE;
+	public int getHP() {
+		return Integer.MAX_VALUE;
 	}
 }

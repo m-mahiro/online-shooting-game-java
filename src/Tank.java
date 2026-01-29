@@ -46,7 +46,7 @@ public class Tank implements GameObject {
 	private static BufferedImage blueTankDebris;
 	private static BufferedImage noneImage;
 
-	private enum Status {
+	private enum State {
 		RESPAWNING, NORMAL, BROKEN, DEBRIS, NONE
 	}
 
@@ -107,19 +107,19 @@ public class Tank implements GameObject {
 
 	public Bullet shootBullet() {
 		sound.shootGun();
-		return new Bullet(this.getPosition(), this.gunAngle, this);
+		return new Bullet(this);
 	}
 
-	public Missile readyMissile() {
-		Missile missile = new Missile(this.getPosition(), this.gunAngle, this);
+	public Missile startEnergyCharge() {
+		Missile missile = new Missile(this);
 		this.holdingMissile = missile;
 		return missile;
 	}
 
-	public void launchMissile() {
-		if (holdingMissile == null) return;
-		this.holdingMissile.launch();
-		this.holdingMissile = null;
+	public void finishEnergyCharge() {
+		if (this.holdingMissile == null) return;
+		boolean success = this.holdingMissile.finishEnergyCharge();
+		if (!success) this.holdingMissile = null;
 	}
 
 	public Block createBlock() {
@@ -156,7 +156,7 @@ public class Tank implements GameObject {
 	}
 
 	private double getObjectScale() {
-		switch (getStatus()) {
+		switch (getState()) {
 			case RESPAWNING:
 				return 1.0 - respawnAnimateFrame / (double) RESPAWN_ANIMATE_FRAME;
 			case NORMAL:
@@ -174,7 +174,7 @@ public class Tank implements GameObject {
 
 		boolean isRed = (base.getTeam() == Team.RED);
 		boolean isFlushing = (damageFlushFrame > 0) && damageFlushFrame % 20 == 0;
-		switch (getStatus()) {
+		switch (getState()) {
 			case RESPAWNING: return isRed ? redTransparentChassisImage : blueTransparentChassisImage;
 //			case RESPAWNING: return isRed ? redNormalChassisImage : blueNormalChassisImage;
 			case NORMAL:
@@ -188,14 +188,14 @@ public class Tank implements GameObject {
 			case NONE:
 				return noneImage;
 			default:
-				throw new RuntimeException("未実装のTankImageStatus");
+				throw new IllegalStateException("Unexpected value: " + getState());
 		}
 	}
 
 	private BufferedImage getGunImage() {
 		boolean isRed = (base.getTeam() == Team.RED);
 		boolean isFlushing = (damageFlushFrame > 0) && damageFlushFrame % 20 == 0;
-		switch (getStatus()) {
+		switch (getState()) {
 			case RESPAWNING: return isRed ? redTransparentGunImage : blueTransparentGunImage;
 //			case RESPAWNING: return isRed ? redNormalGunImage : blueNormalGunImage;
 			case NORMAL:
@@ -208,24 +208,24 @@ public class Tank implements GameObject {
 			case NONE:
 				return noneImage;
 			default:
-				throw new RuntimeException("未実装のTankImageStatus");
+				throw new IllegalStateException("Unexpected value: " + getState());
 		}
 	}
 
-	private Status getStatus() {
+	private State getState() {
 
-		if (respawnAnimateFrame > 0) return Status.RESPAWNING;
+		if (respawnAnimateFrame > 0) return State.RESPAWNING;
 
 		// 残骸は一定時間経過後画面から消える
-		if (debrisLifeFrame <= 0 && isDead()) return Status.NONE;
+		if (debrisLifeFrame <= 0 && isDead()) return State.NONE;
 
 		// 破壊されたときに、画面に残骸が表示される
-		if (isDead()) return Status.DEBRIS;
+		if (isDead()) return State.DEBRIS;
 
 		// ダメージが蓄積されると戦車にひびが入る演出
-		if (hp < INITIAL_HP / 2.0) return Status.BROKEN;
+		if (hp < INITIAL_HP / 2.0) return State.BROKEN;
 
-		return Status.NORMAL;
+		return State.NORMAL;
 	}
 
 	// ============================= GameObjectインタフェースのメソッド =============================
@@ -234,7 +234,7 @@ public class Tank implements GameObject {
 	public void update() {
 
 
-		if (getStatus() == Status.BROKEN && !hadBroken) {
+		if (getState() == State.BROKEN && !hadBroken) {
 			sound.objectBreak();
 			hadBroken = true;
 		}
@@ -340,7 +340,7 @@ public class Tank implements GameObject {
 
 	@Override
 	public boolean isTangible() {
-		switch (getStatus()) {
+		switch (getState()) {
 			case RESPAWNING:
 			case NORMAL:
 			case BROKEN:
@@ -355,7 +355,7 @@ public class Tank implements GameObject {
 
 	@Override
 	public RenderLayer getRenderLayer() {
-		switch (getStatus()) {
+		switch (getState()) {
 			case RESPAWNING:
 			case NORMAL:
 			case BROKEN:
@@ -384,18 +384,11 @@ public class Tank implements GameObject {
 	}
 
 	@Override
-	public double getHP() {
+	public int getHP() {
 		return this.hp;
 	}
 
 	// ============================= ゲッター・セッター =============================
-	public double getX() {
-		return position.x;
-	}
-
-	public double getY() {
-		return position.y;
-	}
 
 	public double getGunAngle() {
 		return this.gunAngle;
