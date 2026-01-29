@@ -20,7 +20,7 @@ public class Tank implements GameObject {
 	private final Point2D.Double position; // オブジェクトの中心の座標
 	private double gunAngle; // ラジアン
 	private int hp = INITIAL_HP;
-	@Nullable private Missile holdingMissile;
+	private Missile holdingMissile;
 
 	// 演出用定数
 	private final static int DAMAGE_FLUSH_FRAME = (int) (GamePanel.FPS * 1.5);
