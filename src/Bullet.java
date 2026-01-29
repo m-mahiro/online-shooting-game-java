@@ -78,7 +78,7 @@ public class Bullet implements GameObject, DangerGameObject {
 		return VELOCITY;
 	}
 
-	private Team getTeam() {
+	public Team getTeam() {
 		return this.shooter.getTeam();
 	}
 

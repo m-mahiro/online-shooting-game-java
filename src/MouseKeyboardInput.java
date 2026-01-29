@@ -35,6 +35,7 @@ public class MouseKeyboardInput
 	private int scrollAmount = 0;
 
 	private boolean canShootBullet = true;
+	private boolean chargeIsStarted = false;
 
 	private int continuousLeftPressedCount = 0;
 	private ChargeState chargeState = ChargeState.STAND_BY;
@@ -82,24 +83,6 @@ public class MouseKeyboardInput
 		return result;
 	}
 
-	@Override
-	public boolean chargeButtonPressed() {
-		switch (chargeState) {
-			case STAND_BY:
-				if (continuousLeftPressedCount > CHARGE_START_COUNT) {
-					this.chargeState = ChargeState.IS_CHARGING;
-					return true;
-				} else {
-					return false;
-				}
-			case IS_CHARGING:
-				boolean result = !leftClicked;
-				chargeState = ChargeState.STAND_BY;
-				return result;
-			default:
-				throw new IllegalStateException("Unexpected value: " + chargeState);
-		}
-	}
 
 	@Override
 	public boolean createBlock() {
@@ -122,6 +105,9 @@ public class MouseKeyboardInput
 			continuousLeftPressedCount++;
 		} else {
 			continuousLeftPressedCount = 0;
+		}
+		if (continuousLeftPressedCount > CHARGE_START_COUNT) {
+			chargeState = ChargeState.IS_CHARGING;
 		}
 	}
 

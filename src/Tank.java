@@ -288,6 +288,11 @@ public class Tank implements GameObject {
 	@Override
 	public void onCollision(GameObject other) {
 
+		if (other instanceof Bullet) {
+			Bullet bullet = (Bullet) other;
+			if (bullet.getTeam() == this.getTeam()) return;
+		}
+
 		if (other instanceof Base){
 			isOnBase = true;
 			return;
