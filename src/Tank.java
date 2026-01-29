@@ -1,3 +1,5 @@
+import com.sun.javafx.runtime.async.BackgroundExecutor;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -32,6 +34,7 @@ public class Tank implements GameObject {
 	private int respawnLagFrame = 0;
 	private int respawnAnimateFrame = 0;
 	private boolean hadBroken = false;
+	private boolean isOnBase = false;
 
 	private SoundManager sound = new SoundManager();
 
@@ -121,6 +124,7 @@ public class Tank implements GameObject {
 	}
 
 	public Block createBlock() {
+		if (isOnBase) return null;
 		sound.createBlock();
 		return new Block(this.position.x, this.position.y, true);
 	}
@@ -147,10 +151,6 @@ public class Tank implements GameObject {
 		this.respawnAnimateFrame = RESPAWN_ANIMATE_FRAME;
 		Point2D.Double spawnPoint = base.getPosition();
 		this.setPosition(spawnPoint.x, spawnPoint.y);
-	}
-
-	public boolean isDead() {
-		return this.hp <= 0;
 	}
 
 	private double getObjectScale() {
@@ -210,15 +210,29 @@ public class Tank implements GameObject {
 		}
 	}
 
+	public boolean isDead() {
+		switch (this.getState()) {
+			case RESPAWNING:
+			case DEBRIS:
+			case NONE:
+				return true;
+			case NORMAL:
+			case BROKEN:
+				return false;
+			default:
+				throw new IllegalStateException("Unexpected value: " + this.getState());
+		}
+	}
+
 	private State getState() {
 
 		if (respawnAnimateFrame > 0) return State.RESPAWNING;
 
 		// 残骸は一定時間経過後画面から消える
-		if (debrisLifeFrame <= 0 && isDead()) return State.NONE;
+		if (debrisLifeFrame <= 0 && hp <= 0) return State.NONE;
 
 		// 破壊されたときに、画面に残骸が表示される
-		if (isDead()) return State.DEBRIS;
+		if (hp <= 0) return State.DEBRIS;
 
 		// ダメージが蓄積されると戦車にひびが入る演出
 		if (hp < INITIAL_HP / 2.0) return State.BROKEN;
@@ -231,6 +245,7 @@ public class Tank implements GameObject {
 	@Override
 	public void update() {
 
+		isOnBase = false;
 
 		if (getState() == State.BROKEN && !hadBroken) {
 			sound.objectBreak();
@@ -273,7 +288,10 @@ public class Tank implements GameObject {
 	@Override
 	public void onCollision(GameObject other) {
 
-		if (other instanceof Base) return;
+		if (other instanceof Base){
+			isOnBase = true;
+			return;
+		}
 
 		// ============================= オブジェクトがのめりこまないように、適切な方向に逃げる =============================
 

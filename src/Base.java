@@ -217,7 +217,7 @@ public class Base implements GameObject {
 	@Override
 	public Shape getShape() {
 		double width = getBaseImage().getWidth() * debrisScale;
-		return new Circle(this.position, 0.8 * width / 2.0);
+		return new Circle(this.position, width / 2.0);
 	}
 
 	@Override

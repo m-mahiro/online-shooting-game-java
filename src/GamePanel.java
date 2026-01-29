@@ -140,6 +140,7 @@ public class GamePanel extends JPanel implements Runnable {
 		}
 
 		// ============================= 自分の操作 =============================
+
 		input.onFrameUpdate();
 
 		Tank myTank = getMyTank();
@@ -181,6 +182,7 @@ public class GamePanel extends JPanel implements Runnable {
 		// 戦車のブロック作成命令を出す。
 		if (input.createBlock()) {
 			Block block = myTank.createBlock();
+			if (block == null) return;
 			gameStage.addObject(block);
 			networkManager.createBlock(myTankID);
 		}

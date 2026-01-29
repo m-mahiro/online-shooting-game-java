@@ -140,12 +140,11 @@ public class GameStage {
 	 * ゲームの状態を更新する
 	 */
 	public void update() {
-		checkObjectToRemove();
-		checkCollision();
-
 		for (GameObject object : objects.values()) {
 			object.update();
 		}
+		checkObjectToRemove();
+		checkCollision();
 	}
 
 	public void checkCollision() {
