@@ -1,5 +1,3 @@
-import com.sun.javafx.runtime.async.BackgroundExecutor;
-
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -119,8 +117,8 @@ public class Tank implements GameObject {
 
 	public void finishEnergyCharge() {
 		if (this.holdingMissile == null) return;
-		boolean success = this.holdingMissile.finishEnergyCharge();
-		if (!success) this.holdingMissile = null;
+		this.holdingMissile.launch();
+		this.holdingMissile = null;
 	}
 
 	public Block createBlock() {
@@ -288,12 +286,14 @@ public class Tank implements GameObject {
 	@Override
 	public void onCollision(GameObject other) {
 
-		if (other instanceof Bullet) {
-			Bullet bullet = (Bullet) other;
-			if (bullet.getTeam() == this.getTeam()) return;
+		// 自チームの弾はすり抜ける
+		if (other instanceof Projectile) {
+			Projectile projectile = (Projectile) other;
+			if (projectile.getTeam() == this.getTeam()) return;
 		}
 
-		if (other instanceof Base){
+		// 自チームの基地の上には乗れる。
+		if (other instanceof Base && other.getTeam() == this.getTeam()) {
 			isOnBase = true;
 			return;
 		}
@@ -306,11 +306,11 @@ public class Tank implements GameObject {
 		// 全く同じ位置だった場合、少しだけずらす
 		if (vector.x == 0 && vector.y == 0) {
 			Random random = new Random();
-			vector.x = random.nextDouble() - 0.5; // 0.0~1.0だと正の方向に偏るので -0.5
+			vector.x = random.nextDouble() - 0.5;
 			vector.y = random.nextDouble() - 0.5;
 		}
 
-		// 相手のサイズを取得（これが抜けていました）
+		// 相手のサイズを取得
 		double otherWidth, otherHeight;
 		if (other.getShape() instanceof Rectangle) {
 			Rectangle rect = (Rectangle) other.getShape();
@@ -349,23 +349,23 @@ public class Tank implements GameObject {
 	}
 
 	@Override
-	public void onHitBy(DangerGameObject bullet) {
+	public void onHitBy(Projectile bullet) {
 		if (isDead()) return;
 		this.damage(bullet.getDamageAbility());
 	}
 
 	@Override
-	public boolean shouldRemove() {
+	public boolean isExpired() {
 		return false;
 	}
 
 	@Override
 	public boolean isTangible() {
 		switch (getState()) {
-			case RESPAWNING:
 			case NORMAL:
 			case BROKEN:
 				return true;
+			case RESPAWNING:
 			case DEBRIS:
 			case NONE:
 				return false;

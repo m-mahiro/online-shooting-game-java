@@ -1,4 +1,4 @@
-import javax.swing.JPanel;
+import javax.swing.*;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -13,8 +13,8 @@ public class GamePanel extends JPanel implements Runnable {
 
 	private final AffineTransform canvasTransform = new AffineTransform();
 	private double cameraZoom = 1;
-	public double CAMERA_ZOOM_UPPER_THRESHOLD = 10;
-	public double CAMERA_ZOOM_LOWER_THRESHOLD = 0.1;
+	public double CAMERA_ZOOM_UPPER_THRESHOLD = 5;
+	public double CAMERA_ZOOM_LOWER_THRESHOLD = 0.07;
 
 	private Thread gameThread;
 	private InputHandler input;
@@ -42,7 +42,7 @@ public class GamePanel extends JPanel implements Runnable {
 //		myTankID = 0;
 
 		// ============================= オブジェクトの配置 =============================
-		this.gameStage = new GameStage(networkClientID, 10);
+		this.gameStage = new GameStage(networkClientID, 2);
 
 		// カメラの初期設定
 		cameraZoom = 0.5;
@@ -106,10 +106,8 @@ public class GamePanel extends JPanel implements Runnable {
 	public void run() {
 		// 1フレームの持ち時間 (ナノ秒)
 		// 1秒 = 1,000,000,000 ナノ秒
-		double drawInterval = 1000000000.0 / FPS;
-		double nextDrawTime = System.nanoTime() + drawInterval;
-
-		int frame = 0;
+		long drawInterval = 1000000000L / FPS;
+		long nextDrawTime = System.nanoTime() + drawInterval;
 
 
 		while (gameThread != null) {
@@ -117,7 +115,7 @@ public class GamePanel extends JPanel implements Runnable {
 			repaint();
 
 			// 3. SLEEP: 時間調整
-			double remainingTime = nextDrawTime - System.nanoTime();
+			long remainingTime = nextDrawTime - System.nanoTime();
 
 			try {
 				// 時間が余っていれば寝る
@@ -169,14 +167,15 @@ public class GamePanel extends JPanel implements Runnable {
 			networkManager.shootGun(myTankID);
 		}
 
-		// 戦車にエネルギーチャージ命令を出す
-		if (input.chargeButtonPressed()) {
+		// 戦車にチャージ開始命令を出す。
+		if (input.startEnergyCharge()) {
 			Missile missile = myTank.startEnergyCharge();
 			gameStage.addObject(missile);
-			System.out.println("チャージ開始");
-		} else {
+		}
+
+		// 戦車にチャージキャンセル
+		if (input.finishEnergyCharge()) {
 			myTank.finishEnergyCharge();
-			System.out.println("チャージ終了");
 		}
 
 		// 戦車のブロック作成命令を出す。

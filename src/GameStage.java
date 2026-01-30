@@ -247,7 +247,7 @@ public class GameStage {
 				continue;
 			}
 
-			if (object.shouldRemove()) {
+			if (object.isExpired()) {
 				iterator.remove();
 			}
 		}

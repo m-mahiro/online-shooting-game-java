@@ -50,12 +50,12 @@ public class Wall implements GameObject {
 	}
 
 	@Override
-	public void onHitBy(DangerGameObject other) {
+	public void onHitBy(Projectile other) {
 
 	}
 
 	@Override
-	public boolean shouldRemove() {
+	public boolean isExpired() {
 		return false;
 	}
 
@@ -88,5 +88,10 @@ public class Wall implements GameObject {
 	@Override
 	public int getHP() {
 		return Integer.MAX_VALUE;
+	}
+
+	@Override
+	public Team getTeam() {
+		return Team.OBSTACLE;
 	}
 }

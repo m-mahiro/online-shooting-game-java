@@ -9,9 +9,9 @@ public interface GameObject {
 
 	void onCollision(GameObject other);
 
-	void onHitBy(DangerGameObject other);
+	void onHitBy(Projectile other);
 
-	boolean shouldRemove();
+	boolean isExpired();
 
 	boolean isTangible();
 
@@ -24,4 +24,6 @@ public interface GameObject {
 	void setPosition(double x, double y);
 
 	int getHP();
+
+	Team getTeam();
 }

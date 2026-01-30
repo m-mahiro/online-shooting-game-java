@@ -6,22 +6,20 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
 
-public class Missile implements GameObject, DangerGameObject {
+public class Missile implements GameObject, Projectile {
 
 	// 定数
 	private static final double VELOCITY = 50;
-	private static final double COLLISION_RADIUS_IN_CHARGING = 10;
-	private static final double COLLISION_RADIUS_IN_FLYING = 30;
-	private static final int CHARGE_FRAME = GamePanel.FPS * 2;
+	private static final double MAX_OBJECT_SCALE = 5.0;
+	private static final int MAX_DAMAGE_ABILITY = 200;
 
 	// 状態
 	private Tank shooter;
 	private Point2D.Double position;
 	private double angle;
 	private Status state = Status.CHARGING;
-	private int damageAbility = 500;
-	private int chargeFrame = CHARGE_FRAME;
-	private double objectScale = 1.0;
+	private int chargeCount = 0;
+	private int damageTotal = 0;
 
 	// 演出用定数
 	private static final int CANCEL_ANIMATION_FRAME = (int) (GamePanel.FPS * 0.5);
@@ -30,25 +28,32 @@ public class Missile implements GameObject, DangerGameObject {
 	private int cancelAnimationFrame = 0;
 
 	// 画像リソース
-	private static BufferedImage blueNormalMissileImage, redNormalMissileImage, blueMissileDebris, redMissileDebris, noneImage;
+	private static BufferedImage blueChargingMissileImage, redChargingMissileImage;
+	private static BufferedImage blueReadyMissileImage, redReadyMissileImage;
+	private static BufferedImage blueMissileDebris, redMissileDebris;
+	private static BufferedImage noneImage;
+
+	// 状態管理
+	private enum Status {
+		CHARGING, CANCELLED, FLYING, DEBRIS, SHOULD_REMOVE
+	}
 
 	static {
 		try {
 			noneImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("assets/none_image.png")));
-			blueNormalMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("assets/missile_blue_normal.png")));
-			redNormalMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("assets/missile_blue_normal.png")));
+
+			blueChargingMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("assets/missile_blue_charging.png")));
+			redChargingMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("assets/missile_blue_charging.png")));
+
+			blueReadyMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("assets/missile_blue_ready.png")));
+			redReadyMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("assets/missile_blue_ready.png")));
+
 			blueMissileDebris = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("assets/bullet_blue_debris.png")));
 			redMissileDebris = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("assets/bullet_red_debris.png")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-
-	// 状態管理
-	private enum Status {
-		CHARGING, CANCELLED, IS_READY, FLYING, DEBRIS, SHOULD_REMOVE
-	}
-
 
 	public Missile(Tank shooter) {
 		this.shooter = shooter;
@@ -58,26 +63,9 @@ public class Missile implements GameObject, DangerGameObject {
 
 	// ============================= Missileクラス独自のメソッド =============================
 
-	public boolean finishEnergyCharge() {
-		switch (this.state) {
-			case CHARGING:
-				this.state = Status.CANCELLED;
-				return false;
-			case IS_READY:
-				launch();
-				return true;
-			default:
-				return false;
-		}
-	}
-
 	public void decreaseDamageAbility(int damage) {
-		damageAbility -= damage;
-		if (damageAbility <= 0) onDie();
-	}
-
-	public void onDie() {
-		explode();
+		damageTotal += damage;
+		if (this.getHP() <= 0) explode();
 	}
 
 	public void explode() {
@@ -94,28 +82,30 @@ public class Missile implements GameObject, DangerGameObject {
 		this.setPosition(x, y);
 	}
 
-	private void launch() {
+	public void launch() {
 		this.state = Status.FLYING;
 	}
 
-	private Team getTeam() {
+	public Team getTeam() {
 		return this.shooter.getTeam();
 	}
 
-	private double getCollisionRadius() {
+	private double getObjectScale() {
 		switch (this.state) {
-			case CHARGING:
-			case IS_READY:
-				return COLLISION_RADIUS_IN_CHARGING;
-			case FLYING:
-				return COLLISION_RADIUS_IN_FLYING;
-			case CANCELLED:
 			case DEBRIS:
+			case CANCELLED:
 			case SHOULD_REMOVE:
-				return 0;
+				return 1.0;
+			case CHARGING:
+			case FLYING:
+				return Math.max(MAX_OBJECT_SCALE, getDamageAbility() / 100.0);
 			default:
 				throw new IllegalStateException("Unexpected value: " + this.state);
 		}
+	}
+
+	private double getCollisionRadius() {
+		return getImage().getWidth() / 2.0 * getObjectScale();
 	}
 
 	private BufferedImage getImage() {
@@ -123,9 +113,9 @@ public class Missile implements GameObject, DangerGameObject {
 		switch (this.state) {
 			case CHARGING:
 			case CANCELLED:
-			case IS_READY:
+				return isRed ? redChargingMissileImage : blueChargingMissileImage;
 			case FLYING:
-				return isRed ? redNormalMissileImage : blueNormalMissileImage;
+				return isRed ? redReadyMissileImage : blueReadyMissileImage;
 			case DEBRIS:
 				return isRed ? redMissileDebris : blueMissileDebris;
 			case SHOULD_REMOVE:
@@ -154,46 +144,45 @@ public class Missile implements GameObject, DangerGameObject {
 		}
 
 		// フレームカウントダウン
-		if (chargeFrame > 0) chargeFrame--;
 		if (cancelAnimationFrame > 0) cancelAnimationFrame--;
 
-		// 状態管理
-		if (state == Status.CHARGING && chargeFrame <= 0) state = Status.IS_READY;
-
+		// フレームカウントアップ
+		if (state == Status.CHARGING) chargeCount++;
 	}
 
 	@Override
 	public void draw(Graphics2D graphics) {
 		BufferedImage image = getImage();
+		double objectScale = this.getObjectScale();
 		AffineTransform trans = new AffineTransform();
 		trans.translate(position.x, position.y);
 		trans.rotate(angle);
-		trans.translate(-image.getWidth() / 2.0, -image.getHeight() / 2.0);
 		trans.scale(objectScale, objectScale);
+		trans.translate(-image.getWidth() / 2.0, -image.getHeight() / 2.0);
 		graphics.drawImage(image, trans, null);
 	}
 
 	@Override
 	public void onCollision(GameObject other) {
-		if (other instanceof Bullet) {
-			Bullet bullet = (Bullet) other;
-			if (bullet.getTeam() == this.getTeam()) return;
+
+		if(this.state == Status.CHARGING) explode();
+
+		// 衝突が相手のオブジェクトなら、被弾通知をおくる。
+		if (other.getTeam() != this.getTeam()) {
+			other.onHitBy(this);
+			// 相手のHPの分だけ自分の殺傷能力をを削る
+			this.decreaseDamageAbility(other.getHP());
 		}
 
-		// 相手に被弾を知らせる
-		if (this.state == Status.FLYING) other.onHitBy(this);
-
-		// 相手のHPの分だけ自分の殺傷能力をを削る
-		this.decreaseDamageAbility(other.getHP());
 	}
 
 	@Override
-	public void onHitBy(DangerGameObject other) {
+	public void onHitBy(Projectile other) {
 		decreaseDamageAbility(other.getDamageAbility());
 	}
 
 	@Override
-	public boolean shouldRemove() {
+	public boolean isExpired() {
 		switch (this.state) {
 			case CANCELLED:
 				return cancelAnimationFrame <= 0;
@@ -208,7 +197,6 @@ public class Missile implements GameObject, DangerGameObject {
 	public boolean isTangible() {
 		switch (this.state) {
 			case CHARGING:
-			case IS_READY:
 			case FLYING:
 				return true;
 			case CANCELLED:
@@ -225,7 +213,6 @@ public class Missile implements GameObject, DangerGameObject {
 		switch (this.state) {
 			case CHARGING:
 			case CANCELLED:
-			case IS_READY:
 			case FLYING:
 				return RenderLayer.PROJECTILE;
 			case DEBRIS:
@@ -253,18 +240,18 @@ public class Missile implements GameObject, DangerGameObject {
 
 	@Override
 	public int getHP() {
-		return damageAbility;
+		return getDamageAbility();
 	}
 
 
-	// ============================= DangerObjectインターフェースのメソッド =============================
+	// ============================= Projectileインターフェースのメソッド =============================
 
 	@Override
 	public int getDamageAbility() {
 		if (this.state == Status.FLYING) {
-			return damageAbility;
-		} else {
-			return 0;
+			int damageAbility = Math.min(chargeCount / GamePanel.FPS * 10, MAX_DAMAGE_ABILITY) - damageTotal;
+			return Math.max(damageAbility, 0);
 		}
+		return 0;
 	}
 }

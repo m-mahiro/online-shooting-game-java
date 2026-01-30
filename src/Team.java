@@ -1,3 +1,3 @@
 public enum Team {
-	BLUE, RED
+	BLUE, RED, OBSTACLE
 }

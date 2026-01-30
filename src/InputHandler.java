@@ -9,11 +9,14 @@ public interface InputHandler {
 
 	boolean shootBullet();
 
-	boolean chargeButtonPressed();
+	boolean startEnergyCharge();
+
+	boolean finishEnergyCharge();
 
 	boolean createBlock();
 
 	int getZoomAmount();
 
 	void onFrameUpdate();
+
 }

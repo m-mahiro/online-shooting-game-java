@@ -9,7 +9,6 @@ public class GameWindow extends JFrame {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 //		// 1. ウィンドウの枠（タイトルバーなど）を削除
-//		// これをしないとフルスクリーン時に枠が残ってしまいます
 //		setUndecorated(true);
 //		setResizable(false);
 

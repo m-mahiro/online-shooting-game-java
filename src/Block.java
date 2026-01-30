@@ -128,12 +128,12 @@ public class Block implements GameObject {
 	}
 
 	@Override
-	public void onHitBy(DangerGameObject other) {
+	public void onHitBy(Projectile other) {
 		damage(other.getDamageAbility());
 	}
 
 	@Override
-	public boolean shouldRemove() {
+	public boolean isExpired() {
 		return getState() == State.SHOULD_REMOVE;
 	}
 
@@ -175,6 +175,11 @@ public class Block implements GameObject {
 	@Override
 	public int getHP() {
 		return this.hp;
+	}
+
+	@Override
+	public Team getTeam() {
+		return Team.OBSTACLE;
 	}
 
 	// ============================= ゲッターセッター =============================

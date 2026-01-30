@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.Objects;
 import javax.imageio.ImageIO;
 
-public class Bullet implements GameObject, DangerGameObject {
+public class Bullet implements GameObject, Projectile {
 
 	// 特徴
 	private static final int COLLISION_RADIUS = 5;
@@ -140,21 +140,21 @@ public class Bullet implements GameObject, DangerGameObject {
 
 	@Override
 	public void onCollision(GameObject other) {
-		if (other instanceof Tank) {
-			Tank tank = (Tank) other;
-			if (tank.getTeam() == shooter.getTeam()) return;
+
+		// 衝突が相手のオブジェクトなら、被弾通知をおくる。
+		if (other.getTeam() != this.getTeam()) {
+			other.onHitBy(this);
+			explode();
 		}
-		this.explode();     // とりあえず自身が爆発
-		other.onHitBy(this); // 相手に被弾を通知する
 	}
 
 	@Override
-	public void onHitBy(DangerGameObject other) {
+	public void onHitBy(Projectile other) {
 
 	}
 
 	@Override
-	public boolean shouldRemove() {
+	public boolean isExpired() {
 		return getState() == State.SHOULD_REMOVE;
 	}
 
@@ -197,7 +197,7 @@ public class Bullet implements GameObject, DangerGameObject {
 	}
 
 
-	// ============================= DangerGameObjectインタフェースのメソッド =============================
+	// ============================= Projectileインタフェースのメソッド =============================
 
 	public int getDamageAbility() {
 		return DAMAGE_ABILITY;

@@ -183,16 +183,15 @@ public class Base implements GameObject {
 
 	@Override
 	public void onCollision(GameObject other) {
-		// 何もしない
 	}
 
 	@Override
-	public void onHitBy(DangerGameObject other) {
+	public void onHitBy(Projectile other) {
 		damage(other.getDamageAbility());
 	}
 
 	@Override
-	public boolean shouldRemove() {
+	public boolean isExpired() {
 		return false;
 	}
 

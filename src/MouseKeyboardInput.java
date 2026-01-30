@@ -5,11 +5,11 @@ import java.awt.geom.Point2D;
 
 public class MouseKeyboardInput
 		implements
-			InputHandler,
-			KeyListener,
-			MouseMotionListener,
-			MouseListener,
-			MouseWheelListener {
+		InputHandler,
+		KeyListener,
+		MouseMotionListener,
+		MouseListener,
+		MouseWheelListener {
 
 
 	public MouseKeyboardInput(GamePanel gamePanel) {
@@ -35,12 +35,12 @@ public class MouseKeyboardInput
 	private int scrollAmount = 0;
 
 	private boolean canShootBullet = true;
-	private boolean chargeIsStarted = false;
 
 	private int continuousLeftPressedCount = 0;
 	private ChargeState chargeState = ChargeState.STAND_BY;
+
 	private enum ChargeState {
-		STAND_BY, IS_CHARGING
+		STAND_BY, POST_CHARGE_START, POST_CHARGE_FINISH, CHARGING
 	}
 
 	// ============================= InputHandlerの実装 =============================
@@ -83,6 +83,19 @@ public class MouseKeyboardInput
 		return result;
 	}
 
+	@Override
+	public boolean startEnergyCharge() {
+		boolean temp = chargeState == ChargeState.POST_CHARGE_START;
+		if (temp) chargeState = ChargeState.CHARGING;
+		return temp;
+	}
+
+	@Override
+	public boolean finishEnergyCharge() {
+		boolean temp = chargeState == ChargeState.POST_CHARGE_FINISH;
+		if (temp) chargeState = ChargeState.STAND_BY;
+		return temp;
+	}
 
 	@Override
 	public boolean createBlock() {
@@ -106,8 +119,18 @@ public class MouseKeyboardInput
 		} else {
 			continuousLeftPressedCount = 0;
 		}
-		if (continuousLeftPressedCount > CHARGE_START_COUNT) {
-			chargeState = ChargeState.IS_CHARGING;
+
+		switch (this.chargeState) {
+			case STAND_BY:
+				if (continuousLeftPressedCount > CHARGE_START_COUNT) {
+					chargeState = ChargeState.POST_CHARGE_START;
+				}
+				break;
+			case CHARGING:
+				if (continuousLeftPressedCount <= CHARGE_START_COUNT) {
+					chargeState = ChargeState.POST_CHARGE_FINISH;
+				}
+				break;
 		}
 	}
 

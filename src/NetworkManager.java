@@ -18,8 +18,7 @@ public class NetworkManager extends Thread {
 	public NetworkManager(GamePanel gamePanel) {
 		this.gamePanel = gamePanel;
 		try {
-			// サーバーに接続 (IPは localhost 固定、適宜変更)
-			socket = new Socket("10.75.200.52", 10000);
+			socket = new Socket("localhost", 10000);
 			out = new PrintWriter(socket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
@@ -83,7 +82,6 @@ public class NetworkManager extends Thread {
 
 	// メッセージの解釈
 	private void parseMessage(String msg) {
-		// メッセージ例: "MOVE 1 100.5 200.5 1.57"
 		String[] tokens = msg.split(" ");
 		String cmd = tokens[0];
 		GameStage stage = gamePanel.gameStage;
@@ -93,7 +91,7 @@ public class NetworkManager extends Thread {
 
 		try {
 			switch (cmd) {
-				case "MOVE": {
+				case "LOCATE": {
 					double x = Double.parseDouble(tokens[2]);
 					double y = Double.parseDouble(tokens[3]);
 					stage.getObject(tankID).setPosition(x, y);
@@ -134,7 +132,7 @@ public class NetworkManager extends Thread {
 
 	public void locateTank(int id, Point2D.Double position) {
 		if (out == null) return;
-		out.println("MOVE " + id + " " + position.x + " " + position.y);
+		out.println("LOCATE " + id + " " + position.x + " " + position.y);
 	}
 
 	public void shootGun(int tankID) {
