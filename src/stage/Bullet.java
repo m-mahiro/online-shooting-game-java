@@ -44,11 +44,11 @@ public class Bullet implements GameObject, Projectile {
 
 	static {
 		try {
-			noneImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("client/assets/none_image.png")));
-			blueNormalBulletImage = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("client/assets/bullet_blue.png")));
-			redNormalBulletImage = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("client/assets/bullet_red_normal.png")));
-			blueBulletDebris = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("client/assets/bullet_blue_debris.png")));
-			redBulletDebris = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("client/assets/bullet_red_debris.png")));
+			noneImage = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("/client/assets/none_image.png")));
+			blueNormalBulletImage = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("/client/assets/bullet_blue.png")));
+			redNormalBulletImage = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("/client/assets/bullet_red_normal.png")));
+			blueBulletDebris = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("/client/assets/bullet_blue_debris.png")));
+			redBulletDebris = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("/client/assets/bullet_red_debris.png")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

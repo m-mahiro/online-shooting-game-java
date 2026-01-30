@@ -33,8 +33,8 @@ public class GameStage implements StageInfo {
 
 	static {
 		try {
-			floorTexture = ImageIO.read(Objects.requireNonNull(GameStage.class.getResource("client/assets/floor_texture.png")));
-			outerStageTexture = ImageIO.read(Objects.requireNonNull(GameStage.class.getResource("client/assets/ocean_texture.png")));
+			floorTexture = ImageIO.read(Objects.requireNonNull(GameStage.class.getResource("../client/assets/floor_texture.png")));
+			outerStageTexture = ImageIO.read(Objects.requireNonNull(GameStage.class.getResource("../client/assets/ocean_texture.png")));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

@@ -45,11 +45,11 @@ public class Block implements GameObject {
 
 	static {
 		try {
-			normalBlockImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("client/assets/block_normal.png")));
-			brokenBlockImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("client/assets/block_broken.png")));
-			blockDebrisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("client/assets/block_debris.png")));
-			transparentBlockImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("client/assets/block_trans.png")));
-			noneImage = ImageIO.read(Objects.requireNonNull(Block.class.getResource("client/assets/none_image.png")));
+			normalBlockImage = ImageIO.read(Objects.requireNonNull(Block.class.getResource("/client/assets/block_normal.png")));
+			brokenBlockImage = ImageIO.read(Objects.requireNonNull(Block.class.getResource("/client/assets/block_broken.png")));
+			blockDebrisImage = ImageIO.read(Objects.requireNonNull(Block.class.getResource("/client/assets/block_debris.png")));
+			transparentBlockImage = ImageIO.read(Objects.requireNonNull(Block.class.getResource("/client/assets/block_trans.png")));
+			noneImage = ImageIO.read(Objects.requireNonNull(Block.class.getResource("/client/assets/none_image.png")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

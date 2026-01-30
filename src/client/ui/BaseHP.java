@@ -40,14 +40,14 @@ public class BaseHP implements UIContent {
 			blueTableImage = ImageIO.read(Objects.requireNonNull(BaseHP.class.getResource("../assets/hp_table_blue.png")));
 
 			// REDチームの基地の画像
-			normalRedBaseImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("../assets/hp_base_red_normal.png")));
-			brokenRedBaseImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("../assets/hp_base_red_broken.png")));
-			redBaseRuinsImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("../assets/hp_base_red_ruins.png")));
+			normalRedBaseImage = ImageIO.read(Objects.requireNonNull(BaseHP.class.getResource("../assets/hp_base_red_normal.png")));
+			brokenRedBaseImage = ImageIO.read(Objects.requireNonNull(BaseHP.class.getResource("../assets/hp_base_red_broken.png")));
+			redBaseRuinsImage = ImageIO.read(Objects.requireNonNull(BaseHP.class.getResource("../assets/hp_base_red_ruins.png")));
 
 			// BLUEチームの基地の画像
-			normalBlueBaseImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("../assets/hp_base_blue_normal.png")));
-			brokenBlueBaseImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("../assets/hp_base_blue_broken.png")));
-			blueBaseRuinsImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("../assets/hp_base_blue_ruins.png")));
+			normalBlueBaseImage = ImageIO.read(Objects.requireNonNull(BaseHP.class.getResource("../assets/hp_base_blue_normal.png")));
+			brokenBlueBaseImage = ImageIO.read(Objects.requireNonNull(BaseHP.class.getResource("../assets/hp_base_blue_broken.png")));
+			blueBaseRuinsImage = ImageIO.read(Objects.requireNonNull(BaseHP.class.getResource("../assets/hp_base_blue_ruins.png")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

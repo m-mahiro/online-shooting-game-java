@@ -48,20 +48,20 @@ public class Base implements GameObject {
 	static {
 		try {
 			// red base
-			normalRedBaseImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("client/assets/base_red_normal.png")));
-			brokenRedBaseImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("client/assets/base_red_broken.png")));
-			redBaseRuinsImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("client/assets/base_red_ruins.png")));
+			normalRedBaseImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("/client/assets/base_red_normal.png")));
+			brokenRedBaseImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("/client/assets/base_red_broken.png")));
+			redBaseRuinsImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("/client/assets/base_red_ruins.png")));
 
 			// blue base
-			normalBlueBaseImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("client/assets/base_blue_normal.png")));
-			brokenBlueBaseImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("client/assets/base_blue_broken.png")));
-			blueBaseRuinsImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("client/assets/base_blue_ruins.png")));
+			normalBlueBaseImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("/client/assets/base_blue_normal.png")));
+			brokenBlueBaseImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("/client/assets/base_blue_broken.png")));
+			blueBaseRuinsImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("/client/assets/base_blue_ruins.png")));
 
 			// ring
-			normalRingImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("client/assets/ring_normal.png")));
+			normalRingImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("/client/assets/ring_normal.png")));
 
 			// 透明
-			noneImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("client/assets/none_image.png")));
+			noneImage = ImageIO.read(Objects.requireNonNull(Base.class.getResource("/client/assets/none_image.png")));
 
 		} catch (IOException e) {
 			e.printStackTrace();

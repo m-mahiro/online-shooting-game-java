@@ -44,16 +44,16 @@ public class Missile implements GameObject, Projectile {
 
 	static {
 		try {
-			noneImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("client/assets/none_image.png")));
+			noneImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("/client/assets/none_image.png")));
 
-			blueChargingMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("client/assets/missile_blue_charging.png")));
-			redChargingMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("client/assets/missile_blue_charging.png")));
+			blueChargingMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("/client/assets/missile_blue_charging.png")));
+			redChargingMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("/client/assets/missile_blue_charging.png")));
 
-			blueReadyMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("client/assets/missile_blue_ready.png")));
-			redReadyMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("client/assets/missile_blue_ready.png")));
+			blueReadyMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("/client/assets/missile_blue_ready.png")));
+			redReadyMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("/client/assets/missile_blue_ready.png")));
 
-			blueMissileDebris = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("client/assets/bullet_blue_debris.png")));
-			redMissileDebris = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("client/assets/bullet_red_debris.png")));
+			blueMissileDebris = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("/client/assets/bullet_blue_debris.png")));
+			redMissileDebris = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("/client/assets/bullet_red_debris.png")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

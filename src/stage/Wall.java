@@ -21,7 +21,7 @@ public class Wall implements GameObject {
 
 	static {
 		try {
-			wallImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("client/assets/wall.png"))).getScaledInstance(WIDTH + 1, HEIGHT + 1, Image.SCALE_SMOOTH);
+			wallImage = ImageIO.read(Objects.requireNonNull(Wall.class.getResource("/client/assets/wall.png"))).getScaledInstance(WIDTH + 1, HEIGHT + 1, Image.SCALE_SMOOTH);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
