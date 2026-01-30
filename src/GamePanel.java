@@ -19,9 +19,12 @@ public class GamePanel extends JPanel implements Runnable {
 	private Thread gameThread;
 	private InputHandler input;
 
-	private NetworkManager networkManager;
+	private NetworkManager network;
 	private int networkClientID;
 	public GameStage gameStage;
+	public GameUI gameUI;
+	public HUPRender hud;
+
 	private int myTankID;
 
 	public GamePanel() {
@@ -36,9 +39,9 @@ public class GamePanel extends JPanel implements Runnable {
 		this.input = new MouseKeyboardInput(this);
 
 		// サーバに接続、クライアントIDをもらう
-		this.networkManager = new NetworkManager(this);
-		networkClientID = this.networkManager.getNetworkClientID();
-		myTankID = this.networkManager.getMyTankID();
+		this.network = new NetworkManager(this);
+		networkClientID = this.network.getNetworkClientID();
+		myTankID = this.network.getMyTankID();
 //		myTankID = 0;
 
 		// ============================= オブジェクトの配置 =============================
@@ -49,7 +52,7 @@ public class GamePanel extends JPanel implements Runnable {
 		setCameraPosition(getMyTank().getPosition());
 
 		// サーバからのメッセージ受け取り開始
-		this.networkManager.start();
+		this.network.start();
 	}
 
 	@Override
@@ -153,18 +156,18 @@ public class GamePanel extends JPanel implements Runnable {
 		if (moveVector.x != 0 || moveVector.y != 0) {
 			myTank.move(moveVector);
 		}
-		networkManager.locateTank(myTankID, myTank.getPosition());
+		network.locateTank(myTankID, myTank.getPosition());
 
 		// マウス位置へ砲塔を向ける命令を出す
 		Point2D.Double coordinate = input.getAimedCoordinate(this.canvasTransform);
 		myTank.aimAt(coordinate);
-		networkManager.aimAt(myTankID, coordinate);
+		network.aimAt(myTankID, coordinate);
 
 		// 戦車に発砲命令を出す。
 		if (input.shootBullet()) {
 			Bullet bullet = myTank.shootBullet();
 			gameStage.addObject(bullet);
-			networkManager.shootGun(myTankID);
+			network.shootGun(myTankID);
 		}
 
 		// 戦車にチャージ開始命令を出す。
@@ -183,7 +186,7 @@ public class GamePanel extends JPanel implements Runnable {
 			Block block = myTank.createBlock();
 			if (block == null) return;
 			gameStage.addObject(block);
-			networkManager.createBlock(myTankID);
+			network.createBlock(myTankID);
 		}
 	}
 

@@ -34,7 +34,8 @@ public class Tank implements GameObject {
 	private boolean hadBroken = false;
 	private boolean isOnBase = false;
 
-	private SoundManager sound = new SoundManager();
+	// 効果音
+	private static final SoundManager sound = new SoundManager();
 
 	// 画像リソース
 	private static BufferedImage redNormalChassisImage, redBrokenChassisImage, redTransparentChassisImage;
@@ -83,7 +84,7 @@ public class Tank implements GameObject {
 		}
 	}
 
-	Tank(Base base) {
+	public Tank(Base base) {
 		this.position = base.getPosition();
 		this.base = base;
 	}

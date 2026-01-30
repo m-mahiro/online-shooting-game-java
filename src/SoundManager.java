@@ -11,7 +11,7 @@ public class SoundManager {
 		createBlock = load("assets/sounds/create_block.wav");
 		objectBreak = load("assets/sounds/object_break.wav");
 		objectExplosion = load("assets/sounds/object_explosion.wav");
-		shot = load("assets/sounds/shot2.wav");
+		shot = load("assets/sounds/shot.wav");
 	}
 
 	private static Clip load(String path) {

@@ -28,7 +28,7 @@ public class Bullet implements GameObject, Projectile {
 	private int debrisLifeFrame = 0;
 
 	// 効果音
-	private final SoundManager sound = new SoundManager();
+	private static final SoundManager sound = new SoundManager();
 
 	// 画像リソース（共有）
 	private static BufferedImage blueNormalBulletImage, redNormalBulletImage, blueBulletDebris, redBulletDebris, noneImage;

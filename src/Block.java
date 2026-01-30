@@ -27,7 +27,8 @@ public class Block implements GameObject {
 	private double objectScale = 1.0;
 	private boolean isBroken = false;
 
-	private SoundManager sound = new SoundManager();
+	// 効果音
+	private static final SoundManager sound = new SoundManager();
 
 	// 画像リソース
 	private static BufferedImage normalBlockImage, brokenBlockImage, blockDebrisImage, transparentBlockImage;
