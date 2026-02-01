@@ -1,6 +1,6 @@
 package stage;
 
-import client.GamePanel;
+import client.GameEngine;
 import client.SoundManager;
 
 import javax.imageio.ImageIO;
@@ -24,9 +24,9 @@ public class Base implements GameObject {
 	private Team team;
 
 	// 定数(演出用)
-	private static final int EXPLOSION_FRAME = GamePanel.FPS / 2;
-	private static final int DAMAGE_FLUSH_FRAME = (int) (GamePanel.FPS * 1.5);
-	private static final int DEBRIS_LIFE_FRAME = GamePanel.FPS / 4;
+	private static final int EXPLOSION_FRAME = GameEngine.FPS / 2;
+	private static final int DAMAGE_FLUSH_FRAME = (int) (GameEngine.FPS * 1.5);
+	private static final int DEBRIS_LIFE_FRAME = GameEngine.FPS / 4;
 
 	// 状態(演出用)
 	private int explosionFrame = 0;
@@ -164,7 +164,7 @@ public class Base implements GameObject {
 		if (debrisLifeFrame > 0) debrisLifeFrame--;
 
 		// 破壊されたときの残骸が飛び散る演出用に、オブジェクトのスケールを二次関数的に増加させる。
-		if (getState() == State.RUINS) debrisScale += (GamePanel.FPS / 10.0) * debrisLifeFrame / 100.0;
+		if (getState() == State.RUINS) debrisScale += (GameEngine.FPS / 10.0) * debrisLifeFrame / 100.0;
 	}
 
 	@Override

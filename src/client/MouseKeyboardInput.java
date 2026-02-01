@@ -4,6 +4,7 @@ import java.awt.event.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
+import client.GameEngine;
 
 public class MouseKeyboardInput
 		implements
@@ -26,7 +27,7 @@ public class MouseKeyboardInput
 	}
 
 	// 定数
-	private final int CHARGE_START_COUNT = (int) (GamePanel.FPS * 0.5);
+	private final int CHARGE_START_COUNT = (int) (GameEngine.FPS * 0.5);
 
 	// キーが押されているかどうかのフラグ
 	private boolean up, down, left, right;

@@ -1,0 +1,168 @@
+package client;
+
+import client.ui.GameUI;
+import stage.*;
+
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+
+public class GameEngine implements Runnable {
+
+    public static final int FPS = 60;
+
+    // ゲームオブジェクト
+    private GameStage stage;
+    private GameUI ui;
+    private Tank myTank;
+
+    // 入力・ネットワーク関連
+    private InputHandler input;
+    private NetworkManager network;
+
+    // ゲームの状態
+    private int networkID;
+    private int myTankID;
+    private Thread gameThread;
+
+    // キャンバス・カメラ関連
+    private int canvasWidth, canvasHeight;
+    private double zoomDegrees;
+    private Point2D.Double cameraPosition = new Point2D.Double();
+    public double CAMERA_ZOOM_UPPER_THRESHOLD = 5;
+    public double CAMERA_ZOOM_LOWER_THRESHOLD = 0.07;
+
+    private final Runnable repaintCallback;
+
+    public GameEngine(Runnable repaintCallback, InputHandler inputHandler) {
+        this.repaintCallback = repaintCallback;
+        this.input = inputHandler;
+
+        // サーバーに接続してクライアントIDを取得
+        this.network = new NetworkManager(this);
+        networkID = this.network.getNetworkClientID();
+
+        // Builderを使用してステージを生成
+        StageBuilder stageBuilder = new StageBuilder();
+        this.stage = stageBuilder.createDefaultStage(10); // 仮でプレイヤー数を10に設定
+
+        // ステージから自分の戦車を取得
+        myTankID = this.network.getMyTankID();
+        GameObject myTankObject = this.stage.getGameObject(myTankID);
+        if (myTankObject instanceof Tank) {
+            this.myTank = (Tank) myTankObject;
+        } else {
+            throw new RuntimeException("My assigned object is not a Tank!");
+        }
+
+        // 自分の戦車にマーカーを追加
+        stage.addScreenObject(new Marker(myTank));
+
+        // UIを生成
+        this.ui = new GameUI(stage, myTank.getTeam());
+
+        // カメラの初期設定
+        this.cameraPosition = new Point2D.Double(0, 0);
+
+        // サーバーからのメッセージ受信を開始
+        this.network.start();
+    }
+
+    public void setCanvasSize(int width, int height) {
+        this.canvasWidth = width;
+        this.canvasHeight = height;
+    }
+
+    public void startGameThread(int width, int height) {
+        setCanvasSize(width, height);
+        this.gameThread = new Thread(this);
+        gameThread.start();
+        this.zoomDegrees = this.stage.getJustZoomDegrees(width, height) * 0.9;
+    }
+
+    @Override
+    public void run() {
+        long drawInterval = 1000000000L / FPS;
+        long nextDrawTime = System.nanoTime() + drawInterval;
+
+        while (gameThread != null) {
+            update();
+            repaintCallback.run();
+
+            long remainingTime = nextDrawTime - System.nanoTime();
+            try {
+                if (remainingTime > 0) {
+                    Thread.sleep(remainingTime / 1000000);
+                }
+                nextDrawTime += drawInterval;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void update() {
+        stage.update();
+        ui.update();
+
+        input.onFrameUpdate();
+
+        if (myTank.isDead()) return;
+
+        Point2D.Double moveVector = input.getMoveVector(getCanvasTransform());
+        if (moveVector.x != 0 || moveVector.y != 0) {
+            myTank.move(moveVector);
+        }
+        network.locateTank(myTankID, myTank.getPosition());
+
+        Point2D.Double coordinate = input.getAimedCoordinate(getCanvasTransform());
+        myTank.aimAt(coordinate);
+        network.aimAt(myTankID, coordinate);
+
+        if (input.shootBullet()) {
+            Bullet bullet = myTank.shootBullet();
+            stage.addStageObject(bullet);
+            network.shootGun(myTankID);
+        }
+
+        if (input.createBlock()) {
+            Block block = myTank.createBlock();
+            if (block != null) {
+                stage.addStageObject(block);
+                network.createBlock(myTankID);
+            }
+        }
+    }
+
+    public void zoomCamera(double zoomDelta) {
+        this.zoomDegrees -= zoomDelta;
+        if (this.zoomDegrees < CAMERA_ZOOM_LOWER_THRESHOLD) {
+            this.zoomDegrees = CAMERA_ZOOM_LOWER_THRESHOLD;
+        } else if (CAMERA_ZOOM_UPPER_THRESHOLD < this.zoomDegrees) {
+            this.zoomDegrees = CAMERA_ZOOM_UPPER_THRESHOLD;
+        }
+    }
+
+    public AffineTransform getCanvasTransform() {
+        AffineTransform trans = new AffineTransform();
+        trans.translate(this.canvasWidth / 2.0, this.canvasHeight / 2.0);
+        trans.scale(this.zoomDegrees, this.zoomDegrees);
+        trans.translate(-this.cameraPosition.x, -this.cameraPosition.y);
+        return trans;
+    }
+
+    public GameStage getStage() {
+        return stage;
+    }
+
+    public GameUI getUi() {
+        return ui;
+    }
+
+    public int getMyTankID() {
+        return myTankID;
+    }
+    
+    public double getZoomDegrees() {
+        return zoomDegrees;
+    }
+}

@@ -1,10 +1,8 @@
 package stage;
 
-import client.GamePanel;
+import client.GameEngine;
 
 import java.awt.geom.Point2D;
-import java.util.Random;
-
 
 public class AutoTank extends Tank {
 
@@ -12,22 +10,22 @@ public class AutoTank extends Tank {
     private final GameStage gameStage;
 
     // 移動関連
-    private static final int DIRECTION_CHANGE_FRAME = GamePanel.FPS * 2; // 2秒ごとに方向転換
+    private static final int DIRECTION_CHANGE_FRAME = GameEngine.FPS * 2; // 2秒ごとに方向転換
     private int directionChangeFrame = 0;
     private Point2D.Double currentDirection = new Point2D.Double(0, 0);
 
     // 射撃関連
-    private static final int SHOOT_COOLDOWN = GamePanel.FPS * 3; // 3秒ごとに連射開始
+    private static final int SHOOT_COOLDOWN = GameEngine.FPS * 3; // 3秒ごとに連射開始
     private static final int BURST_COUNT = 5; // 5発連射
-    private static final int BURST_INTERVAL = GamePanel.FPS / 5; // 0.2秒間隔
+    private static final int BURST_INTERVAL = GameEngine.FPS / 5; // 0.2秒間隔
     private int shootCooldown = SHOOT_COOLDOWN;
     private int burstCount = 0;
     private int burstInterval = 0;
 
     // ブロック設置関連
-    private static final int BLOCK_COOLDOWN = GamePanel.FPS * 10; // 10秒ごとに設置開始
+    private static final int BLOCK_COOLDOWN = GameEngine.FPS * 10; // 10秒ごとに設置開始
     private static final int PLACING_BLOCK_COUNT = 8; // 8個連続設置
-    private static final int BLOCK_PLACEMENT_INTERVAL = GamePanel.FPS / 4; // ブロック生成間隔 (0.25秒)
+    private static final int BLOCK_PLACEMENT_INTERVAL = GameEngine.FPS / 4; // ブロック生成間隔 (0.25秒)
     private int blockCooldown = BLOCK_COOLDOWN;
     private int placingBlockCount = 0;
     private int blockPlacementInterval = 0; // 次のブロックを置くまでのタイマー
@@ -115,7 +113,7 @@ public class AutoTank extends Tank {
                 placingBlockCount = PLACING_BLOCK_COUNT;
                 blockPlacementInterval = 0; // 最初のブロックはすぐに置く
                 // 設置中は直進を続けるように方向転換タイマーをリセット
-                directionChangeFrame = PLACING_BLOCK_COUNT * BLOCK_PLACEMENT_INTERVAL + GamePanel.FPS; // 設置時間+α
+                directionChangeFrame = PLACING_BLOCK_COUNT * BLOCK_PLACEMENT_INTERVAL + GameEngine.FPS; // 設置時間+α
                 blockCooldown = BLOCK_COOLDOWN;
             }
         }

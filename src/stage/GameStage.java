@@ -8,10 +8,15 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static stage.Team.*;
+import static stage.Team.BLUE;
+import static stage.Team.RED;
 
 public class GameStage implements StageInfo {
 
@@ -30,9 +35,6 @@ public class GameStage implements StageInfo {
 	// ステージ上空に張り付いているオブジェクト。GameUIよりは下層(隠れる)。
 	private final Map<Integer, UpperStageObject> upperObject = new ConcurrentHashMap<>();
 
-	// プレイヤー情報
-	private int myNetworkClientID;
-
 	// ステージ外のテクスチャのアニメーション用
 	double outerStageAnimationFrame = 0;
 
@@ -49,52 +51,19 @@ public class GameStage implements StageInfo {
 		}
 	}
 
-	public GameStage(int myNetworkClientID, int players) {
-		this.myNetworkClientID = myNetworkClientID;
+	public GameStage(Base redBase, Base blueBase) {
+		this.redBase = redBase;
+		this.blueBase = blueBase;
+		addStageObject(redBase);
+		addStageObject(blueBase);
+	}
 
-		ArrayList<GameObject> objects = new ArrayList<>();
+	public int getStageWidth() {
+		return stageWidth;
+	}
 
-		this.redBase = new Base(2000, 2000, RED);
-		this.blueBase = new Base(-2000, -2000, BLUE);
-
-		// まず最初に戦車
-		objects.add(new Tank(redBase));
-		for (int i = 1; i < players; i++) {
-			Team team = (i % 2 == 0 ) ? RED : BLUE;
-			switch (team) {
-				case RED: {
-					Tank tank = new Tank(redBase);
-					objects.add(tank);
-					break;
-				}
-				case BLUE: {
-					Tank tank = new Tank(blueBase);
-					objects.add(tank);
-					break;
-
-				}
-			}
-		}
-
-		objects.add(redBase);
-		objects.add(blueBase);
-
-
-		// 壁
-		int verticalWall = stageHeight / Wall.HEIGHT;
-		int horizontalWall = stageWidth / Wall.WIDTH;
-		for (int i = 0; i <= verticalWall; i++) {
-			for (int j = 0; j <= horizontalWall; j++) {
-				if (i != 0 && i != verticalWall && j != 0 && j != horizontalWall) continue;
-				double x = Wall.WIDTH * i - stageWidth / 2.0;
-				double y = Wall.HEIGHT * j - stageHeight / 2.0;
-				Point2D.Double point = new Point2D.Double(x, y);
-				Wall wall = new Wall(point);
-				objects.add(wall);
-			}
-		}
-
-		addStageObjects(objects);
+	public int getStageHeight() {
+		return stageHeight;
 	}
 
 	public int addStageObject(GameObject gameObject) {

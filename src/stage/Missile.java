@@ -1,6 +1,6 @@
 package stage;
 
-import client.GamePanel;
+import client.GameEngine;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -28,7 +28,7 @@ public class Missile implements GameObject, Projectile {
 	private int damageTotal = 0;
 
 	// 演出用定数
-	private static final int CANCEL_ANIMATION_FRAME = (int) (GamePanel.FPS * 0.5);
+	private static final int CANCEL_ANIMATION_FRAME = (int) (GameEngine.FPS * 0.5);
 
 	// 演出用変数
 	private int cancelAnimationFrame = 0;
@@ -255,7 +255,7 @@ public class Missile implements GameObject, Projectile {
 	@Override
 	public int getDamageAbility() {
 		if (this.state == Status.FLYING) {
-			int damageAbility = Math.min(chargeCount / GamePanel.FPS * 10, MAX_DAMAGE_ABILITY) - damageTotal;
+			int damageAbility = Math.min(chargeCount / GameEngine.FPS * 10, MAX_DAMAGE_ABILITY) - damageTotal;
 			return Math.max(damageAbility, 0);
 		}
 		return 0;

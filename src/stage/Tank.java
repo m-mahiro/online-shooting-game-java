@@ -1,6 +1,6 @@
 package stage;
 
-import client.GamePanel;
+import client.GameEngine;
 import client.SoundManager;
 import util.Util;
 
@@ -29,10 +29,10 @@ public class Tank implements GameObject {
 	private Missile holdingMissile;
 
 	// 演出用定数
-	private final static int DAMAGE_FLUSH_FRAME = (int) (GamePanel.FPS * 1.5);
-	private final static int DEBRIS_LIFE_FRAME = (int) (GamePanel.FPS * 0.25);
-	private final static int RESPAWN_LAG_FRAME = GamePanel.FPS * 3;
-	private final static int RESPAWN_ANIMATE_FRAME = GamePanel.FPS;
+	private final static int DAMAGE_FLUSH_FRAME = (int) (GameEngine.FPS * 1.5);
+	private final static int DEBRIS_LIFE_FRAME = (int) (GameEngine.FPS * 0.25);
+	private final static int RESPAWN_LAG_FRAME = GameEngine.FPS * 3;
+	private final static int RESPAWN_ANIMATE_FRAME = GameEngine.FPS;
 
 	// 演出用変数（クライアント間の同期は必要ない）
 	private int damageFlushFrame = 0;
@@ -169,7 +169,7 @@ public class Tank implements GameObject {
 			case NONE:
 				return 1.0;
 			case DEBRIS:
-				return (GamePanel.FPS / 240.0) * Math.pow(debrisLifeFrame, 2) / 100.0;
+				return (GameEngine.FPS / 240.0) * Math.pow(debrisLifeFrame, 2) / 100.0;
 			default:
 				throw new RuntimeException();
 		}

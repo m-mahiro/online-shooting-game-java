@@ -1,6 +1,6 @@
 package stage;
 
-import client.GamePanel;
+import client.GameEngine;
 import client.SoundManager;
 
 import java.awt.Graphics2D;
@@ -18,7 +18,7 @@ public class Bullet implements GameObject, Projectile {
 	// 特徴
 	private static final int COLLISION_RADIUS = 5;
 	private static final double VELOCITY = 30;
-	private static final int LIFE_TIME = GamePanel.FPS * 6; // 生存フレーム数
+	private static final int LIFE_TIME = GameEngine.FPS * 6; // 生存フレーム数
 	private static final int DAMAGE_ABILITY = 10;
 
 	// 状態（クライアント間の同期に必要)
@@ -28,7 +28,7 @@ public class Bullet implements GameObject, Projectile {
 	private int lifeFrame = LIFE_TIME;
 
 	// 演出用定数
-	private final int DEBRIS_LIFE_FRAME = GamePanel.FPS / 4;
+	private final int DEBRIS_LIFE_FRAME = GameEngine.FPS / 4;
 
 	// 演出用変数（クライアント間の同期は必要ない）
 	private double renderScale = 1.0;
@@ -127,7 +127,7 @@ public class Bullet implements GameObject, Projectile {
 			}
 			case DEBRIS: {
 				debrisLifeFrame--;
-				renderScale += (GamePanel.FPS / 120.0) * debrisLifeFrame / 100.0;
+				renderScale += (GameEngine.FPS / 120.0) * debrisLifeFrame / 100.0;
 				break;
 			}
 		}

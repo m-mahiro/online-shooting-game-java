@@ -1,6 +1,6 @@
 package stage;
 
-import client.GamePanel;
+import client.GameEngine;
 import client.SoundManager;
 
 import javax.imageio.ImageIO;
@@ -23,9 +23,9 @@ public class Block implements GameObject {
 	private int hp = INITIAL_HP;
 
 	// 演出用定数
-	private static final int DAMAGE_FLUSH_FRAME = (int)(GamePanel.FPS * 1.5);
-	private static final int DEBRIS_LIFE_FRAME = GamePanel.FPS / 4;
-	private static final int BABY_BLOCK_LIFE_FRAME = GamePanel.FPS;
+	private static final int DAMAGE_FLUSH_FRAME = (int)(GameEngine.FPS * 1.5);
+	private static final int DEBRIS_LIFE_FRAME = GameEngine.FPS / 4;
+	private static final int BABY_BLOCK_LIFE_FRAME = GameEngine.FPS;
 
 	// 演出用変数（クライアント間の同期は必要ない）
 	private int debrisLifeFrame = 0;
@@ -117,7 +117,7 @@ public class Block implements GameObject {
 		if (damageFlushFrame > 0) damageFlushFrame--;
 
 		if (getState() == State.DEBRIS) {
-			objectScale += (GamePanel.FPS / 60.0) * debrisLifeFrame / 100.0;
+			objectScale += (GameEngine.FPS / 60.0) * debrisLifeFrame / 100.0;
 		}
 	}
 

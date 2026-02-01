@@ -1,6 +1,6 @@
 package client.ui;
 
-import client.GamePanel;
+import client.GameEngine;
 import stage.Team;
 
 import javax.imageio.ImageIO;
@@ -22,7 +22,7 @@ public class WinnerInfo implements UIContent {
 	private double imageScale = 0.6;
 	private boolean isExpired = false;
 
-	private static final int MOTION_DURATION = GamePanel.FPS * 4;
+	private static final int MOTION_DURATION = GameEngine.FPS * 4;
 
 	public WinnerInfo(Team team) {
 		this.team = team;

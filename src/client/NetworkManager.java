@@ -14,7 +14,7 @@ import java.net.Socket;
 
 public class NetworkManager extends Thread {
 
-	private GamePanel gamePanel;
+	private GameEngine gameEngine;
 	private Socket socket;
 	private PrintWriter out;
 	private BufferedReader in;
@@ -22,8 +22,8 @@ public class NetworkManager extends Thread {
 	private int networkClientID;
 	private int myTankID;
 
-	public NetworkManager(GamePanel gamePanel) {
-		this.gamePanel = gamePanel;
+	public NetworkManager(GameEngine gameEngine) {
+		this.gameEngine = gameEngine;
 		try {
 			socket = new Socket("localhost", 10000);
 			out = new PrintWriter(socket.getOutputStream(), true);
@@ -91,17 +91,17 @@ public class NetworkManager extends Thread {
 	private void parseMessage(String msg) {
 		String[] tokens = msg.split(" ");
 		String cmd = tokens[0];
-		GameStage stage = gamePanel.stage;
+		GameStage stage = gameEngine.getStage();
 		int tankID = Integer.parseInt(tokens[1]);
-		if (gamePanel.getMyTankID() == tankID) return;
-		Tank tank = (Tank) gamePanel.stage.getGameObject(tankID);
+		if (gameEngine.getMyTankID() == tankID) return;
+		Tank tank = (Tank) gameEngine.getStage().getGameObject(tankID);
 
 		try {
 			switch (cmd) {
 				case "LOCATE": {
 					double x = Double.parseDouble(tokens[2]);
 					double y = Double.parseDouble(tokens[3]);
-					stage.getGameObject(tankID).setPosition(new Point2D.Double(x, y));
+					stage.getGameObject(tankID).setPosition(x, y);
 					break;
 				}
 				case "BULLET": {
