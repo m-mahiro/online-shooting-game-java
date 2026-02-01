@@ -1,6 +1,6 @@
 package client.ui;
 
-import stage.GameEngine;
+import client.GameEngine;
 import stage.Team;
 
 import javax.imageio.ImageIO;

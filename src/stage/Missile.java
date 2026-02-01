@@ -1,5 +1,7 @@
 package stage;
 
+import client.GameEngine;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;

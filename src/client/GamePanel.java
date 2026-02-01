@@ -1,8 +1,8 @@
 package client;
 
 import client.ui.GameUI;
-import stage.GameEngine;
 import stage.GameStage;
+import stage.StageGenerator;
 
 import javax.swing.*;
 import java.awt.Color;

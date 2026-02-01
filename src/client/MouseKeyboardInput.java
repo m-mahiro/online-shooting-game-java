@@ -4,7 +4,7 @@ import java.awt.event.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
-import stage.GameEngine;
+import client.GameEngine;
 
 public class MouseKeyboardInput
 		implements

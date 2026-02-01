@@ -1,6 +1,7 @@
 package client;
 
 import client.ui.StartScreenPanel;
+import stage.*;
 import stage.Team;
 
 import javax.swing.JFrame;
