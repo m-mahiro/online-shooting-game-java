@@ -9,11 +9,11 @@ public class SoundManager {
 	public static Clip bulletExplosion, createBlock, objectBreak, objectExplosion, shot;
 
 	static {
-		bulletExplosion = load("client/assets/sounds/bullet_explosion.wav");
-		createBlock = load("client/assets/sounds/create_block.wav");
-		objectBreak = load("client/assets/sounds/object_break.wav");
-		objectExplosion = load("client/assets/sounds/object_explosion.wav");
-		shot = load("client/assets/sounds/shot.wav");
+		bulletExplosion = load("assets/sounds/bullet_explosion.wav");
+		createBlock = load("assets/sounds/create_block.wav");
+		objectBreak = load("assets/sounds/object_break.wav");
+		objectExplosion = load("assets/sounds/object_explosion.wav");
+		shot = load("assets/sounds/shot.wav");
 	}
 
 	private static Clip load(String path) {

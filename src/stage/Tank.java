@@ -151,7 +151,7 @@ public class Tank implements GameObject {
 	}
 
 	public void respawn() {
-		if (base.isDebris()) return;
+		if (base.isRuins()) return;
 		this.hp = INITIAL_HP;
 		this.respawnAnimateFrame = RESPAWN_ANIMATE_FRAME;
 		Point2D.Double spawnPoint = base.getPosition();

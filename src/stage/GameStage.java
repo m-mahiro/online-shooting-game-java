@@ -16,8 +16,6 @@ public class GameStage implements StageInfo {
 	// 描画範囲の情報
 	private final int stageWidth = 6000;
 	private final int stageHeight = 6000;
-	private int visibleWidth = 2000;
-	private int visibleHeight = 1000;
 
 	// オブジェクト管理
 	private int nextPrivateObjectID = 0;
@@ -26,6 +24,9 @@ public class GameStage implements StageInfo {
 
 	// プレイヤー情報
 	private int myNetworkClientID;
+
+	// ステージ外のテクスチャのアニメーション用
+	double outerStageAnimationFrame = 0;
 
 
 	// 画像リソース
@@ -45,8 +46,8 @@ public class GameStage implements StageInfo {
 
 		ArrayList<GameObject> objects = new ArrayList<>();
 
-		this.redBase = new Base(-2000, -2000, Team.RED);
-		this.blueBase = new Base(2000, 2000, Team.BLUE);
+		this.redBase = new Base(2000, 2000, Team.RED);
+		this.blueBase = new Base(-2000, -2000, Team.BLUE);
 
 		// まず最初に戦車
 		objects.add(new Tank(redBase));
@@ -88,11 +89,6 @@ public class GameStage implements StageInfo {
 		addObjects(objects);
 	}
 
-	public void setVisibleRange(int width, int height) {
-		this.visibleWidth = width;
-		this.visibleHeight = height;
-	}
-
 	public void addObject(GameObject gameObject) {
 		int id = getNextPrivateObjectID();
 		objects.put(id, gameObject);
@@ -120,14 +116,16 @@ public class GameStage implements StageInfo {
 	}
 
 
-	public void draw(Graphics2D graphics) {
+	public void draw(Graphics2D graphics, int windowWidth, int windowHeight, double zoomDegrees) {
 
 		// ステージ外の描画
-		Rectangle2D outerStageAnchor = new Rectangle2D.Double(0, 0, 1000, 1000);
+		double textureSize = 1000;
+		double translate = outerStageAnimationFrame * 10 % textureSize;
+		Rectangle2D outerStageAnchor = new Rectangle2D.Double(translate, translate, textureSize, textureSize);
 		TexturePaint outerStagePaint = new TexturePaint(outerStageTexture, outerStageAnchor);
 		graphics.setPaint(outerStagePaint);
-		int fillWidth = stageWidth + visibleWidth;
-		int fillHeight = stageHeight + visibleHeight;
+		int fillWidth = (int) (stageWidth + windowWidth / zoomDegrees);
+		int fillHeight = (int) (stageHeight + windowHeight / zoomDegrees);
 		graphics.fillRect(-fillWidth / 2, -fillHeight / 2, fillWidth, fillHeight);
 
 		// フローリングの描画
@@ -154,6 +152,7 @@ public class GameStage implements StageInfo {
 		}
 		checkObjectToRemove();
 		checkCollision();
+		outerStageAnimationFrame++;
 	}
 
 	public void checkCollision() {
@@ -262,6 +261,12 @@ public class GameStage implements StageInfo {
 		}
 	}
 
+	public double  getJustZoomDegrees(double windowWidth, double windowHeight) {
+		double zoomWidth = windowWidth / stageWidth;
+		double zoomHeight = windowHeight / stageWidth;
+		return Math.min(zoomWidth, zoomHeight);
+	}
+
 
 	// ============================= StageInfoインターフェースのメソッド =============================
 
@@ -274,4 +279,48 @@ public class GameStage implements StageInfo {
 	public int getBlueBaseHP() {
 		return this.blueBase.getHP();
 	}
+
+	@Override
+	public Base.State getRedBaseState() {
+		return this.redBase.getState();
+	}
+
+	@Override
+	public Base.State getBlueBaseState() {
+		return this.blueBase.getState();
+	}
+
+	@Override
+	public int getRemainRedTank() {
+		int count = 0;
+		synchronized (this.objects) {
+			for (GameObject object : this.objects.values()) {
+				if (object instanceof Tank) {
+					Tank tank = (Tank) object;
+					boolean isRed = tank.getTeam() == Team.RED;
+					boolean isAlive = !tank.isDead();
+					if (isRed && isAlive) count++;
+				}
+			}
+		}
+		return count;
+	}
+
+	@Override
+	public int getRemainBlueTank() {
+		int count = 0;
+		synchronized (this.objects) {
+			for (GameObject object : this.objects.values()) {
+				if (object instanceof Tank) {
+					Tank tank = (Tank) object;
+					boolean isBlue = tank.getTeam() == Team.BLUE;
+					boolean isAlive = !tank.isDead();
+					if (isBlue && isAlive) count++;
+				}
+			}
+		}
+		return count;
+	}
+
+
 }

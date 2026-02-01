@@ -1,6 +1,5 @@
 package client.ui;
 
-import client.SoundManager;
 import stage.StageInfo;
 import stage.Team;
 
@@ -16,10 +15,18 @@ public class GameUI {
 	StageInfo info;
 
 	public GameUI(StageInfo info) {
-		BaseHP redBase = new BaseHP(Team.RED, info);
-		BaseHP blueBase = new BaseHP(Team.BLUE, info);
-		contents.add(redBase);
-		contents.add(blueBase);
+		TeamInfoCard redCard = new TeamInfoCard(Team.RED, info);
+		TeamInfoCard blueCard = new TeamInfoCard(Team.BLUE, info);
+		TeamInfoIcon redIcon = new TeamInfoIcon(Team.RED, info);
+		TeamInfoIcon blueIcon = new TeamInfoIcon(Team.BLUE, info);
+		TeamInfoText redText = new TeamInfoText(Team.RED, info);
+		TeamInfoText blueText = new TeamInfoText(Team.BLUE, info);
+		contents.add(redCard);
+		contents.add(blueCard);
+		contents.add(redIcon);
+		contents.add(blueIcon);
+		contents.add(redText);
+		contents.add(blueText);
 	}
 
 	public void update() {
@@ -28,6 +35,7 @@ public class GameUI {
 				content.update();
 			}
 		}
+
 	}
 
 	public void draw(Graphics2D graphics, int windowWidth, int windowHeight) {

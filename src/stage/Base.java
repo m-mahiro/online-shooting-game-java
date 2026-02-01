@@ -14,7 +14,7 @@ import java.util.Objects;
 public class Base implements GameObject {
 
 	// 定数
-	private static final int INIT_HP = 1000;
+	private static final int INIT_HP = 100;
 
 	// 状態
 	private int hp = INIT_HP;
@@ -92,7 +92,7 @@ public class Base implements GameObject {
 		return this.team;
 	}
 
-	public boolean isDebris() {
+	public boolean isRuins() {
 		return getState() == State.RUINS;
 	}
 
@@ -127,7 +127,7 @@ public class Base implements GameObject {
 
 	}
 
-	private State getState() {
+	public State getState() {
 		if (hp <= 0) return State.RUINS;
 		if (hp <= INIT_HP / 2) return State.BROKEN;
 		return State.NORMAL;

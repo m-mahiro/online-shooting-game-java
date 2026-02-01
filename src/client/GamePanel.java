@@ -16,8 +16,8 @@ public class GamePanel extends JPanel implements Runnable {
 	// 画面サイズ定数
 	public static final int FPS = 60;
 
-	private final AffineTransform canvasTransform = new AffineTransform();
-	private double cameraZoom = 1;
+	private double zoomDegrees;
+	private Point2D.Double cameraPosition = new Point2D.Double();
 	public double CAMERA_ZOOM_UPPER_THRESHOLD = 5;
 	public double CAMERA_ZOOM_LOWER_THRESHOLD = 0.07;
 
@@ -51,14 +51,13 @@ public class GamePanel extends JPanel implements Runnable {
 		// ============================= オブジェクトの配置 =============================
 
 		// ステージの作成
-		this.stage = new GameStage(networkID, 2);
+		this.stage = new GameStage(networkID, 20);
 
 		// ゲームUIの作成（HUD）
 		this.ui = new GameUI(stage);
 
 		// カメラの初期設定
-		cameraZoom = 0.5;
-		setCameraPosition(getMyTank().getPosition());
+		this.cameraPosition = new Point2D.Double(0, 0);
 
 		// サーバからのメッセージ受け取り開始
 		this.network.start();
@@ -70,51 +69,39 @@ public class GamePanel extends JPanel implements Runnable {
 		Graphics2D graphics2D = (Graphics2D) graphics;
 
 		// カメラの位置・ズーム度合いに合わせてあらかじめキャンバスをずらしておく。
-		graphics2D.transform(this.canvasTransform);
-
-		// ステージのウィンドウから見える範囲を更新する
-		updateVisibleRange();
+		graphics2D.transform(this.getCanvasTransform());
 
 		// GameObjectの描画
-		stage.draw(graphics2D);
+		stage.draw(graphics2D, this.getWidth(), this.getHeight(), zoomDegrees);
 
 		// GUIの描画
 		graphics2D.setTransform(new AffineTransform());
 		ui.draw(graphics2D, this.getWidth(), this.getHeight());
 	}
 
-	public void setCameraPosition(Point2D.Double position) {
+	public AffineTransform getCanvasTransform() {
 		AffineTransform trans = new AffineTransform();
 		trans.translate(this.getWidth() / 2.0, this.getHeight() / 2.0);
-		trans.scale(this.cameraZoom, this.cameraZoom);
-		trans.translate(-position.x, -position.y);
-		this.canvasTransform.setTransform(trans);
+		trans.scale(this.zoomDegrees, this.zoomDegrees);
+		trans.translate(-this.cameraPosition.x, -this.cameraPosition.y);
+		return trans;
 	}
 
 	public void zoomCamera(double zoomDelta) {
-		this.cameraZoom -= zoomDelta;
-		if (this.cameraZoom < CAMERA_ZOOM_LOWER_THRESHOLD) {
-			this.cameraZoom = CAMERA_ZOOM_LOWER_THRESHOLD;
-		} else if (CAMERA_ZOOM_UPPER_THRESHOLD < this.cameraZoom) {
-			this.cameraZoom = CAMERA_ZOOM_UPPER_THRESHOLD;
+		this.zoomDegrees -= zoomDelta;
+		if (this.zoomDegrees < CAMERA_ZOOM_LOWER_THRESHOLD) {
+			this.zoomDegrees = CAMERA_ZOOM_LOWER_THRESHOLD;
+		} else if (CAMERA_ZOOM_UPPER_THRESHOLD < this.zoomDegrees) {
+			this.zoomDegrees = CAMERA_ZOOM_UPPER_THRESHOLD;
 		}
 	}
 
 	public void startGameThread() {
 		this.gameThread = new Thread(this);
 		gameThread.start();
-		updateVisibleRange();
+		this.zoomDegrees = this.stage.getJustZoomDegrees(this.getWidth(), this.getHeight()) * 0.9;
 	}
 
-	public void updateVisibleRange() {
-		int displayWidth = (int) (this.getWidth() / CAMERA_ZOOM_LOWER_THRESHOLD);
-		int displayHeight = (int) (this.getHeight() / CAMERA_ZOOM_LOWER_THRESHOLD);
-		stage.setVisibleRange(displayWidth, displayHeight);
-	}
-
-	/**
-	 * ゲームループ (60FPS固定)
-	 */
 	@Override
 	public void run() {
 		// 1フレームの持ち時間 (ナノ秒)
@@ -158,18 +145,17 @@ public class GamePanel extends JPanel implements Runnable {
 		if (myTank.isDead()) return;
 
 		// カメラアングルを調整
-		zoomCamera(input.getZoomAmount() * 0.1);
-		setCameraPosition(myTank.getPosition());
+//		zoomCamera(input.getZoomAmount() * 0.1);
 
 		// 戦車に移動命令を出す
-		Point2D.Double moveVector = input.getMoveVector(this.canvasTransform);
+		Point2D.Double moveVector = input.getMoveVector(this.getCanvasTransform());
 		if (moveVector.x != 0 || moveVector.y != 0) {
 			myTank.move(moveVector);
 		}
 		network.locateTank(myTankID, myTank.getPosition());
 
 		// マウス位置へ砲塔を向ける命令を出す
-		Point2D.Double coordinate = input.getAimedCoordinate(this.canvasTransform);
+		Point2D.Double coordinate = input.getAimedCoordinate(this.getCanvasTransform());
 		myTank.aimAt(coordinate);
 		network.aimAt(myTankID, coordinate);
 
@@ -180,16 +166,16 @@ public class GamePanel extends JPanel implements Runnable {
 			network.shootGun(myTankID);
 		}
 
-		// 戦車にチャージ開始命令を出す。
-		if (input.startEnergyCharge()) {
-			Missile missile = myTank.startEnergyCharge();
-			stage.addObject(missile);
-		}
-
-		// 戦車にチャージキャンセル
-		if (input.finishEnergyCharge()) {
-			myTank.finishEnergyCharge();
-		}
+//		// 戦車にチャージ開始命令を出す。
+//		if (input.startEnergyCharge()) {
+//			Missile missile = myTank.startEnergyCharge();
+//			stage.addObject(missile);
+//		}
+//
+//		// 戦車にチャージキャンセル
+//		if (input.finishEnergyCharge()) {
+//			myTank.finishEnergyCharge();
+//		}
 
 		// 戦車のブロック作成命令を出す。
 		if (input.createBlock()) {

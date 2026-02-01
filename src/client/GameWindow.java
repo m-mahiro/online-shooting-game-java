@@ -11,8 +11,8 @@ public class GameWindow extends JFrame {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 //		// 1. ウィンドウの枠（タイトルバーなど）を削除
-//		setUndecorated(true);
-//		setResizable(false);
+		setUndecorated(true);
+		setResizable(false);
 
 		// GamePanelを作成してウィンドウに追加
 		GamePanel gamePanel = new GamePanel();
@@ -22,8 +22,7 @@ public class GameWindow extends JFrame {
 		GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
 		GraphicsDevice device = env.getDefaultScreenDevice();
 
-//		if (device.isFullScreenSupported()) {
-		if (false) {
+		if (device.isFullScreenSupported()) {
 			// 自分自身(this)をフルスクリーンウィンドウに設定
 			device.setFullScreenWindow(this);
 		} else {
