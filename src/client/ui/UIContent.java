@@ -8,4 +8,5 @@ public interface UIContent {
 
 	void draw(Graphics2D graphics, int windowWidth, int windowHeight);
 
+	boolean isExpired();
 }

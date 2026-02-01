@@ -97,4 +97,9 @@ public class TeamInfoText implements UIContent {
 		graphics.fill(finalShape);
 
 	}
+
+	@Override
+	public boolean isExpired() {
+		return false;
+	}
 }

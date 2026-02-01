@@ -84,9 +84,8 @@ public class Wall implements GameObject {
 	}
 
 	@Override
-	public void setPosition(double x, double y) {
-		this.position.x = x;
-		this.position.y = y;
+	public void setPosition(Point2D.Double position) {
+		this.position.setLocation(position);
 	}
 
 	@Override

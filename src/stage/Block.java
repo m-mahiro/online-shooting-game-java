@@ -176,8 +176,8 @@ public class Block implements GameObject {
 	}
 
 	@Override
-	public void setPosition(double x, double y) {
-		this.position.setLocation(x, y);
+	public void setPosition(Point2D.Double position) {
+		this.position.setLocation(position);
 	}
 
 	@Override

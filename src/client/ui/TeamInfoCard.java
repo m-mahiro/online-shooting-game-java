@@ -64,4 +64,9 @@ public class TeamInfoCard implements UIContent {
 		graphics.drawImage(this.cardImage, tableTrans, null);
 
 	}
+
+	@Override
+	public boolean isExpired() {
+		return false;
+	}
 }

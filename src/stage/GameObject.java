@@ -23,7 +23,7 @@ public interface GameObject {
 
 	Point2D.Double getPosition();
 
-	void setPosition(double x, double y);
+	void setPosition(Point2D.Double position);
 
 	int getHP();
 

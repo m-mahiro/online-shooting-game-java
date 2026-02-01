@@ -16,7 +16,7 @@ import static stage.Team.*;
 public class Base implements GameObject {
 
 	// 定数
-	private static final int INIT_HP = 100;
+	private static final int INIT_HP = 1000;
 
 	// 状態
 	private int hp = INIT_HP;
@@ -228,8 +228,8 @@ public class Base implements GameObject {
 	}
 
 	@Override
-	public void setPosition(double x, double y) {
-		this.position.setLocation(x, y);
+	public void setPosition(Point2D.Double position) {
+		this.position.setLocation(position);
 	}
 
 	@Override

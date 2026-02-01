@@ -21,10 +21,6 @@ public class TeamInfoIcon implements UIContent {
 	// 表示する情報の提供元
 	private StageInfo info;
 
-	// 表示サイズ調整用
-	private double baseScale = 0.6;
-	private double tankScale = 1.3;
-
 	// 画像リソース
 	private static Image normalRedBaseImage, brokenRedBaseImage;
 	private static Image normalBlueBaseImage, brokenBlueBaseImage;
@@ -34,7 +30,7 @@ public class TeamInfoIcon implements UIContent {
 		try {
 			// REDチームの基地の画像
 			normalRedBaseImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/info_team_base_red_normal.png")));
-			brokenRedBaseImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/info_team_base_broken.png")));
+			brokenRedBaseImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/info_team_base_red_broken.png")));
 
 			// BLUEチームの基地の画像
 			normalBlueBaseImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/info_team_base_blue_normal.png")));
@@ -96,12 +92,13 @@ public class TeamInfoIcon implements UIContent {
 		double scale, x, y;
 		if (isRuins()) {
 			// 戦車を表示する
-			scale = tankScale;
+			scale = 1.3;
 			x = isRed ? windowWidth - scale * image.getWidth(null) - 10 : 10;
 			y = windowHeight - scale * image.getHeight(null) - 10;
 		} else {
 			// 基地を表示する
-			scale = baseScale;
+			// 表示サイズ調整用
+			scale = 0.6;
 			x = isRed ? windowWidth - scale * image.getWidth(null) - 10 : 10;
 			y = windowHeight - scale * image.getHeight(null);
 		}
@@ -111,5 +108,10 @@ public class TeamInfoIcon implements UIContent {
 		baseTrans.translate(x, y);
 		baseTrans.scale(scale, scale);
 		graphics.drawImage(image, baseTrans, null);
+	}
+
+	@Override
+	public boolean isExpired() {
+		return false;
 	}
 }

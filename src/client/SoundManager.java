@@ -163,4 +163,62 @@ public class SoundManager {
 			}
 		}).start();
 	}
+
+	/**
+	 * Plays a victory sound: C major chord then G major chord.
+	 */
+	public void playVictorySound() {
+		new Thread(() -> {
+			try {
+				int velocity = 90;
+				// C major (C5, E5, G5)
+				int[] C_MAJOR = {72, 76, 79};
+				// G major (G5, B5, D6)
+				int[] G_MAJOR = {79, 83, 86};
+
+				// Play C major
+				for (int note : C_MAJOR) midiChannel.noteOn(note, velocity);
+				Thread.sleep(300);
+				for (int note : C_MAJOR) midiChannel.noteOff(note);
+
+				// Play G major
+				for (int note : G_MAJOR) midiChannel.noteOn(note, velocity);
+				Thread.sleep(500);
+				for (int note : G_MAJOR) midiChannel.noteOff(note);
+
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}).start();
+	}
+
+	/**
+	 * Plays a game over sound: A minor chord then E minor chord.
+	 */
+	public void playGameOverSound() {
+		new Thread(() -> {
+			try {
+				int velocity = 80;
+				// A minor (A4=69, C5, E5)
+				int[] A_MINOR = {69, 72, 76};
+				// E minor (E5, G5, B5)
+				int[] E_MINOR = {76, 79, 83};
+
+				// Play A minor
+				for (int note : A_MINOR) midiChannel.noteOn(note, velocity);
+				Thread.sleep(300);
+				for (int note : A_MINOR) midiChannel.noteOff(note);
+
+				// Play E minor
+				for (int note : E_MINOR) midiChannel.noteOn(note, velocity);
+				Thread.sleep(500);
+				for (int note : E_MINOR) midiChannel.noteOff(note);
+
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}).start();
+	}
+
+
 }

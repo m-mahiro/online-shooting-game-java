@@ -157,7 +157,7 @@ public class Tank implements GameObject {
 		this.hp = INITIAL_HP;
 		this.respawnAnimateFrame = RESPAWN_ANIMATE_FRAME;
 		Point2D.Double spawnPoint = base.getPosition();
-		this.setPosition(spawnPoint.x, spawnPoint.y);
+		this.setPosition(spawnPoint);
 	}
 
 	private double getObjectScale() {
@@ -409,8 +409,8 @@ public class Tank implements GameObject {
 	}
 
 	@Override
-	public void setPosition(double x, double y) {
-		this.position.setLocation(x, y);
+	public void setPosition(Point2D.Double position) {
+		this.position.setLocation(position);
 	}
 
 	@Override

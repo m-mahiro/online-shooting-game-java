@@ -85,7 +85,7 @@ public class Missile implements GameObject, Projectile {
 		Point2D.Double bulletPosition = (Point2D.Double) shooter.getPosition().clone();
 		double x = bulletPosition.x + (shooterRadius + missileRadius) * Math.cos(this.angle);
 		double y = bulletPosition.y + (shooterRadius + missileRadius) * Math.sin(this.angle);
-		this.setPosition(x, y);
+		this.setPosition(new Point2D.Double(x, y));
 	}
 
 	public void launch() {
@@ -240,8 +240,8 @@ public class Missile implements GameObject, Projectile {
 	}
 
 	@Override
-	public void setPosition(double x, double y) {
-		this.position.setLocation(x, y);
+	public void setPosition(Point2D.Double position) {
+		this.position.setLocation(position);
 	}
 
 	@Override

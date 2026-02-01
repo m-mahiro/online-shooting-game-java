@@ -194,8 +194,8 @@ public class Bullet implements GameObject, Projectile {
 	}
 
 	@Override
-	public void setPosition(double x, double y) {
-		this.position.setLocation(x, y);
+	public void setPosition(Point2D.Double position) {
+		this.position.setLocation(position);
 	}
 
 	@Override

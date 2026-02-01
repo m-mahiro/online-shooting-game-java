@@ -11,7 +11,7 @@ public class GameWindow extends JFrame {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 //		// 1. ウィンドウの枠（タイトルバーなど）を削除
-		setUndecorated(true);
+//		setUndecorated(true);
 		setResizable(false);
 
 		// GamePanelを作成してウィンドウに追加

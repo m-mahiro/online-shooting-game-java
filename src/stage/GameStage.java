@@ -21,8 +21,14 @@ public class GameStage implements StageInfo {
 
 	// オブジェクト管理
 	private int nextPrivateObjectID = 0;
-	private final Map<Integer, GameObject> objects = new ConcurrentHashMap<>();
+
+	// スポーン地点はgameObjectsとは別に、フィールドでも持っておく
 	private final Base redBase, blueBase;
+
+	// ステージ上のオブジェクト。
+	private final Map<Integer, GameObject> object = new ConcurrentHashMap<>();
+	// ステージ上空に張り付いているオブジェクト。GameUIよりは下層(隠れる)。
+	private final Map<Integer, UpperStageObject> upperObject = new ConcurrentHashMap<>();
 
 	// プレイヤー情報
 	private int myNetworkClientID;
@@ -88,24 +94,40 @@ public class GameStage implements StageInfo {
 			}
 		}
 
-		addObjects(objects);
+		addStageObjects(objects);
 	}
 
-	public void addObject(GameObject gameObject) {
+	public int addStageObject(GameObject gameObject) {
 		int id = getNextPrivateObjectID();
-		objects.put(id, gameObject);
+		object.put(id, gameObject);
+		return id;
 	}
 
-	public void addObjects(Collection<GameObject> gameObjects) {
+	public int[] addStageObjects(Collection<GameObject> gameObjects) {
+		int n = gameObjects.size();
+		int[] idList = new int[n];
 		synchronized (this) {
+			int i = 0;
 			for (GameObject object : gameObjects) {
-				this.addObject(object);
+				int id = this.addStageObject(object);
+				idList[i++] = id;
 			}
 		}
+		return idList;
 	}
 
-	public GameObject getObject(int objectID) {
-		return objects.get(objectID);
+	public int addScreenObject(UpperStageObject upperStageObject) {
+		int id = getNextPrivateObjectID();
+		this.upperObject.put(id, upperStageObject);
+		return id;
+	}
+
+	public GameObject getGameObject(int id) {
+		return object.get(id);
+	}
+
+	public UpperStageObject getScreenObject(int id) {
+		return upperObject.get(id);
 	}
 
 	private int getNextPrivateObjectID() {
@@ -138,10 +160,15 @@ public class GameStage implements StageInfo {
 
 		// GameObjectの描画
 		for (RenderLayer layer : RenderLayer.values()) {
-			for (GameObject object : objects.values()) {
+			for (GameObject object : object.values()) {
 				if (object.getRenderLayer() != layer) continue;
 				object.draw(graphics);
 			}
+		}
+
+		// ScreenObjectの描画
+		for (UpperStageObject object : upperObject.values()) {
+			object.draw(graphics);
 		}
 	}
 
@@ -149,16 +176,29 @@ public class GameStage implements StageInfo {
 	 * ゲームの状態を更新する
 	 */
 	public void update() {
-		for (GameObject object : objects.values()) {
+
+		// ゲームオブジェクトのフレーム更新
+		for (GameObject object : object.values()) {
 			object.update();
 		}
+
+		// 削除可能なオブジェクトがあれば削除
 		checkObjectToRemove();
+
+		// 衝突判定。衝突があれば該当オブジェクトに通知を送る
 		checkCollision();
+
+		// ステージ演出アニメーション用の変数をインクリメント
 		outerStageAnimationFrame++;
+
+		// ステージ上空のオブジェクトのフレームを更新
+		for (UpperStageObject upperStageObject : upperObject.values()) {
+			upperStageObject.update();
+		}
 	}
 
 	public void checkCollision() {
-		ArrayList<GameObject> objectList = new ArrayList<>(objects.values());
+		ArrayList<GameObject> objectList = new ArrayList<>(object.values());
 		for (int i = 0; i < objectList.size(); i++) {
 			for (int j = i + 1; j < objectList.size(); j++) {
 				GameObject o1 = objectList.get(i);
@@ -248,7 +288,7 @@ public class GameStage implements StageInfo {
 	}
 
 	public void checkObjectToRemove() {
-		Iterator<GameObject> iterator = this.objects.values().iterator();
+		Iterator<GameObject> iterator = this.object.values().iterator();
 		while (iterator.hasNext()) {
 			GameObject object = iterator.next();
 
@@ -295,8 +335,8 @@ public class GameStage implements StageInfo {
 	@Override
 	public int getRemainRedTank() {
 		int count = 0;
-		synchronized (this.objects) {
-			for (GameObject object : this.objects.values()) {
+		synchronized (this.object) {
+			for (GameObject object : this.object.values()) {
 				if (object instanceof Tank) {
 					Tank tank = (Tank) object;
 					boolean isRed = tank.getTeam() == RED;
@@ -311,8 +351,8 @@ public class GameStage implements StageInfo {
 	@Override
 	public int getRemainBlueTank() {
 		int count = 0;
-		synchronized (this.objects) {
-			for (GameObject object : this.objects.values()) {
+		synchronized (this.object) {
+			for (GameObject object : this.object.values()) {
 				if (object instanceof Tank) {
 					Tank tank = (Tank) object;
 					boolean isBlue = tank.getTeam() == BLUE;

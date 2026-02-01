@@ -16,20 +16,26 @@ public class GamePanel extends JPanel implements Runnable {
 	// 画面サイズ定数
 	public static final int FPS = 60;
 
+	// カメラに関する情報
 	private double zoomDegrees;
 	private Point2D.Double cameraPosition = new Point2D.Double();
 	public double CAMERA_ZOOM_UPPER_THRESHOLD = 5;
 	public double CAMERA_ZOOM_LOWER_THRESHOLD = 0.07;
 
+	// このインスタンス内で、update->drawのループが繰り返される
 	private Thread gameThread;
-	private InputHandler input;
 
+	// ソフトウェアコンポーネント(?)
+	private InputHandler input;
 	private NetworkManager network;
 	private int networkID;
 	public GameStage stage;
 	public GameUI ui;
+	public SoundManager sound = new SoundManager();
 
+	// 自分の操作している戦車
 	private int myTankID;
+	private Tank myTank;
 
 	public GamePanel() {
 
@@ -46,12 +52,13 @@ public class GamePanel extends JPanel implements Runnable {
 		this.network = new NetworkManager(this);
 		networkID = this.network.getNetworkClientID();
 		myTankID = this.network.getMyTankID();
-//		myTankID = 0;
 
 		// ============================= オブジェクトの配置 =============================
 
 		// ステージの作成
-		this.stage = new GameStage(networkID, 20);
+		this.stage = new GameStage(networkID, 10);
+		this.myTank = (Tank) this.stage.getGameObject(myTankID);
+		stage.addScreenObject(new Marker(myTank));
 
 		// ゲームUIの作成（HUD）
 		this.ui = new GameUI(stage);
@@ -105,7 +112,6 @@ public class GamePanel extends JPanel implements Runnable {
 	@Override
 	public void run() {
 		// 1フレームの持ち時間 (ナノ秒)
-		// 1秒 = 1,000,000,000 ナノ秒
 		long drawInterval = 1000000000L / FPS;
 		long nextDrawTime = System.nanoTime() + drawInterval;
 
@@ -114,11 +120,9 @@ public class GamePanel extends JPanel implements Runnable {
 			update();
 			repaint();
 
-			// 3. SLEEP: 時間調整
+			// フレーム内の処理はは早く終わったりするので時間調整
 			long remainingTime = nextDrawTime - System.nanoTime();
-
 			try {
-				// 時間が余っていれば寝る
 				if (remainingTime > 0) {
 					Thread.sleep((long) remainingTime / 1000000);
 				}
@@ -131,17 +135,15 @@ public class GamePanel extends JPanel implements Runnable {
 
 	public void update() {
 
-		try {
-			stage.update();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		// 画面に描画されている各種オブジェクトのフレームを更新
+		stage.update();
+		ui.update();
 
 		// ============================= 自分の操作 =============================
 
+		// マウスの長押し判定などに必要
 		input.onFrameUpdate();
 
-		Tank myTank = getMyTank();
 		if (myTank.isDead()) return;
 
 		// カメラアングルを調整
@@ -161,33 +163,25 @@ public class GamePanel extends JPanel implements Runnable {
 
 		// 戦車に発砲命令を出す。
 		if (input.shootBullet()) {
-			Bullet bullet = myTank.shootBullet();
-			stage.addObject(bullet);
-			network.shootGun(myTankID);
+//			Bullet bullet = myTank.shootBullet();
+//			stage.addStageObject(bullet);
+//			network.shootGun(myTankID);
+			sound.playVictorySound();
 		}
-
-//		// 戦車にチャージ開始命令を出す。
-//		if (input.startEnergyCharge()) {
-//			Missile missile = myTank.startEnergyCharge();
-//			stage.addObject(missile);
-//		}
-//
-//		// 戦車にチャージキャンセル
-//		if (input.finishEnergyCharge()) {
-//			myTank.finishEnergyCharge();
-//		}
 
 		// 戦車のブロック作成命令を出す。
 		if (input.createBlock()) {
-			Block block = myTank.createBlock();
-			if (block == null) return;
-			stage.addObject(block);
-			network.createBlock(myTankID);
+//			Block block = myTank.createBlock();
+//			if (block == null) return;
+//			stage.addStageObject(block);
+//			network.createBlock(myTankID);
+			sound.playGameOverSound();
 		}
+
 	}
 
 	private Tank getMyTank() {
-		GameObject object = this.stage.getObject(myTankID);
+		GameObject object = this.stage.getGameObject(myTankID);
 		if (object instanceof Tank) {
 			return (Tank) object;
 		} else {

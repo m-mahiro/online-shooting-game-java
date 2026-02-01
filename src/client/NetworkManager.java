@@ -38,7 +38,7 @@ public class NetworkManager extends Thread {
 				this.networkClientID = Integer.parseInt(tokens[0]);
 
 
-				int myTankID = networkClientID % 4;
+				int myTankID = networkClientID % 10;
 				this.setMyTankID(myTankID);
 
 				// 名前送信（サーバーが期待しているので送る）
@@ -94,19 +94,19 @@ public class NetworkManager extends Thread {
 		GameStage stage = gamePanel.stage;
 		int tankID = Integer.parseInt(tokens[1]);
 		if (gamePanel.getMyTankID() == tankID) return;
-		Tank tank = (Tank) gamePanel.stage.getObject(tankID);
+		Tank tank = (Tank) gamePanel.stage.getGameObject(tankID);
 
 		try {
 			switch (cmd) {
 				case "LOCATE": {
 					double x = Double.parseDouble(tokens[2]);
 					double y = Double.parseDouble(tokens[3]);
-					stage.getObject(tankID).setPosition(x, y);
+					stage.getGameObject(tankID).setPosition(new Point2D.Double(x, y));
 					break;
 				}
 				case "BULLET": {
 					Bullet bullet = tank.shootBullet();
-					stage.addObject(bullet);
+					stage.addStageObject(bullet);
 					break;
 				}
 				case "START_CHARGE": {
@@ -126,7 +126,7 @@ public class NetworkManager extends Thread {
 				}
 				case "BLOCK": {
 					Block block = tank.createBlock();
-					stage.addObject(block);
+					stage.addStageObject(block);
 					break;
 				}
 			}
