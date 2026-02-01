@@ -1,6 +1,5 @@
 package stage;
 
-import client.GameEngine;
 import client.SoundManager;
 
 import javax.imageio.ImageIO;

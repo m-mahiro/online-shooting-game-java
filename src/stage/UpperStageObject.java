@@ -1,18 +1,11 @@
 package stage;
 
-import java.awt.*;
-import java.awt.geom.Point2D;
+import java.awt.Graphics2D;
 
+// このインターフェースを実装するオブジェクトは、
+// GameStageの上層に（UIよりは下層に）描画される
 public interface UpperStageObject {
-
+	void draw(Graphics2D g);
 	void update();
-
-	void draw(Graphics2D graphics);
-
-	void isExpired();
-
-	Point2D.Double getPosition();
-
-	void setPosition(Point2D.Double position);
-
+	boolean isExpired();
 }

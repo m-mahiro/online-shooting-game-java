@@ -23,6 +23,7 @@ public class GameEngine implements Runnable {
     private int networkID;
     private int myTankID;
     private Thread gameThread;
+    private final StageGenerator generator;
 
     // キャンバス・カメラ関連
     private int canvasWidth, canvasHeight;
@@ -33,25 +34,32 @@ public class GameEngine implements Runnable {
 
     private final Runnable repaintCallback;
 
-    public GameEngine(Runnable repaintCallback, InputHandler inputHandler) {
+    public GameEngine(Runnable repaintCallback, InputHandler inputHandler, StageGenerator generator) {
         this.repaintCallback = repaintCallback;
         this.input = inputHandler;
+        this.generator = generator;
 
-        // サーバーに接続してクライアントIDを取得
-        this.network = new NetworkManager(this);
-        networkID = this.network.getNetworkClientID();
-
-        // Builderを使用してステージを生成
-        StageBuilder stageBuilder = new StageBuilder();
-        this.stage = stageBuilder.createDefaultStage(10); // 仮でプレイヤー数を10に設定
+        // StageGeneratorを使ってステージを生成
+        this.stage = new GameStage(generator);
+        
+        if (generator.isNetworked()) {
+            // 通常モード
+            this.network = new NetworkManager(this);
+            networkID = this.network.getNetworkClientID();
+            myTankID = this.network.getMyTankID();
+        } else {
+            // 練習モード (ネットワークなし)
+            this.network = null;
+            // 練習モードでは、生成された最初の戦車を操作対象とする
+            this.myTankID = 0;
+        }
 
         // ステージから自分の戦車を取得
-        myTankID = this.network.getMyTankID();
         GameObject myTankObject = this.stage.getGameObject(myTankID);
         if (myTankObject instanceof Tank) {
             this.myTank = (Tank) myTankObject;
         } else {
-            throw new RuntimeException("My assigned object is not a Tank!");
+            throw new RuntimeException("My assigned object ("+ myTankID +") is not a Tank!");
         }
 
         // 自分の戦車にマーカーを追加
@@ -64,7 +72,9 @@ public class GameEngine implements Runnable {
         this.cameraPosition = new Point2D.Double(0, 0);
 
         // サーバーからのメッセージ受信を開始
-        this.network.start();
+        if (generator.isNetworked()) {
+            this.network.start();
+        }
     }
 
     public void setCanvasSize(int width, int height) {
@@ -108,22 +118,38 @@ public class GameEngine implements Runnable {
 
         if (myTank.isDead()) return;
 
+        // 照準合わせ
+        Point2D.Double coordinate = input.getAimedCoordinate(getCanvasTransform());
+        myTank.aimAt(coordinate);
+        if (generator.isNetworked()) {
+            network.aimAt(myTankID, coordinate);
+        }
+
+        // 発射
+        if (input.shootBullet()) {
+            Bullet bullet = myTank.shootBullet();
+            stage.addStageObject(bullet);
+            if (generator.isNetworked()) {
+                network.shootGun(myTankID);
+            }
+        }
+
+        // 練習モードではここで処理終了
+        if (!generator.isNetworked()) {
+            return;
+        }
+
+        // --- 通常モードでのみ実行される処理 ---
+
+        // 移動
         Point2D.Double moveVector = input.getMoveVector(getCanvasTransform());
         if (moveVector.x != 0 || moveVector.y != 0) {
             myTank.move(moveVector);
         }
         network.locateTank(myTankID, myTank.getPosition());
 
-        Point2D.Double coordinate = input.getAimedCoordinate(getCanvasTransform());
-        myTank.aimAt(coordinate);
-        network.aimAt(myTankID, coordinate);
 
-        if (input.shootBullet()) {
-            Bullet bullet = myTank.shootBullet();
-            stage.addStageObject(bullet);
-            network.shootGun(myTankID);
-        }
-
+        // ブロック生成
         if (input.createBlock()) {
             Block block = myTank.createBlock();
             if (block != null) {
@@ -132,7 +158,7 @@ public class GameEngine implements Runnable {
             }
         }
     }
-
+    
     public void zoomCamera(double zoomDelta) {
         this.zoomDegrees -= zoomDelta;
         if (this.zoomDegrees < CAMERA_ZOOM_LOWER_THRESHOLD) {

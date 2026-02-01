@@ -1,6 +1,7 @@
 package client;
 
 import client.ui.GameUI;
+import stage.GameEngine;
 import stage.GameStage;
 
 import javax.swing.*;
@@ -17,7 +18,7 @@ public class GamePanel extends JPanel {
     private final GameEngine gameEngine;
     private final InputHandler input;
 
-    public GamePanel() {
+    public GamePanel(StageGenerator generator) {
         // パネル設定
         this.setBackground(Color.WHITE);
         this.setDoubleBuffered(true);
@@ -27,7 +28,7 @@ public class GamePanel extends JPanel {
         this.input = new MouseKeyboardInput(this);
 
         // ゲームエンジンを生成し、再描画用のコールバックと入力ハンドラを渡す
-        this.gameEngine = new GameEngine(this::repaint, this.input);
+        this.gameEngine = new GameEngine(this::repaint, this.input, generator);
 
         // エンジンにリサイズを通知するためのリスナーを追加
         this.addComponentListener(new ComponentAdapter() {

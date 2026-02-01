@@ -15,14 +15,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static stage.Team.BLUE;
-import static stage.Team.RED;
+import static stage.Team.*;
 
 public class GameStage implements StageInfo {
 
 	// 描画範囲の情報
-	private final int stageWidth = 6000;
-	private final int stageHeight = 6000;
+	private final int stageWidth;
+	private final int stageHeight;
 
 	// オブジェクト管理
 	private int nextPrivateObjectID = 0;
@@ -51,11 +50,16 @@ public class GameStage implements StageInfo {
 		}
 	}
 
-	public GameStage(Base redBase, Base blueBase) {
-		this.redBase = redBase;
-		this.blueBase = blueBase;
-		addStageObject(redBase);
-		addStageObject(blueBase);
+	public GameStage(StageGenerator generator) {
+		this.stageWidth = generator.getStageWidth();
+		this.stageHeight = generator.getStageHeight();
+		this.redBase = generator.getRedBase();
+		this.blueBase = generator.getBlueBase();
+		
+		addStageObject(this.redBase);
+		addStageObject(this.blueBase);
+		addStageObjects(generator.getGameObjects());
+		addScreenObjects(generator.getUpperStageObjects());
 	}
 
 	public int getStageWidth() {
@@ -67,25 +71,28 @@ public class GameStage implements StageInfo {
 	}
 
 	public int addStageObject(GameObject gameObject) {
+		if (gameObject == null) return -1;
 		int id = getNextPrivateObjectID();
 		object.put(id, gameObject);
 		return id;
 	}
 
-	public int[] addStageObjects(Collection<GameObject> gameObjects) {
-		int n = gameObjects.size();
-		int[] idList = new int[n];
-		synchronized (this) {
-			int i = 0;
-			for (GameObject object : gameObjects) {
-				int id = this.addStageObject(object);
-				idList[i++] = id;
-			}
+	public void addStageObjects(GameObject[] gameObjects) {
+		if (gameObjects == null) return;
+		for (GameObject obj : gameObjects) {
+			addStageObject(obj);
 		}
-		return idList;
+	}
+
+	public void addScreenObjects(UpperStageObject[] upperStageObjects) {
+		if (upperStageObjects == null) return;
+		for (UpperStageObject obj : upperStageObjects) {
+			addScreenObject(obj);
+		}
 	}
 
 	public int addScreenObject(UpperStageObject upperStageObject) {
+		if (upperStageObject == null) return -1;
 		int id = getNextPrivateObjectID();
 		this.upperObject.put(id, upperStageObject);
 		return id;
@@ -104,7 +111,6 @@ public class GameStage implements StageInfo {
 			int id = nextPrivateObjectID;
 			nextPrivateObjectID++;
 			return id;
-//			return myNetworkClientID * 100000 + lastPrivateObjectID;
 		}
 	}
 

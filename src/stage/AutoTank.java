@@ -1,8 +1,7 @@
 package stage;
 
-import client.GameEngine;
-
 import java.awt.geom.Point2D;
+import java.util.Random;
 
 public class AutoTank extends Tank {
 

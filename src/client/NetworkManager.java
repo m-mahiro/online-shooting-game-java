@@ -1,9 +1,6 @@
 package client;
 
-import stage.Block;
-import stage.Bullet;
-import stage.GameStage;
-import stage.Tank;
+import stage.*;
 
 import java.awt.geom.Point2D;
 import java.io.BufferedReader;
@@ -101,7 +98,7 @@ public class NetworkManager extends Thread {
 				case "LOCATE": {
 					double x = Double.parseDouble(tokens[2]);
 					double y = Double.parseDouble(tokens[3]);
-					stage.getGameObject(tankID).setPosition(x, y);
+					stage.getGameObject(tankID).setPosition(new Point2D.Double(x, y));
 					break;
 				}
 				case "BULLET": {

@@ -1,6 +1,5 @@
 package stage;
 
-import client.GameEngine;
 import client.SoundManager;
 
 import java.awt.Graphics2D;
