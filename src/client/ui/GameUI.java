@@ -24,7 +24,7 @@ public class GameUI {
 
 	private boolean hasDisplayedWinner = false;
 
-	public GameUI(StageInfo info) {
+	public GameUI(StageInfo info, Team myTeam) {
 		this.info = info;
 		TeamInfoCard redCard = new TeamInfoCard(RED, info);
 		TeamInfoCard blueCard = new TeamInfoCard(BLUE, info);
@@ -58,7 +58,7 @@ public class GameUI {
 			WinnerInfo winnerInfo = new WinnerInfo(winner);
 			contents.add(winnerInfo);
 			hasDisplayedWinner = true;
-			sound.playClearChord();
+
 		}
 	}
 

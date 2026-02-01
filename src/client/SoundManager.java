@@ -141,7 +141,7 @@ public class SoundManager {
 		playFromPool(shotPool);
 	}
 
-	public void playClearChord() {
+	public void playBell() {
 		new Thread(() -> {
 			try {
 				int velocity = 90;
@@ -151,11 +151,10 @@ public class SoundManager {
 				int G5 = 79;
 
 				midiChannel.noteOn(C5, velocity);
-				Thread.sleep(250);
-				midiChannel.noteOff(C5);
-
+				Thread.sleep(60);
 				midiChannel.noteOn(G5, velocity);
 				Thread.sleep(400);
+				midiChannel.noteOff(C5);
 				midiChannel.noteOff(G5);
 
 			} catch (InterruptedException e) {
@@ -165,26 +164,31 @@ public class SoundManager {
 	}
 
 	/**
-	 * Plays a victory sound: C major chord then G major chord.
+	 * Plays a victory sound as a longer sequence of single notes
+	 * that ascend to convey triumphant feeling.
 	 */
 	public void playVictorySound() {
 		new Thread(() -> {
 			try {
 				int velocity = 90;
-				// C major (C5, E5, G5)
-				int[] C_MAJOR = {72, 76, 79};
-				// G major (G5, B5, D6)
-				int[] G_MAJOR = {79, 83, 86};
 
-				// Play C major
-				for (int note : C_MAJOR) midiChannel.noteOn(note, velocity);
-				Thread.sleep(300);
-				for (int note : C_MAJOR) midiChannel.noteOff(note);
+				int[] victoryNotes = {
+						72, // C5
+						74, // D5
+						76, // E5
+						79, // G5
+						72, // C5
+						74, // D5
+						76, // E5
+						79, // G5
+						84  // C6
+				};
 
-				// Play G major
-				for (int note : G_MAJOR) midiChannel.noteOn(note, velocity);
-				Thread.sleep(500);
-				for (int note : G_MAJOR) midiChannel.noteOff(note);
+				for (int note : victoryNotes) {
+					midiChannel.noteOn(note, velocity);
+					Thread.sleep(150); // note duration
+					midiChannel.noteOff(note);
+				}
 
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -193,26 +197,27 @@ public class SoundManager {
 	}
 
 	/**
-	 * Plays a game over sound: A minor chord then E minor chord.
+	 * Plays a game over sound as a longer sequence of single notes
+	 * that descend or feel denser to convey somber feeling.
 	 */
 	public void playGameOverSound() {
 		new Thread(() -> {
 			try {
-				int velocity = 80;
-				// A minor (A4=69, C5, E5)
-				int[] A_MINOR = {69, 72, 76};
-				// E minor (E5, G5, B5)
-				int[] E_MINOR = {76, 79, 83};
+				int velocity = 85;
 
-				// Play A minor
-				for (int note : A_MINOR) midiChannel.noteOn(note, velocity);
-				Thread.sleep(300);
-				for (int note : A_MINOR) midiChannel.noteOff(note);
+				// 音階: A4, G4, E4, C4
+				int[] gameOverNotes = {
+						69, // A4
+						67, // G4
+						64, // E4
+						60  // C4
+				};
 
-				// Play E minor
-				for (int note : E_MINOR) midiChannel.noteOn(note, velocity);
-				Thread.sleep(500);
-				for (int note : E_MINOR) midiChannel.noteOff(note);
+				for (int note : gameOverNotes) {
+					midiChannel.noteOn(note, velocity);
+					Thread.sleep(220); // note duration
+					midiChannel.noteOff(note);
+				}
 
 			} catch (InterruptedException e) {
 				e.printStackTrace();

@@ -61,7 +61,7 @@ public class GamePanel extends JPanel implements Runnable {
 		stage.addScreenObject(new Marker(myTank));
 
 		// ゲームUIの作成（HUD）
-		this.ui = new GameUI(stage);
+		this.ui = new GameUI(stage, myTank.getTeam());
 
 		// カメラの初期設定
 		this.cameraPosition = new Point2D.Double(0, 0);
@@ -163,21 +163,18 @@ public class GamePanel extends JPanel implements Runnable {
 
 		// 戦車に発砲命令を出す。
 		if (input.shootBullet()) {
-//			Bullet bullet = myTank.shootBullet();
-//			stage.addStageObject(bullet);
-//			network.shootGun(myTankID);
-			sound.playVictorySound();
+			Bullet bullet = myTank.shootBullet();
+			stage.addStageObject(bullet);
+			network.shootGun(myTankID);
 		}
 
 		// 戦車のブロック作成命令を出す。
 		if (input.createBlock()) {
-//			Block block = myTank.createBlock();
-//			if (block == null) return;
-//			stage.addStageObject(block);
-//			network.createBlock(myTankID);
-			sound.playGameOverSound();
+			Block block = myTank.createBlock();
+			if (block == null) return;
+			stage.addStageObject(block);
+			network.createBlock(myTankID);
 		}
-
 	}
 
 	private Tank getMyTank() {
