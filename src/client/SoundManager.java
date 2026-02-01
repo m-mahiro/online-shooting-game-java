@@ -29,7 +29,8 @@ public class SoundManager {
 
 	// MIDI
 	private static Synthesizer synthesizer;
-	private static MidiChannel midiChannel;
+	private static MidiChannel vibraphone;
+	private static MidiChannel whistle;
 
 	static {
 		bulletExplosionPool = loadPool("assets/sounds/bullet_explosion.wav");
@@ -41,8 +42,10 @@ public class SoundManager {
 		try {
 			synthesizer = MidiSystem.getSynthesizer();
 			synthesizer.open();
-			midiChannel = synthesizer.getChannels()[0];
-			midiChannel.programChange(11); // Vibraphone
+			vibraphone = synthesizer.getChannels()[0];
+			whistle = synthesizer.getChannels()[1];
+			vibraphone.programChange(11); // Vibraphone
+			whistle.programChange(79); // Whistle
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -150,12 +153,39 @@ public class SoundManager {
 				int C5 = 72;
 				int G5 = 79;
 
-				midiChannel.noteOn(C5, velocity);
+				vibraphone.noteOn(C5, velocity);
 				Thread.sleep(60);
-				midiChannel.noteOn(G5, velocity);
+				vibraphone.noteOn(G5, velocity);
 				Thread.sleep(400);
-				midiChannel.noteOff(C5);
-				midiChannel.noteOff(G5);
+				vibraphone.noteOff(C5);
+				vibraphone.noteOff(G5);
+
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}).start();
+	}
+
+	public void playWhistle() {
+		new Thread(() -> {
+			try {
+				int velocity = 90;
+
+				int C7 = 96;
+
+				whistle.noteOn(C7, velocity);
+				Thread.sleep(80);
+				whistle.noteOff(C7);
+				Thread.sleep(400);
+
+				whistle.noteOn(C7, velocity);
+				Thread.sleep(80);
+				whistle.noteOff(C7);
+				Thread.sleep(400);
+
+				whistle.noteOn(C7, velocity);
+				Thread.sleep(1000);
+				whistle.noteOff(C7);
 
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -185,9 +215,9 @@ public class SoundManager {
 				};
 
 				for (int note : victoryNotes) {
-					midiChannel.noteOn(note, velocity);
+					vibraphone.noteOn(note, velocity);
 					Thread.sleep(150); // note duration
-					midiChannel.noteOff(note);
+					vibraphone.noteOff(note);
 				}
 
 			} catch (InterruptedException e) {
@@ -214,9 +244,9 @@ public class SoundManager {
 				};
 
 				for (int note : gameOverNotes) {
-					midiChannel.noteOn(note, velocity);
+					vibraphone.noteOn(note, velocity);
 					Thread.sleep(220); // note duration
-					midiChannel.noteOff(note);
+					vibraphone.noteOff(note);
 				}
 
 			} catch (InterruptedException e) {

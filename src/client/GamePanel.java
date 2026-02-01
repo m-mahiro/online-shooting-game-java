@@ -31,7 +31,6 @@ public class GamePanel extends JPanel implements Runnable {
 	private int networkID;
 	public GameStage stage;
 	public GameUI ui;
-	public SoundManager sound = new SoundManager();
 
 	// 自分の操作している戦車
 	private int myTankID;

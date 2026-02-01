@@ -55,10 +55,14 @@ public class GameUI {
 		boolean blueAllDead = info.getBlueBaseState() == RUINS && info.getRemainBlueTank() == 0;
 		if (redAllDead || blueAllDead) {
 			Team winner = redAllDead ? BLUE : RED;
+
+			// 勝利チームを画面に表示
 			WinnerInfo winnerInfo = new WinnerInfo(winner);
 			contents.add(winnerInfo);
 			hasDisplayedWinner = true;
 
+			// 終了のホイッスル
+			sound.playWhistle();
 		}
 	}
 
