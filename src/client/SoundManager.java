@@ -49,9 +49,11 @@ public class SoundManager {
 	}
 
 	/**
+	 * 指定された音声ファイルから、複数の {@link Clip} を生成し、
+	 * 同一効果音を重ねて再生するための Clip プールを作成する。
 	 *
-	 * @param path
-	 * @return
+	 * @param path クラスパス上の音声ファイルへのパス
+	 * @return 生成された {@link Clip} のリスト（Clipプール）
 	 */
 	private static List<Clip> loadPool(String path) {
 		List<Clip> pool = new ArrayList<>();
@@ -66,9 +68,10 @@ public class SoundManager {
 	}
 
 	/**
+	 * 指定された音声ファイルを読み込み、再生可能な {@link Clip} を生成する。
 	 *
-	 * @param path
-	 * @return
+	 * @param path クラスパス上の音声ファイルへのパス
+	 * @return 初期化済みの {@link Clip}。読み込みに失敗した場合は {@code null}
 	 */
 	private static Clip loadClip(String path) {
 		try {
@@ -92,10 +95,11 @@ public class SoundManager {
 		}
 	}
 
-
 	/**
+	 * Clipプールから再生可能な {@link Clip} を選択して再生する。
+	 * すべての Clip が再生中の場合は、先頭の Clip を停止して再利用する。
 	 *
- 	 * @param pool
+	 * @param pool 再生対象となる {@link Clip} のプール
 	 */
 	private static void playFromPool(List<Clip> pool) {
 		if (pool == null || pool.isEmpty()) {
