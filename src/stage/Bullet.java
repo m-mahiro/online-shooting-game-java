@@ -166,7 +166,7 @@ public class Bullet implements GameObject, Projectile {
 	}
 
 	@Override
-	public boolean isTangible() {
+	public boolean hasRigidBody() {
 		return getState() == State.NORMAL;
 	}
 

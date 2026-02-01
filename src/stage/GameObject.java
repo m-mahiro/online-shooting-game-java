@@ -15,7 +15,7 @@ public interface GameObject {
 
 	boolean isExpired();
 
-	boolean isTangible();
+	boolean hasRigidBody();
 
 	RenderLayer getRenderLayer();
 

@@ -64,7 +64,7 @@ public class Wall implements GameObject {
 	}
 
 	@Override
-	public boolean isTangible() {
+	public boolean hasRigidBody() {
 		return true;
 	}
 

@@ -199,7 +199,7 @@ public class Base implements GameObject {
 	}
 
 	@Override
-	public boolean isTangible() {
+	public boolean hasRigidBody() {
 		switch (getState()) {
 			case NORMAL:
 			case BROKEN:

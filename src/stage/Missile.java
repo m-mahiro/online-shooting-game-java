@@ -200,7 +200,7 @@ public class Missile implements GameObject, Projectile {
 	}
 
 	@Override
-	public boolean isTangible() {
+	public boolean hasRigidBody() {
 		switch (this.state) {
 			case CHARGING:
 			case FLYING:

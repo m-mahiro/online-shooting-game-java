@@ -81,7 +81,7 @@ public class AutoTank extends Tank {
         if (burstCount > 0) {
             burstInterval--;
             if (burstInterval <= 0) {
-                gameStage.addStageObject(shootBullet());
+                gameStage.addGameObject(shootBullet());
                 burstCount--;
                 burstInterval = BURST_INTERVAL;
             }
@@ -102,7 +102,7 @@ public class AutoTank extends Tank {
         if (placingBlockCount > 0) {
             blockPlacementInterval--;
             if (blockPlacementInterval <= 0) {
-                gameStage.addStageObject(createBlock());
+                gameStage.addGameObject(createBlock());
                 placingBlockCount--;
                 blockPlacementInterval = BLOCK_PLACEMENT_INTERVAL;
             }

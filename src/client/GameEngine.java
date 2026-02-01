@@ -3,6 +3,7 @@ package client;
 import client.ui.GameUI;
 import stage.*;
 
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 
@@ -128,7 +129,7 @@ public class GameEngine implements Runnable {
         // 発射
         if (input.shootBullet()) {
             Bullet bullet = myTank.shootBullet();
-            stage.addStageObject(bullet);
+            stage.addGameObject(bullet);
             if (generator.isNetworked()) {
                 network.shootGun(myTankID);
             }
@@ -153,10 +154,28 @@ public class GameEngine implements Runnable {
         if (input.createBlock()) {
             Block block = myTank.createBlock();
             if (block != null) {
-                stage.addStageObject(block);
+                stage.addGameObject(block);
                 network.createBlock(myTankID);
             }
         }
+    }
+
+    public void draw(Graphics2D graphics, double windowWidth, double windowHeight) {
+        // カメラの移動・ズームを反映させるアフィン変換を作成
+        AffineTransform canvasTransform = new AffineTransform();
+        canvasTransform.translate(this.canvasWidth / 2.0, this.canvasHeight / 2.0);
+        canvasTransform.scale(this.zoomDegrees, this.zoomDegrees);
+        canvasTransform.translate(-this.cameraPosition.x, -this.cameraPosition.y);
+
+        // カメラに映る(ウィンドウから見える)範囲を計算
+        double visibleWidth = windowWidth / this.zoomDegrees;
+        double visibleHeight = windowHeight / this.zoomDegrees;
+
+        // ステージを描画
+        AffineTransform originalTransform = graphics.getTransform();
+        graphics.setTransform(canvasTransform);
+        this.stage.draw(graphics, visibleWidth, visibleHeight);
+        graphics.setTransform(originalTransform);  // 元の座標系に戻しておく
     }
     
     public void zoomCamera(double zoomDelta) {

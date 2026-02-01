@@ -9,7 +9,6 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
@@ -30,9 +29,9 @@ public class GameStage implements StageInfo {
 	private final Base redBase, blueBase;
 
 	// ステージ上のオブジェクト。
-	private final Map<Integer, GameObject> object = new ConcurrentHashMap<>();
+	private final Map<Integer, GameObject> objects = new ConcurrentHashMap<>();
 	// ステージ上空に張り付いているオブジェクト。GameUIよりは下層(隠れる)。
-	private final Map<Integer, UpperStageObject> upperObject = new ConcurrentHashMap<>();
+	private final Map<Integer, ScreenObject> screenObjects = new ConcurrentHashMap<>();
 
 	// ステージ外のテクスチャのアニメーション用
 	double outerStageAnimationFrame = 0;
@@ -55,11 +54,11 @@ public class GameStage implements StageInfo {
 		this.stageHeight = generator.getStageHeight();
 		this.redBase = generator.getRedBase();
 		this.blueBase = generator.getBlueBase();
-		
-		addStageObject(this.redBase);
-		addStageObject(this.blueBase);
-		addStageObjects(generator.getGameObjects());
-		addScreenObjects(generator.getUpperStageObjects());
+
+		addGameObject(this.redBase);
+		addGameObject(this.blueBase);
+		addGameObjects(generator.getGameObjects());
+		addScreenObjects(generator.getScreenObjects());
 	}
 
 	public int getStageWidth() {
@@ -70,52 +69,83 @@ public class GameStage implements StageInfo {
 		return stageHeight;
 	}
 
-	public int addStageObject(GameObject gameObject) {
+	/**
+	 * ステージに配置したいオブジェクトをこのメソッドに与えます。
+	 * @param gameObject ステージに配置したいゲームオブジェクト
+	 * @return 配置されたゲームオブジェクトに割り振られたオブジェクトID
+	 */
+	public int addGameObject(GameObject gameObject) {
 		if (gameObject == null) return -1;
 		int id = getNextPrivateObjectID();
-		object.put(id, gameObject);
+		objects.put(id, gameObject);
 		return id;
 	}
 
-	public void addStageObjects(GameObject[] gameObjects) {
-		if (gameObjects == null) return;
-		for (GameObject obj : gameObjects) {
-			addStageObject(obj);
-		}
+	/**
+	 * ステージに配置したいオブジェクトの配列をこのメソッドに与えます。
+ 	 * @param gameObjects ステージに配置したいゲームオブジェクトの配列
+	 * @return 配置されたゲームオブジェクトに割り振られたオブジェクトIDの配列。順番は引数に与えれた<code>gameObjects</code>に対応しています。
+	 */
+	public int[] addGameObjects(GameObject[] gameObjects) {
+		int length = gameObjects.length;
+		int[] idList = new int[length];
+		int i = 0;
+		for (GameObject obj : gameObjects) idList[i++] = addGameObject(obj);
+		return idList;
 	}
 
-	public void addScreenObjects(UpperStageObject[] upperStageObjects) {
-		if (upperStageObjects == null) return;
-		for (UpperStageObject obj : upperStageObjects) {
-			addScreenObject(obj);
-		}
-	}
-
-	public int addScreenObject(UpperStageObject upperStageObject) {
-		if (upperStageObject == null) return -1;
+	/**
+	 * ステージの座標系を用いてスクリーンに表示されるオブジェクト(<code>ScreenObject</code>)を追加します。
+	 * @param screenObject 追加したいスクリーンオブジェクト
+	 * @return 追加されたスクリーンオブジェクトに割り振られたオブジェクトID
+	 */
+	public int addScreenObject(ScreenObject screenObject) {
 		int id = getNextPrivateObjectID();
-		this.upperObject.put(id, upperStageObject);
+		this.screenObjects.put(id, screenObject);
 		return id;
 	}
 
+	/**
+	 * ステージの座標系を用いてスクリーンに表示されるオブジェクト(<code>ScreenObject</code>)を追加します。
+	 * @param screenObjects 追加したいスクリーンオブジェクトの配列
+	 * @return 追加されたスクリーンオブジェクトに割り振られたオブジェクトIDの配列。順番は引数に与えれた<code>screenObjects</code>に対応しています。
+	 */
+	public int[] addScreenObjects(ScreenObject[] screenObjects) {
+		int length = screenObjects.length;
+		int[] idList = new int[length];
+		int i = 0;
+		for (ScreenObject obj : screenObjects) idList[i++] = addScreenObject(obj);
+		return idList;
+	}
+
+	/**
+	 * 与えらたオブジェクトIDに対応する<code>GameObject</code>を返す。
+	 * @param id オブジェクトID
+	 * @return idに対応する対応する<code>GameObject</code>
+	 */
 	public GameObject getGameObject(int id) {
-		return object.get(id);
+		return objects.get(id);
 	}
 
-	public UpperStageObject getScreenObject(int id) {
-		return upperObject.get(id);
+	/**
+	 * 与えらえらたオブジェクトIDに対応する<code>ScreenObject</code>を返す。
+	 * @param id オブジェクトID
+	 * @return idに対応する対応する<code>ScreenObject</code>
+	 */
+	public ScreenObject getScreenObject(int id) {
+		return screenObjects.get(id);
 	}
 
-	private int getNextPrivateObjectID() {
-		synchronized (this) {
-			int id = nextPrivateObjectID;
-			nextPrivateObjectID++;
-			return id;
-		}
-	}
-
-
-	public void draw(Graphics2D graphics, int windowWidth, int windowHeight, double zoomDegrees) {
+	/**
+	 * 与えられた<code>Graphics2D</code>に、ステージ上の<code>GameObject</code>を描画していく。
+	 * それらには、<code>ScreenObject</code>(ユーザの操作する戦車を指し示すためのマーカなど、ステージ上空のオブジェクト。)も含まれる。
+	 * また、ステージのテクスチャやステージ外の背景なども描画される。
+	 *
+	 * @param graphics カメラ位置・ズームによる座標変換を適用済みのGraphics2D
+	 * @param visibleWidth カメラに映る（ウィンドウに映る）範囲の幅(ステージ上の座標系)
+	 * @param visibleHeight カメラに映る（ウィンドウに映る）範囲の高さ(ステージ上の座標系)
+	 */
+	public void draw(Graphics2D graphics, double visibleWidth, double visibleHeight) {
 
 		// ステージ外の描画
 		double textureSize = 1000;
@@ -123,8 +153,8 @@ public class GameStage implements StageInfo {
 		Rectangle2D outerStageAnchor = new Rectangle2D.Double(translate, translate, textureSize, textureSize);
 		TexturePaint outerStagePaint = new TexturePaint(outerStageTexture, outerStageAnchor);
 		graphics.setPaint(outerStagePaint);
-		int fillWidth = (int) (stageWidth + windowWidth / zoomDegrees);
-		int fillHeight = (int) (stageHeight + windowHeight / zoomDegrees);
+		int fillWidth = (int) (stageWidth + visibleWidth);
+		int fillHeight = (int) (stageHeight + visibleHeight);
 		graphics.fillRect(-fillWidth / 2, -fillHeight / 2, fillWidth, fillHeight);
 
 		// フローリングの描画
@@ -135,25 +165,26 @@ public class GameStage implements StageInfo {
 
 		// GameObjectの描画
 		for (RenderLayer layer : RenderLayer.values()) {
-			for (GameObject object : object.values()) {
+			for (GameObject object : objects.values()) {
 				if (object.getRenderLayer() != layer) continue;
 				object.draw(graphics);
 			}
 		}
 
 		// ScreenObjectの描画
-		for (UpperStageObject object : upperObject.values()) {
+		for (ScreenObject object : screenObjects.values()) {
 			object.draw(graphics);
 		}
 	}
 
 	/**
-	 * ゲームの状態を更新する
+	 * ステージ上のオブジェクト(<code>GameObject</code>と<code>ScreenObject</code>)のフレーム更新をおこなう。
+	 * 他にも、衝突を判定し該当のオブジェクトに通知を送ったり、削除可能なオブジェクトをメモリから削除したりする。
 	 */
 	public void update() {
 
 		// ゲームオブジェクトのフレーム更新
-		for (GameObject object : object.values()) {
+		for (GameObject object : objects.values()) {
 			object.update();
 		}
 
@@ -167,23 +198,33 @@ public class GameStage implements StageInfo {
 		outerStageAnimationFrame++;
 
 		// ステージ上空のオブジェクトのフレームを更新
-		for (UpperStageObject upperStageObject : upperObject.values()) {
-			upperStageObject.update();
+		for (ScreenObject screenObject : screenObjects.values()) {
+			screenObject.update();
 		}
 	}
 
-	public void checkCollision() {
-		ArrayList<GameObject> objectList = new ArrayList<>(object.values());
+	/**
+	 * <code>GameObject</code>同士の衝突判定をおこない、衝突があれば該当のオブジェクトに通知を送る。
+	 * 衝突判定は両方ののオブジェクトが<code>hasRigidBody()</code>が<code>true</code>を返した場合のみ行います。
+	 * 「衝突判定のの通知」は、該当オブジェクトの<code>onCollision()</code>を呼ぶことで送られます。
+	 */
+	private void checkCollision() {
+		ArrayList<GameObject> objectList = new ArrayList<>(objects.values());
 		for (int i = 0; i < objectList.size(); i++) {
 			for (int j = i + 1; j < objectList.size(); j++) {
+
+				// オブジェクトの組（総組み合わせ）を取得
 				GameObject o1 = objectList.get(i);
 				GameObject o2 = objectList.get(j);
-
-				if (o1 == o2) continue;
-				if (!o1.isTangible() || !o2.isTangible()) continue;
-
 				stage.Shape shape1 = o1.getShape();
 				stage.Shape shape2 = o2.getShape();
+
+				// 同一のオブジェクト同士では衝突判定を行わない
+				if (o1 == o2) continue;
+
+				// 衝突判定は、両方がRigidBodyじゃないと行わない。
+				if (!o1.hasRigidBody() || !o2.hasRigidBody()) continue;
+
 
 				boolean isCollided = false;
 
@@ -234,21 +275,21 @@ public class GameStage implements StageInfo {
 					circle = (Circle) circleObj.getShape();
 					rectangle = (Rectangle) rectObj.getShape();
 
-					// 1. 円の中心座標を、長方形を原点としたローカル座標系に変換
+					// 円の中心座標を、長方形を原点としたローカル座標系に変換
 					Point2D.Double circleCenterInRectLocal = Util.subtract(circle.center, rectangle.center);
 
-					// 2. 長方形の境界内に、円の中心座標をクランプ（射影）する
+					// 長方形の境界内に、円の中心座標をクランプ（射影）する
 					//    clampedX/Yは、長方形上で円の中心に最も近い点の座標（ローカル座標）
 					double halfW = rectangle.width / 2.0;
 					double halfH = rectangle.height / 2.0;
 					double clampedX = Math.max(-halfW, Math.min(halfW, circleCenterInRectLocal.x));
 					double clampedY = Math.max(-halfH, Math.min(halfH, circleCenterInRectLocal.y));
 
-					// 3. クランプした点と、円の中心（ローカル座標）との距離を計算
+					// クランプした点と、円の中心（ローカル座標）との距離を計算
 					Point2D.Double clampedPoint = new Point2D.Double(clampedX, clampedY);
 					double distance = Util.norm(Util.subtract(circleCenterInRectLocal, clampedPoint));
 
-					// 4. 距離が円の半径より小さければ衝突している
+					// 距離が円の半径より小さければ衝突している
 					if (distance < circle.radius) {
 						isCollided = true;
 					}
@@ -262,8 +303,12 @@ public class GameStage implements StageInfo {
 		}
 	}
 
-	public void checkObjectToRemove() {
-		Iterator<GameObject> iterator = this.object.values().iterator();
+	/**
+	 * 削除可能なオブジェクト(<code>GameObject</code>と<code>ScreenObject</code>)をメモリから削除する。
+	 * 具体的には、ステージ上のオブジェクトを管理している<code>this.objects</code>と<code>this.screenObject</code>からオブジェクトを削除する。
+	 */
+	private void checkObjectToRemove() {
+		Iterator<GameObject> iterator = this.objects.values().iterator();
 		while (iterator.hasNext()) {
 			GameObject object = iterator.next();
 
@@ -278,13 +323,19 @@ public class GameStage implements StageInfo {
 		}
 	}
 
-	public double  getJustZoomDegrees(double windowWidth, double windowHeight) {
-		double zoomWidth = windowWidth / stageWidth;
-		double zoomHeight = windowHeight / stageWidth;
-		return Math.min(zoomWidth, zoomHeight);
+	/**
+	 * <code>this.screenObjects</code>と<code>this.objects</code>に共通するオブジェクトIDを返す。
+	 * <code>getObject()</code>や<code>getScreenObject()</code>に与えることができる。
+	 *
+	 * @return オブジェクトID
+	 */
+	private int getNextPrivateObjectID() {
+		synchronized (this) {
+			int id = nextPrivateObjectID;
+			nextPrivateObjectID++;
+			return id;
+		}
 	}
-
-
 	// ============================= StageInfoインターフェースのメソッド =============================
 
 	@Override
@@ -310,8 +361,8 @@ public class GameStage implements StageInfo {
 	@Override
 	public int getRemainRedTank() {
 		int count = 0;
-		synchronized (this.object) {
-			for (GameObject object : this.object.values()) {
+		synchronized (this.objects) {
+			for (GameObject object : this.objects.values()) {
 				if (object instanceof Tank) {
 					Tank tank = (Tank) object;
 					boolean isRed = tank.getTeam() == RED;
@@ -326,8 +377,8 @@ public class GameStage implements StageInfo {
 	@Override
 	public int getRemainBlueTank() {
 		int count = 0;
-		synchronized (this.object) {
-			for (GameObject object : this.object.values()) {
+		synchronized (this.objects) {
+			for (GameObject object : this.objects.values()) {
 				if (object instanceof Tank) {
 					Tank tank = (Tank) object;
 					boolean isBlue = tank.getTeam() == BLUE;

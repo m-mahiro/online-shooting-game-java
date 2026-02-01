@@ -146,7 +146,7 @@ public class Block implements GameObject {
 	}
 
 	@Override
-	public boolean isTangible() {
+	public boolean hasRigidBody() {
 		State s = getState();
 		return s == State.NORMAL || s == State.BROKEN;
 	}

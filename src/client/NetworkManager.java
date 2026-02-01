@@ -103,7 +103,7 @@ public class NetworkManager extends Thread {
 				}
 				case "BULLET": {
 					Bullet bullet = tank.shootBullet();
-					stage.addStageObject(bullet);
+					stage.addGameObject(bullet);
 					break;
 				}
 				case "START_CHARGE": {
@@ -123,7 +123,7 @@ public class NetworkManager extends Thread {
 				}
 				case "BLOCK": {
 					Block block = tank.createBlock();
-					stage.addStageObject(block);
+					stage.addGameObject(block);
 					break;
 				}
 			}

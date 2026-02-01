@@ -2,7 +2,7 @@ package stage;
 
 import java.awt.Graphics2D;
 
-public class Marker implements UpperStageObject {
+public class Marker implements ScreenObject {
     private Tank target;
 
     public Marker(Tank target) {

@@ -60,8 +60,8 @@ public class GameWindow extends JFrame {
 				}
 
 				@Override
-				public UpperStageObject[] getUpperStageObjects() {
-					return new UpperStageObject[0];
+				public ScreenObject[] getScreenObjects() {
+					return new ScreenObject[0];
 				}
 
 				@Override

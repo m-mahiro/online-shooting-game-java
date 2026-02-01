@@ -39,10 +39,6 @@ public class GamePanel extends JPanel {
                 }
             }
         });
-
-        // ゲームループを開始
-        // パネルのサイズを取得するために、パネルが実現されるのを待つ必要がある
-        // addNotifyを使ってゲームスレッドを開始するのは一般的な手法
     }
 
     @Override
@@ -56,7 +52,7 @@ public class GamePanel extends JPanel {
     @Override
     protected void paintComponent(Graphics graphics) {
         super.paintComponent(graphics);
-        Graphics2D g2d = (Graphics2D) graphics;
+        Graphics2D g = (Graphics2D) graphics;
 
         if (gameEngine == null) {
             return;
@@ -66,19 +62,19 @@ public class GamePanel extends JPanel {
         GameUI ui = gameEngine.getUi();
 
         // カメラのトランスフォームを適用
-        g2d.transform(gameEngine.getCanvasTransform());
+        g.transform(gameEngine.getCanvasTransform());
 
         // ゲームオブジェクトを描画
         if (stage != null) {
-            stage.draw(g2d, this.getWidth(), this.getHeight(), gameEngine.getZoomDegrees());
+            stage.draw(g, this.getWidth(), this.getHeight(), gameEngine.getZoomDegrees());
         }
 
         // UI描画のためにトランスフォームをリセット
-        g2d.setTransform(new AffineTransform());
+        g.setTransform(new AffineTransform());
 
         // UIを描画
         if (ui != null) {
-            ui.draw(g2d, this.getWidth(), this.getHeight());
+            ui.draw(g, this.getWidth(), this.getHeight());
         }
     }
 }

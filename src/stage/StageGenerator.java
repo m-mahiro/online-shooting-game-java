@@ -1,12 +1,20 @@
 package stage;
 
 public interface StageGenerator {
+
     GameObject[] getGameObjects();
-    UpperStageObject[] getUpperStageObjects();
+
+    ScreenObject[] getScreenObjects();
+
     Base getRedBase();
+
     Base getBlueBase();
+
     int getStageWidth();
+
     int getStageHeight();
+
     Tank[] getTanks();
+
     boolean isNetworked();
 }
