@@ -10,8 +10,8 @@ import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.util.Objects;
 
-import static stage.Base.State.RUINS;
-import static stage.Team.RED;
+import static stage.Base.State.*;
+import static stage.Team.*;
 
 public class TeamInfoIcon implements UIContent {
 

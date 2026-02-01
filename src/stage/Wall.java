@@ -7,6 +7,8 @@ import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.Objects;
 
+import static stage.Team.*;
+
 public class Wall implements GameObject {
 
 	// 特徴
@@ -94,6 +96,6 @@ public class Wall implements GameObject {
 
 	@Override
 	public Team getTeam() {
-		return Team.OBSTACLE;
+		return OBSTACLE;
 	}
 }

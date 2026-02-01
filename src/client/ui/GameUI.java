@@ -1,10 +1,11 @@
 package client.ui;
 
 import stage.StageInfo;
-import stage.Team;
 
 import java.awt.*;
 import java.util.ArrayList;
+
+import static stage.Team.*;
 
 public class GameUI {
 
@@ -15,12 +16,12 @@ public class GameUI {
 	StageInfo info;
 
 	public GameUI(StageInfo info) {
-		TeamInfoCard redCard = new TeamInfoCard(Team.RED, info);
-		TeamInfoCard blueCard = new TeamInfoCard(Team.BLUE, info);
-		TeamInfoIcon redIcon = new TeamInfoIcon(Team.RED, info);
-		TeamInfoIcon blueIcon = new TeamInfoIcon(Team.BLUE, info);
-		TeamInfoText redText = new TeamInfoText(Team.RED, info);
-		TeamInfoText blueText = new TeamInfoText(Team.BLUE, info);
+		TeamInfoCard redCard = new TeamInfoCard(RED, info);
+		TeamInfoCard blueCard = new TeamInfoCard(BLUE, info);
+		TeamInfoIcon redIcon = new TeamInfoIcon(RED, info);
+		TeamInfoIcon blueIcon = new TeamInfoIcon(BLUE, info);
+		TeamInfoText redText = new TeamInfoText(RED, info);
+		TeamInfoText blueText = new TeamInfoText(BLUE, info);
 		contents.add(redCard);
 		contents.add(blueCard);
 		contents.add(redIcon);

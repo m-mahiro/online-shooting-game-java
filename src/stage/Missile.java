@@ -10,6 +10,8 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
 
+import static stage.Team.*;
+
 public class Missile implements GameObject, Projectile {
 
 	// 定数
@@ -113,7 +115,7 @@ public class Missile implements GameObject, Projectile {
 	}
 
 	private BufferedImage getImage() {
-		boolean isRed = (getTeam() == Team.RED);
+		boolean isRed = (getTeam() == RED);
 		switch (this.state) {
 			case CHARGING:
 			case CANCELLED:

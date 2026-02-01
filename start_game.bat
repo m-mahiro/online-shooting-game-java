@@ -1,14 +1,17 @@
 @echo off
 echo Creating output directory...
 if not exist out mkdir out
+if not exist out\client mkdir out\client
 
 echo Copying assets...
-xcopy src\assets out\assets /E /I /Y
+xcopy src\client\assets out\client\assets /E /I /Y
 
 echo Compiling Java source files...
-javac -d out -encoding UTF-8 -cp src src/*.java
+set "SRCS="
+for /r src %%F in (*.java) do (call set "SRCS=%%SRCS%% "%%F"")
+javac -d out -encoding UTF-8 %SRCS%
 
 echo Running the game...
-java -cp out GameLauncher
+java -cp out client.GameLauncher
 
 pause

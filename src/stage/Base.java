@@ -11,6 +11,8 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
 
+import static stage.Team.*;
+
 public class Base implements GameObject {
 
 	// 定数
@@ -97,7 +99,7 @@ public class Base implements GameObject {
 	}
 
 	private BufferedImage getBaseImage() {
-		boolean isRed = this.team == Team.RED;
+		boolean isRed = this.team == RED;
 		boolean isFlushing = (damageFlushFrame > 0) && damageFlushFrame % 20 == 0;
 		switch (getState()) {
 			case NORMAL:

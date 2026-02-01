@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.Objects;
 import javax.imageio.ImageIO;
 
+import static stage.Team.*;
+
 public class Bullet implements GameObject, Projectile {
 
 	// 特徴
@@ -88,7 +90,7 @@ public class Bullet implements GameObject, Projectile {
 	}
 
 	private BufferedImage getImage() {
-		boolean isRed = this.getTeam() == Team.RED;
+		boolean isRed = this.getTeam() == RED;
 		switch (getState()) {
 			case NORMAL:
 				return isRed ? redNormalBulletImage : blueNormalBulletImage;

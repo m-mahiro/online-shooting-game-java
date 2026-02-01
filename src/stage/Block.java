@@ -11,6 +11,8 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
 
+import static stage.Team.*;
+
 public class Block implements GameObject {
 
 	// 特徴
@@ -185,7 +187,7 @@ public class Block implements GameObject {
 
 	@Override
 	public Team getTeam() {
-		return Team.OBSTACLE;
+		return OBSTACLE;
 	}
 
 	// ============================= ゲッターセッター =============================

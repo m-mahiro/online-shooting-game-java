@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static stage.Team.*;
+
 public class GameStage implements StageInfo {
 
 	// 描画範囲の情報
@@ -46,13 +48,13 @@ public class GameStage implements StageInfo {
 
 		ArrayList<GameObject> objects = new ArrayList<>();
 
-		this.redBase = new Base(2000, 2000, Team.RED);
-		this.blueBase = new Base(-2000, -2000, Team.BLUE);
+		this.redBase = new Base(2000, 2000, RED);
+		this.blueBase = new Base(-2000, -2000, BLUE);
 
 		// まず最初に戦車
 		objects.add(new Tank(redBase));
 		for (int i = 1; i < players; i++) {
-			Team team = (i % 2 == 0 ) ? Team.RED : Team.BLUE;
+			Team team = (i % 2 == 0 ) ? RED : BLUE;
 			switch (team) {
 				case RED: {
 					Tank tank = new Tank(redBase);
@@ -297,7 +299,7 @@ public class GameStage implements StageInfo {
 			for (GameObject object : this.objects.values()) {
 				if (object instanceof Tank) {
 					Tank tank = (Tank) object;
-					boolean isRed = tank.getTeam() == Team.RED;
+					boolean isRed = tank.getTeam() == RED;
 					boolean isAlive = !tank.isDead();
 					if (isRed && isAlive) count++;
 				}
@@ -313,7 +315,7 @@ public class GameStage implements StageInfo {
 			for (GameObject object : this.objects.values()) {
 				if (object instanceof Tank) {
 					Tank tank = (Tank) object;
-					boolean isBlue = tank.getTeam() == Team.BLUE;
+					boolean isBlue = tank.getTeam() == BLUE;
 					boolean isAlive = !tank.isDead();
 					if (isBlue && isAlive) count++;
 				}

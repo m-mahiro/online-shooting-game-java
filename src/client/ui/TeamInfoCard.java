@@ -10,6 +10,8 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
 
+import static stage.Team.*;
+
 public class TeamInfoCard implements UIContent {
 
 
@@ -51,7 +53,7 @@ public class TeamInfoCard implements UIContent {
 	public void draw(Graphics2D graphics, int windowWidth, int windowHeight) {
 
 		// カードの位置を計算
-		boolean isRed = this.team == Team.RED;
+		boolean isRed = this.team == RED;
 		double cardX = isRed ? windowWidth - imageScale * cardImage.getWidth(null) : 0;
 		double cardY = windowHeight - imageScale * cardImage.getHeight(null);
 

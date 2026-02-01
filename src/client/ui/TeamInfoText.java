@@ -1,17 +1,17 @@
 package client.ui;
 
-import stage.Base;
 import stage.StageInfo;
-import stage.Team;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
 import java.awt.geom.AffineTransform;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.util.Objects;
+
+import static stage.Base.State.*;
+
+import stage.Team;
+import stage.Base;
+import static stage.Team.*;
 
 public class TeamInfoText implements UIContent {
 
@@ -39,7 +39,7 @@ public class TeamInfoText implements UIContent {
 
 		// ============================= 表示するテキストを用意 =============================
 
-		boolean isRed = this.team == Team.RED;
+		boolean isRed = this.team == RED;
 
 		// このクラスでは、基地のHPか、戦車の残り代数のどちらかを表示する
 		int baseHp = isRed ? info.getRedBaseHP() : info.getBlueBaseHP();
@@ -49,7 +49,7 @@ public class TeamInfoText implements UIContent {
 
 		// 通常は基地のHP、基地が破壊されたら戦車の残り台数
 		Base.State baseState = isRed ? info.getRedBaseState() : info.getBlueBaseState();
-		boolean isRuins = baseState == Base.State.RUINS;
+		boolean isRuins = baseState == RUINS;
 		String text = isRuins ? tankCountText : baseHpText;
 
 

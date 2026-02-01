@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.Random;
 
+import static stage.Team.*;
+
 public class Tank implements GameObject {
 
 	// 特徴（定数）
@@ -175,7 +177,7 @@ public class Tank implements GameObject {
 
 	private BufferedImage getChassisImage() {
 
-		boolean isRed = (base.getTeam() == Team.RED);
+		boolean isRed = (base.getTeam() == RED);
 		boolean isFlushing = (damageFlushFrame > 0) && damageFlushFrame % 20 == 0;
 		switch (getState()) {
 			case RESPAWNING: return isRed ? redTransparentChassisImage : blueTransparentChassisImage;
@@ -196,7 +198,7 @@ public class Tank implements GameObject {
 	}
 
 	private BufferedImage getGunImage() {
-		boolean isRed = (base.getTeam() == Team.RED);
+		boolean isRed = (base.getTeam() == RED);
 		boolean isFlushing = (damageFlushFrame > 0) && damageFlushFrame % 20 == 0;
 		switch (getState()) {
 			case RESPAWNING: return isRed ? redTransparentGunImage : blueTransparentGunImage;
