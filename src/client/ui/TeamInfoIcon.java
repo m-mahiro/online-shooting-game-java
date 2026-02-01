@@ -22,8 +22,8 @@ public class TeamInfoIcon implements UIContent {
 	private StageInfo info;
 
 	// 表示サイズ調整用
-	private double cardScale = 0.6;
-	private double tankScale = 0.8;
+	private double baseScale = 0.6;
+	private double tankScale = 1.3;
 
 	// 画像リソース
 	private static Image normalRedBaseImage, brokenRedBaseImage, redBaseRuinsImage;
@@ -71,8 +71,8 @@ public class TeamInfoIcon implements UIContent {
 		}
 	}
 
-	private double getImageScale() {
-		boolean isRuins = getBaseState() == RUINS;
+	private boolean isRuins() {
+		return getBaseState() == RUINS;
 	}
 
 	private Base.State getBaseState() {
@@ -95,14 +95,23 @@ public class TeamInfoIcon implements UIContent {
 		Image image = this.getImage();
 
 		// 画像の位置を計算
-		double scale =
-		double baseX = isRed ? windowWidth - cardScale * image.getWidth(null) - 10 : 10;
-		double baseY = windowHeight - cardScale * image.getHeight(null);
+		double scale, x, y;
+		if (isRuins()) {
+			// 戦車を表示する
+			scale = tankScale;
+			x = isRed ? windowWidth - scale * image.getWidth(null) - 10 : 10;
+			y = windowHeight - scale * image.getHeight(null) - 10;
+		} else {
+			// 基地を表示する
+			scale = baseScale;
+			x = isRed ? windowWidth - scale * image.getWidth(null) - 10 : 10;
+			y = windowHeight - scale * image.getHeight(null);
+		}
 
 		// 画像の描画
 		AffineTransform baseTrans = new AffineTransform();
-		baseTrans.translate(baseX, baseY);
-		baseTrans.scale(cardScale, cardScale);
+		baseTrans.translate(x, y);
+		baseTrans.scale(scale, scale);
 		graphics.drawImage(image, baseTrans, null);
 	}
 }
