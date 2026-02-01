@@ -26,21 +26,19 @@ public class TeamInfoIcon implements UIContent {
 	private double tankScale = 1.3;
 
 	// 画像リソース
-	private static Image normalRedBaseImage, brokenRedBaseImage, redBaseRuinsImage;
-	private static Image normalBlueBaseImage, brokenBlueBaseImage, blueBaseRuinsImage;
+	private static Image normalRedBaseImage, brokenRedBaseImage;
+	private static Image normalBlueBaseImage, brokenBlueBaseImage;
 	private static Image redTankImage, blueTankImage;
 
 	static {
 		try {
 			// REDチームの基地の画像
-			normalRedBaseImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/hp_base_red_normal.png")));
-			brokenRedBaseImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/hp_base_red_broken.png")));
-			redBaseRuinsImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/hp_base_red_ruins.png")));
+			normalRedBaseImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/info_team_base_red_normal.png")));
+			brokenRedBaseImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/info_team_base_broken.png")));
 
 			// BLUEチームの基地の画像
-			normalBlueBaseImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/hp_base_blue_normal.png")));
-			brokenBlueBaseImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/hp_base_blue_broken.png")));
-			blueBaseRuinsImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/hp_base_blue_ruins.png")));
+			normalBlueBaseImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/info_team_base_blue_normal.png")));
+			brokenBlueBaseImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/info_team_base_blue_broken.png")));
 
 			// 戦車の画像
 			redTankImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/tank_red.png")));

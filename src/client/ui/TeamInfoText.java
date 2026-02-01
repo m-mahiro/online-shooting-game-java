@@ -44,7 +44,7 @@ public class TeamInfoText implements UIContent {
 		// このクラスでは、基地のHPか、戦車の残り代数のどちらかを表示する
 		int baseHp = isRed ? info.getRedBaseHP() : info.getBlueBaseHP();
 		int tankCount = isRed ? info.getRemainRedTank() : info.getRemainBlueTank();
-		String tankCountText = isRed ? tankCount + " X" : "X " + tankCount;
+		String tankCountText = Integer.toString(tankCount);
 		String baseHpText = Integer.toString(baseHp);
 
 		// 通常は基地のHP、基地が破壊されたら戦車の残り台数
