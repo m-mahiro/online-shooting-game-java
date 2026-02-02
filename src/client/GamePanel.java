@@ -35,7 +35,7 @@ public class GamePanel extends JPanel {
             @Override
             public void componentResized(ComponentEvent e) {
                 if (gameEngine != null) {
-                    gameEngine.setCanvasSize(getWidth(), getHeight());
+                    gameEngine.setWindowSize(getWidth(), getHeight());
                 }
             }
         });
@@ -61,13 +61,8 @@ public class GamePanel extends JPanel {
         GameStage stage = gameEngine.getStage();
         GameUI ui = gameEngine.getUi();
 
-        // カメラのトランスフォームを適用
-        g.transform(gameEngine.getCanvasTransform());
-
         // ゲームオブジェクトを描画
-        if (stage != null) {
-            stage.draw(g, this.getWidth(), this.getHeight(), gameEngine.getZoomDegrees());
-        }
+        gameEngine.draw(g);
 
         // UI描画のためにトランスフォームをリセット
         g.setTransform(new AffineTransform());

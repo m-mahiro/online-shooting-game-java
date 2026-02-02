@@ -30,8 +30,7 @@ public class GameStage implements StageInfo {
 
 	// ステージ上のオブジェクト。
 	private final Map<Integer, GameObject> objects = new ConcurrentHashMap<>();
-	// ステージ上空に張り付いているオブジェクト。GameUIよりは下層(隠れる)。
-	private final Map<Integer, ScreenObject> screenObjects = new ConcurrentHashMap<>();
+
 
 	// ステージ外のテクスチャのアニメーション用
 	double outerStageAnimationFrame = 0;
@@ -62,7 +61,6 @@ public class GameStage implements StageInfo {
 		addGameObject(this.redBase);
 		addGameObject(this.blueBase);
 		addGameObjects(generator.getGameObjects());
-		addScreenObjects(generator.getScreenObjects());
 	}
 
 	/**
@@ -106,29 +104,9 @@ public class GameStage implements StageInfo {
 		return idList;
 	}
 
-	/**
-	 * ステージの座標系を用いてスクリーンに表示されるオブジェクト(<code>ScreenObject</code>)を追加します。
-	 * @param screenObject 追加したいスクリーンオブジェクト
-	 * @return 追加されたスクリーンオブジェクトに割り振られたオブジェクトID
-	 */
-	public int addScreenObject(ScreenObject screenObject) {
-		int id = getNextPrivateObjectID();
-		this.screenObjects.put(id, screenObject);
-		return id;
-	}
 
-	/**
-	 * ステージの座標系を用いてスクリーンに表示されるオブジェクト(<code>ScreenObject</code>)を追加します。
-	 * @param screenObjects 追加したいスクリーンオブジェクトの配列
-	 * @return 追加されたスクリーンオブジェクトに割り振られたオブジェクトIDの配列。順番は引数に与えれた<code>screenObjects</code>に対応しています。
-	 */
-	public int[] addScreenObjects(ScreenObject[] screenObjects) {
-		int length = screenObjects.length;
-		int[] idList = new int[length];
-		int i = 0;
-		for (ScreenObject obj : screenObjects) idList[i++] = addScreenObject(obj);
-		return idList;
-	}
+
+
 
 	/**
 	 * 与えらたオブジェクトIDに対応する<code>GameObject</code>を返す。
@@ -139,19 +117,11 @@ public class GameStage implements StageInfo {
 		return objects.get(id);
 	}
 
-	/**
-	 * 与えらえらたオブジェクトIDに対応する<code>ScreenObject</code>を返す。
-	 * @param id オブジェクトID
-	 * @return idに対応する対応する<code>ScreenObject</code>
-	 */
-	public ScreenObject getScreenObject(int id) {
-		return screenObjects.get(id);
-	}
+
 
 	/**
 	 * 与えられた<code>Graphics2D</code>に、ステージ上の<code>GameObject</code>を描画していく。
-	 * それらには、<code>ScreenObject</code>(ユーザの操作する戦車を指し示すためのマーカなど、ステージ上空のオブジェクト。)も含まれる。
-	 * また、ステージのテクスチャやステージ外の背景なども描画される。
+	 * ステージのテクスチャやステージ外の背景なども描画される。
 	 *
 	 * @param graphics カメラ位置・ズームによる座標変換を適用済みのGraphics2D
 	 * @param visibleWidth カメラに映る（ウィンドウに映る）範囲の幅(ステージ上の座標系)
@@ -182,15 +152,10 @@ public class GameStage implements StageInfo {
 				object.draw(graphics);
 			}
 		}
-
-		// ScreenObjectの描画
-		for (ScreenObject object : screenObjects.values()) {
-			object.draw(graphics);
-		}
 	}
 
 	/**
-	 * ステージ上のオブジェクト(<code>GameObject</code>と<code>ScreenObject</code>)のフレーム更新をおこなう。
+	 * ステージ上の<code>GameObject</code>のフレーム更新をおこなう。
 	 * 他にも、衝突を判定し該当のオブジェクトに通知を送ったり、削除可能なオブジェクトをメモリから削除したりする。
 	 */
 	public void update() {
@@ -201,18 +166,13 @@ public class GameStage implements StageInfo {
 		}
 
 		// 削除可能なオブジェクトがあれば削除
-		checkObjectToRemove();
+		removeExpiredObjects();
 
 		// 衝突判定。衝突があれば該当オブジェクトに通知を送る
 		checkCollision();
 
 		// ステージ演出アニメーション用の変数をインクリメント
 		outerStageAnimationFrame++;
-
-		// ステージ上空のオブジェクトのフレームを更新
-		for (ScreenObject screenObject : screenObjects.values()) {
-			screenObject.update();
-		}
 	}
 
 	/**
@@ -316,10 +276,10 @@ public class GameStage implements StageInfo {
 	}
 
 	/**
-	 * 削除可能なオブジェクト(<code>GameObject</code>と<code>ScreenObject</code>)をメモリから削除する。
-	 * 具体的には、ステージ上のオブジェクトを管理している<code>this.objects</code>と<code>this.screenObject</code>からオブジェクトを削除する。
+	 * 削除可能なオブジェクト(<code>GameObject</code>)をメモリから削除する。
+	 * 具体的には、<code>isExpired()</code>が<code>true</code>を<code>this.objects</code>から削除する。
 	 */
-	private void checkObjectToRemove() {
+	private void removeExpiredObjects() {
 		Iterator<GameObject> iterator = this.objects.values().iterator();
 		while (iterator.hasNext()) {
 			GameObject object = iterator.next();
@@ -336,8 +296,8 @@ public class GameStage implements StageInfo {
 	}
 
 	/**
-	 * <code>this.screenObjects</code>と<code>this.objects</code>に共通するオブジェクトIDを返す。
-	 * <code>getObject()</code>や<code>getScreenObject()</code>に与えることができる。
+	 * オブジェクトIDを返す。
+	 * <code>getObject()</code>に与えることができる。
 	 *
 	 * @return オブジェクトID
 	 */

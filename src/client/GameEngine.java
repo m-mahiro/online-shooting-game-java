@@ -6,6 +6,9 @@ import stage.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GameEngine implements Runnable {
 
@@ -27,8 +30,12 @@ public class GameEngine implements Runnable {
     private Thread gameThread;
     private final StageGenerator generator;
 
+    // オブジェクト管理
+    private int nextScreenObjectID = 0;
+    private final Map<Integer, ScreenObject> screenObjects = new ConcurrentHashMap<>();
+
     // キャンバス・カメラ関連
-    private int canvasWidth, canvasHeight;
+    private int windowWidth, windowHeight;
     private double zoomDegrees;
     private Point2D.Double cameraPosition = new Point2D.Double();
     public double CAMERA_ZOOM_UPPER_THRESHOLD = 5;
@@ -63,7 +70,7 @@ public class GameEngine implements Runnable {
         if (myTankObject instanceof Tank) {
             this.myTank = (Tank) myTankObject;
         } else {
-            throw new RuntimeException("My assigned object ("+ myTankID +") is not a Tank!");
+            throw new RuntimeException("My assigned object (" + myTankID + ") is not a Tank!");
         }
 
         // 自分の戦車にマーカーを追加
@@ -81,16 +88,22 @@ public class GameEngine implements Runnable {
         }
     }
 
-    public void setCanvasSize(int width, int height) {
-        this.canvasWidth = width;
-        this.canvasHeight = height;
+    /**
     }
 
+    /**
+     * ゲームスレッドを開始します。
+     * ゲームループが別スレッドで実行されます。
+     *
+     * @param width ウィンドウの幅
+     * @param height ウィンドウの高さ
+     */
     public void startGameThread(int width, int height) {
-        setCanvasSize(width, height);
+        setWindowSize(width, height);
         this.gameThread = new Thread(this);
         gameThread.start();
-        this.zoomDegrees = this.stage.getJustZoomDegrees(width, height) * 0.9;
+        this.zoomDegrees = this.getJustZoom(width, height) * 0.9;
+    }
     }
 
     @Override
@@ -163,21 +176,33 @@ public class GameEngine implements Runnable {
         }
     }
 
-    public void draw(Graphics2D graphics, double windowWidth, double windowHeight) {
+    /**
+     * ゲーム画面を描画します。
+     * カメラ変換を適用し、ステージとスクリーンオブジェクトを描画します。
+     *
+     * @param graphics 描画に使用するGraphics2Dオブジェクト
+     */
+    public void draw(Graphics2D graphics) {
         // カメラの移動・ズームを反映させるアフィン変換を作成
         AffineTransform canvasTransform = new AffineTransform();
-        canvasTransform.translate(this.canvasWidth / 2.0, this.canvasHeight / 2.0);
+        canvasTransform.translate(this.windowWidth / 2.0, this.windowHeight / 2.0);
         canvasTransform.scale(this.zoomDegrees, this.zoomDegrees);
         canvasTransform.translate(-this.cameraPosition.x, -this.cameraPosition.y);
 
         // カメラに映る(ウィンドウから見える)範囲を計算
-        double visibleWidth = windowWidth / this.zoomDegrees;
-        double visibleHeight = windowHeight / this.zoomDegrees;
+        double visibleWidth = this.windowWidth / this.zoomDegrees;
+        double visibleHeight = this.windowHeight / this.zoomDegrees;
 
         // ステージを描画
         AffineTransform originalTransform = graphics.getTransform();
         graphics.setTransform(canvasTransform);
         this.stage.draw(graphics, visibleWidth, visibleHeight);
+
+        // ScreenObjectの描画
+        for (ScreenObject object : screenObjects.values()) {
+            object.draw(graphics);
+        }
+
         graphics.setTransform(originalTransform);  // 元の座標系に戻しておく
     }
     
@@ -192,7 +217,7 @@ public class GameEngine implements Runnable {
 
     public AffineTransform getCanvasTransform() {
         AffineTransform trans = new AffineTransform();
-        trans.translate(this.canvasWidth / 2.0, this.canvasHeight / 2.0);
+        trans.translate(this.windowWidth / 2.0, this.windowHeight / 2.0);
         trans.scale(this.zoomDegrees, this.zoomDegrees);
         trans.translate(-this.cameraPosition.x, -this.cameraPosition.y);
         return trans;
