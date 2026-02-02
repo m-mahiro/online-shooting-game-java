@@ -29,72 +29,119 @@ public class Wall implements GameObject {
 		}
 	}
 
-	public Wall(Point2D.Double coordinate) {
-		this.position = (Point2D.Double) coordinate.clone();
+	    /**
+	     * 新しい壁オブジェクトを生成します。
+	     * @param coordinate 壁の中心座標
+	     */
+	    public Wall(Point2D.Double coordinate) {		this.position = (Point2D.Double) coordinate.clone();
 	}
 
 	// ============================= GameObjectインタフェースのメソッド =============================
 
-	@Override
-	public void update() {
-
+	    /**
+	     * 壁の状態を更新します。
+	     * 壁は静的なオブジェクトであるため、このメソッドは何も処理しません。
+	     */
+	    @Override
+	    public void update() {
 	}
 
-	@Override
-	public void draw(Graphics2D graphics) {
-		AffineTransform trans = new AffineTransform();
+	    /**
+	     * 壁自身を描画します。
+	     * @param graphics 描画に使用するGraphics2Dオブジェクト
+	     */
+	    @Override
+	    public void draw(Graphics2D graphics) {		AffineTransform trans = new AffineTransform();
 		trans.translate(this.position.x, this.position.y);
 		trans.translate(-WIDTH / 2.0, -HEIGHT / 2.0);
 		graphics.drawImage(wallImage, trans, null);
 	}
 
-	@Override
-	public void onCollision(GameObject other) {
-
+	    /**
+	     * 他のGameObjectとの衝突時に呼び出されます。
+	     * 壁は衝突によって特別な状態変化を起こさないため、このメソッドは何も処理しません。
+	     * @param other 衝突したGameObject
+	     */
+	    @Override
+	    public void onCollision(GameObject other) {
 	}
 
-	@Override
-	public void onHitBy(Projectile other) {
-
+	    /**
+	     * プロジェクタイルから被弾した際に呼び出されます。
+	     * 壁はダメージを受けないため、このメソッドは何も処理しません。
+	     * @param other 衝突したプロジェクタイル
+	     */
+	    @Override
+	    public void onHitBy(Projectile other) {
 	}
 
-	@Override
-	public boolean isExpired() {
-		return false;
+	    /**
+	     * オブジェクトがステージから削除されるべきかを判定します。
+	     * 壁はゲーム終了までステージに残り続けるため、常にfalseを返します。
+	     * @return 常にfalse
+	     */
+	    @Override
+	    public boolean isExpired() {		return false;
 	}
 
-	@Override
-	public boolean hasRigidBody() {
-		return true;
+	    /**
+	     * オブジェクトが剛体として扱われるべきか、つまり衝突判定の対象となるべきかを判定します。
+	     * 壁は常に剛体として扱われます。
+	     * @return 常にtrue
+	     */
+	    @Override
+	    public boolean hasRigidBody() {		return true;
 	}
 
-	@Override
-	public RenderLayer getRenderLayer() {
-		return RenderLayer.TANGIBLE_OBJECT;
+	    /**
+	     * オブジェクトの描画レイヤーを取得します。
+	     * 壁は常にTANGIBLE_OBJECTレイヤーとして描画されます。
+	     * @return 描画レイヤー
+	     */
+	    @Override
+	    public RenderLayer getRenderLayer() {		return RenderLayer.TANGIBLE_OBJECT;
 	}
 
-	@Override
-	public Shape getShape() {
-		return new Rectangle(this.position, WIDTH, HEIGHT);
+	    /**
+	     * オブジェクトの衝突判定に使用される形状を取得します。
+	     * 壁は長方形の形状を持ちます。
+	     * @return 壁の形状を表すShapeオブジェクト
+	     */
+	    @Override
+	    public Shape getShape() {		return new Rectangle(this.position, WIDTH, HEIGHT);
 	}
 
-	@Override
-	public Point2D.Double getPosition() {
-		return (Point2D.Double) this.position.clone();
+	    /**
+	     * 壁の中心座標を取得します。
+	     * @return 壁の中心座標のPoint2D.Doubleオブジェクト
+	     */
+	    @Override
+	    public Point2D.Double getPosition() {		return (Point2D.Double) this.position.clone();
 	}
 
-	@Override
-	public void setPosition(Point2D.Double position) {
-		this.position.setLocation(position);
+	    /**
+	     * 壁の中心座標を設定します。
+	     * @param position 設定する新しい中心座標のPoint2D.Doubleオブジェクト
+	     */
+	    @Override
+	    public void setPosition(Point2D.Double position) {		this.position.setLocation(position);
 	}
 
-	@Override
-	public int getHP() {
-		return Integer.MAX_VALUE;
+	    /**
+	     * 壁の現在のHPを取得します。
+	     * 壁は破壊されないため、常にInteger.MAX_VALUEを返します。
+	     * @return 壁の現在のHP (Integer.MAX_VALUE)
+	     */
+	    @Override
+	    public int getHP() {		return Integer.MAX_VALUE;
 	}
 
-	@Override
-	public Team getTeam() {
-		return OBSTACLE;
+	    /**
+	     * 壁が所属するチームを取得します。
+	     * 壁は常にOBSTACLEチームに所属します。
+	     * @return 常にOBSTACLE
+	     */
+	    @Override
+	    public Team getTeam() {		return OBSTACLE;
 	}
 }

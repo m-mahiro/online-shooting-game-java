@@ -92,20 +92,32 @@ public class Tank implements GameObject {
 		}
 	}
 
-	public Tank(Base base) {
-		this.position = base.getPosition();
+	    /**
+	     * 新しい戦車オブジェクトを生成します。
+	     * 戦車は指定された基地の位置にスポーンします。
+	     * @param base 戦車が所属し、スポーンする基地
+	     */
+	    public Tank(Base base) {		this.position = base.getPosition();
 		this.base = base;
 	}
 
 	// ============================= Tankクラス独自のメソッド =============================
 
-	public void aimAt(Point2D.Double coordinate) {
-		if (holdingMissile != null) return;
+	    /**
+	     * 戦車の砲塔を指定された座標に向かせます。
+	     * ミサイルをチャージ中の場合は砲塔を動かせません。
+	     * @param coordinate 砲塔を向けるターゲットの座標
+	     */
+	    public void aimAt(Point2D.Double coordinate) {		if (holdingMissile != null) return;
 		this.gunAngle = Math.atan2(coordinate.y - this.position.y, coordinate.x - this.position.x);
 	}
 
-	public void move(Point2D.Double vector) {
-		if (holdingMissile != null) return;
+	    /**
+	     * 指定されたベクトル方向に戦車を移動させます。
+	     * ミサイルをチャージ中の場合は移動できません。
+	     * @param vector 移動方向と強さを表すベクトル
+	     */
+	    public void move(Point2D.Double vector) {		if (holdingMissile != null) return;
 		Point2D.Double p = new Point2D.Double(vector.x, vector.y);
 		p = Util.normalize(p);
 		p = Util.multiple(p, this.VELOCITY);
@@ -113,55 +125,82 @@ public class Tank implements GameObject {
 		this.position.setLocation(p);
 	}
 
-	public Bullet shootBullet() {
-		sound.shootGun();
+	    /**
+	     * 戦車から弾丸を発射します。
+	     * @return 発射されたBulletオブジェクト
+	     */
+	    public Bullet shootBullet() {		sound.shootGun();
 		return new Bullet(this);
 	}
 
-	public Missile startEnergyCharge() {
-		Missile missile = new Missile(this);
+	    /**
+	     * エネルギーチャージを開始し、新しいミサイルを生成して保持します。
+	     * @return 生成されたMissileオブジェクト
+	     */
+	    public Missile startEnergyCharge() {		Missile missile = new Missile(this);
 		this.holdingMissile = missile;
 		return missile;
 	}
 
-	public void finishEnergyCharge() {
-		if (this.holdingMissile == null) return;
+	    /**
+	     * エネルギーチャージを終了し、保持しているミサイルを発射します。
+	     * ミサイルが保持されていない場合は何もしません。
+	     */
+	    public void finishEnergyCharge() {		if (this.holdingMissile == null) return;
 		this.holdingMissile.launch();
 		this.holdingMissile = null;
 	}
 
-	public Block createBlock() {
-		if (isOnBase) return null;
+	    /**
+	     * 現在位置にブロックを生成します。
+	     * 基地の上にいる場合はブロックを生成できません。
+	     * @return 生成されたBlockオブジェクト、または基地の上にいる場合はnull
+	     */
+	    public Block createBlock() {		if (isOnBase) return null;
 		sound.createBlock();
 		return new Block(this.position.x, this.position.y, true);
 	}
 
-	public void damage(int damage) {
-		this.damageFlushFrame = DAMAGE_FLUSH_FRAME;
+	    /**
+	     * 戦車にダメージを与えます。
+	     * HPが0以下になった場合、onDie()を呼び出します。
+	     * ダメージを受けた際の点滅演出のためのフレームも設定します。
+	     * @param damage 与えるダメージ量
+	     */
+	    public void damage(int damage) {		this.damageFlushFrame = DAMAGE_FLUSH_FRAME;
 		this.hp -= damage;
 		if (this.hp <= 0) {
 			onDie();
 		}
 	}
 
-	public void onDie() {
-		sound.objectExplosion();
+	    /**
+	     * 戦車のHPが0以下になったときに呼び出され、戦車の破壊処理（爆発音再生、残骸表示、リスポーン遅延設定）を行います。
+	     */
+	    public void onDie() {		sound.objectExplosion();
 		this.hp = 0;
 		this.damageFlushFrame = 0;
 		this.debrisLifeFrame = DEBRIS_LIFE_FRAME;
 		this.respawnLagFrame = RESPAWN_LAG_FRAME;
 	}
 
-	public void respawn() {
-		if (base.isRuins()) return;
+	    /**
+	     * 戦車をリスポーンさせます。
+	     * 基地が廃墟状態の場合はリスポーンできません。HPを初期値に戻し、リスポーンアニメーションを開始し、基地の位置に戦車を移動させます。
+	     */
+	    public void respawn() {		if (base.isRuins()) return;
 		this.hp = INITIAL_HP;
 		this.respawnAnimateFrame = RESPAWN_ANIMATE_FRAME;
 		Point2D.Double spawnPoint = base.getPosition();
 		this.setPosition(spawnPoint);
 	}
 
-	private double getObjectScale() {
-		switch (getState()) {
+	    /**
+	     * 戦車の描画スケールを取得します。
+	     * 戦車の現在の状態（リスポーン中、通常、破壊など）に応じてスケールが異なります。
+	     * @return 戦車の描画スケール
+	     */
+	    private double getObjectScale() {		switch (getState()) {
 			case RESPAWNING:
 				return 1.0 - respawnAnimateFrame / (double) RESPAWN_ANIMATE_FRAME;
 			case NORMAL:
@@ -175,8 +214,12 @@ public class Tank implements GameObject {
 		}
 	}
 
-	private BufferedImage getChassisImage() {
-
+	    /**
+	     * 戦車のシャシーの現在の状態とチームに応じた画像を取得します。
+	     * ダメージを受けた直後は点滅演出のため透明な画像が返されることがあります。
+	     * @return シャシーの画像
+	     */
+	    private BufferedImage getChassisImage() {
 		boolean isRed = (base.getTeam() == RED);
 		boolean isFlushing = (damageFlushFrame > 0) && damageFlushFrame % 20 == 0;
 		switch (getState()) {
@@ -197,8 +240,12 @@ public class Tank implements GameObject {
 		}
 	}
 
-	private BufferedImage getGunImage() {
-		boolean isRed = (base.getTeam() == RED);
+	    /**
+	     * 戦車の砲塔の現在の状態とチームに応じた画像を取得します。
+	     * ダメージを受けた直後は点滅演出のため透明な画像が返されることがあります。
+	     * @return 砲塔の画像
+	     */
+	    private BufferedImage getGunImage() {		boolean isRed = (base.getTeam() == RED);
 		boolean isFlushing = (damageFlushFrame > 0) && damageFlushFrame % 20 == 0;
 		switch (getState()) {
 			case RESPAWNING: return isRed ? redTransparentGunImage : blueTransparentGunImage;
@@ -217,8 +264,11 @@ public class Tank implements GameObject {
 		}
 	}
 
-	public boolean isDead() {
-		switch (this.getState()) {
+	    /**
+	     * 戦車が現在行動不能（死亡または消滅）状態であるかどうかを判定します。
+	     * @return 戦車が行動不能であればtrue、そうでなければfalse
+	     */
+	    public boolean isDead() {		switch (this.getState()) {
 			case RESPAWNING:
 			case NORMAL:
 			case BROKEN:
@@ -231,8 +281,11 @@ public class Tank implements GameObject {
 		}
 	}
 
-	private State getState() {
-
+	    /**
+	     * 戦車の現在の状態（RESPAWNING, NORMAL, BROKEN, DEBRIS, NONE）を取得します。
+	     * @return 戦車の現在の状態
+	     */
+	    private State getState() {
 		if (respawnAnimateFrame > 0) return State.RESPAWNING;
 
 		// 残骸は一定時間経過後画面から消える
@@ -249,9 +302,12 @@ public class Tank implements GameObject {
 
 	// ============================= GameObjectインタフェースのメソッド =============================
 
-	@Override
-	public void update() {
-
+	    /**
+	     * 戦車の状態を更新します。
+	     * リスポーンアニメーション、ダメージ点滅、残骸の寿命、リスポーン遅延などのカウントダウンを処理します。
+	     */
+	    @Override
+	    public void update() {
 		isOnBase = false;
 
 		if (getState() == State.BROKEN && !hadBroken) {
@@ -269,9 +325,12 @@ public class Tank implements GameObject {
 	}
 
 
-	@Override
-	public void draw(Graphics2D graphics) {
-		BufferedImage chassisImage = this.getChassisImage();
+	    /**
+	     * 戦車自身を描画します。シャシーと砲塔を現在の位置、角度、スケールに基づいて描画します。
+	     * @param graphics 描画に使用するGraphics2Dオブジェクト
+	     */
+	    @Override
+	    public void draw(Graphics2D graphics) {		BufferedImage chassisImage = this.getChassisImage();
 		BufferedImage gunImage = this.getGunImage();
 		double objectScale = getObjectScale();
 
@@ -292,9 +351,14 @@ public class Tank implements GameObject {
 		graphics.drawImage(gunImage, gunTransform, null);
 	}
 
-	@Override
-	public void onCollision(GameObject other) {
-
+	    /**
+	     * 他のGameObjectとの衝突時に呼び出されます。
+	     * 自身のチームの弾丸や基地との衝突は無視されます。
+	     * それ以外のオブジェクトとの衝突では、戦車がめり込まないように適切な方向に押し戻されます。
+	     * @param other 衝突したGameObject
+	     */
+	    @Override
+	    public void onCollision(GameObject other) {
 		// 自チームの弾はすり抜ける
 		if (other instanceof Projectile) {
 			Projectile projectile = (Projectile) other;
@@ -357,20 +421,32 @@ public class Tank implements GameObject {
 		move(vector);
 	}
 
-	@Override
-	public void onHitBy(Projectile bullet) {
-		if (isDead()) return;
+	    /**
+	     * プロジェクタイルから被弾した際に呼び出されます。
+	     * 戦車が死亡状態でない場合、プロジェクタイルのダメージ能力に基づいてダメージを受けます。
+	     * @param bullet 衝突したプロジェクタイル
+	     */
+	    @Override
+	    public void onHitBy(Projectile bullet) {		if (isDead()) return;
 		this.damage(bullet.getDamageAbility());
 	}
 
-	@Override
-	public boolean isExpired() {
-		return false;
+	    /**
+	     * オブジェクトがステージから削除されるべきかを判定します。
+	     * 戦車はゲーム終了までステージに存在するため、常にfalseを返します。
+	     * @return 常にfalse
+	     */
+	    @Override
+	    public boolean isExpired() {		return false;
 	}
 
-	@Override
-	public boolean hasRigidBody() {
-		switch (getState()) {
+	    /**
+	     * オブジェクトが剛体として扱われるべきか、つまり衝突判定の対象となるべきかを判定します。
+	     * 戦車はNORMAL状態またはBROKEN状態でのみ剛体として扱われます。
+	     * @return 戦車が剛体であればtrue、そうでなければfalse
+	     */
+	    @Override
+	    public boolean hasRigidBody() {		switch (getState()) {
 			case NORMAL:
 			case BROKEN:
 				return true;
@@ -383,9 +459,13 @@ public class Tank implements GameObject {
 		}
 	}
 
-	@Override
-	public RenderLayer getRenderLayer() {
-		switch (getState()) {
+	    /**
+	     * オブジェクトの描画レイヤーを取得します。
+	     * 戦車の状態に応じてTANGIBLE_OBJECTレイヤーまたはDEBRISレイヤーを返します。
+	     * @return 描画レイヤー
+	     */
+	    @Override
+	    public RenderLayer getRenderLayer() {		switch (getState()) {
 			case RESPAWNING:
 			case NORMAL:
 			case BROKEN:
@@ -398,46 +478,76 @@ public class Tank implements GameObject {
 		}
 	}
 
-	@Override
-	public Shape getShape() {
-		return new Rectangle(this.position, getWidth(), getHeight());
+	    /**
+	     * オブジェクトの衝突判定に使用される形状を取得します。
+	     * 戦車は長方形の形状を持ちます。
+	     * @return 戦車の形状を表すShapeオブジェクト
+	     */
+	    @Override
+	    public Shape getShape() {		return new Rectangle(this.position, getWidth(), getHeight());
 	}
 
-	@Override
-	public Point2D.Double getPosition() {
-		return (Point2D.Double) this.position.clone();
+	    /**
+	     * 戦車の中心座標を取得します。
+	     * @return 戦車の中心座標のPoint2D.Doubleオブジェクト
+	     */
+	    @Override
+	    public Point2D.Double getPosition() {		return (Point2D.Double) this.position.clone();
 	}
 
-	@Override
-	public void setPosition(Point2D.Double position) {
-		this.position.setLocation(position);
+	    /**
+	     * 戦車の中心座標を設定します。
+	     * @param position 設定する新しい中心座標のPoint2D.Doubleオブジェクト
+	     */
+	    @Override
+	    public void setPosition(Point2D.Double position) {		this.position.setLocation(position);
 	}
 
-	@Override
-	public int getHP() {
-		return this.hp;
+	    /**
+	     * 戦車の現在のHPを取得します。
+	     * @return 戦車の現在のHP
+	     */
+	    @Override
+	    public int getHP() {		return this.hp;
 	}
 
 	// ============================= ゲッター・セッター =============================
 
-	public double getGunAngle() {
-		return this.gunAngle;
+	    /**
+	     * 戦車の砲塔の角度をラジアンで取得します。
+	     * @return 砲塔の現在の角度（ラジアン）
+	     */
+	    public double getGunAngle() {		return this.gunAngle;
 	}
 
-	public Team getTeam() {
-		return this.base.getTeam();
+	    /**
+	     * 戦車が所属するチームを取得します。
+	     * これは戦車が紐付けられている基地のチームです。
+	     * @return 戦車のチーム
+	     */
+	    public Team getTeam() {		return this.base.getTeam();
 	}
 
-	public double getHeight() {
-		return getChassisImage().getHeight() * getObjectScale();
+	    /**
+	     * 戦車の高さを取得します。オブジェクトのスケールを考慮します。
+	     * @return 戦車の現在の高さ
+	     */
+	    public double getHeight() {		return getChassisImage().getHeight() * getObjectScale();
 	}
 
-	public double getWidth() {
-		return getChassisImage().getWidth() * getObjectScale();
+	    /**
+	     * 戦車の幅を取得します。オブジェクトのスケールを考慮します。
+	     * @return 戦車の現在の幅
+	     */
+	    public double getWidth() {		return getChassisImage().getWidth() * getObjectScale();
 	}
 
-	public double getBulletReleaseRadius() {
-		double gunLength = getGunImage().getWidth() / 2.0;
+	    /**
+	     * 弾丸が戦車から放出される際の半径を取得します。
+	     * これは砲身の長さと戦車の半径を考慮して計算されます。
+	     * @return 弾丸の放出半径
+	     */
+	    public double getBulletReleaseRadius() {		double gunLength = getGunImage().getWidth() / 2.0;
 		double chassisRadius = Math.max(getWidth(), getHeight()) / 2.0;
 		return Math.max(gunLength, chassisRadius);
 	}

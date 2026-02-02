@@ -56,8 +56,12 @@ public class Bullet implements GameObject, Projectile {
 		}
 	}
 
-	public Bullet(Tank shooter) {
-		double angle = shooter.getGunAngle();
+	    /**
+	     * 新しい弾丸オブジェクトを生成します。
+	     * 弾丸はシューターの現在位置と向きに基づいて初期化されます。
+	     * @param shooter 弾丸を発射した戦車
+	     */
+	    public Bullet(Tank shooter) {		double angle = shooter.getGunAngle();
 		Point2D.Double tankPosition = shooter.getPosition();
 		double x = tankPosition.x + (shooter.getBulletReleaseRadius() + this.getCollisionRadius()) * Math.cos(shooter.getGunAngle());
 		double y = tankPosition.y + (shooter.getBulletReleaseRadius() + this.getCollisionRadius()) * Math.sin(shooter.getGunAngle());
@@ -71,26 +75,41 @@ public class Bullet implements GameObject, Projectile {
 
 	// ============================= Bulletクラス独自のメソッド =============================
 
-	private void explode() {
-		sound.bulletExplosion();
+	    /**
+	     * 弾丸が爆発する際の処理を実行します。
+	     * 爆発音を再生し、弾丸を破片状態にし、寿命を終了させます。
+	     */
+	    private void explode() {		sound.bulletExplosion();
 		this.debrisLifeFrame = DEBRIS_LIFE_FRAME;
 		this.lifeFrame = 0;
 	}
 
-	private double getCollisionRadius() {
-		return COLLISION_RADIUS;
+	    /**
+	     * 弾丸の衝突半径を取得します。
+	     * @return 弾丸の衝突半径
+	     */
+	    private double getCollisionRadius() {		return COLLISION_RADIUS;
 	}
 
-	private double getVelocity() {
-		return VELOCITY;
+	    /**
+	     * 弾丸の速度を取得します。
+	     * @return 弾丸の速度
+	     */
+	    private double getVelocity() {		return VELOCITY;
 	}
 
-	public Team getTeam() {
-		return this.shooter.getTeam();
+	    /**
+	     * 弾丸を発射したシューターのチームを取得します。
+	     * @return 弾丸が所属するチーム
+	     */
+	    public Team getTeam() {		return this.shooter.getTeam();
 	}
 
-	private BufferedImage getImage() {
-		boolean isRed = this.getTeam() == RED;
+	    /**
+	     * 弾丸の現在の状態とチームに応じた画像を取得します。
+	     * @return 弾丸の現在の状態に対応するBufferedImage
+	     */
+	    private BufferedImage getImage() {		boolean isRed = this.getTeam() == RED;
 		switch (getState()) {
 			case NORMAL:
 				return isRed ? redNormalBulletImage : blueNormalBulletImage;
@@ -103,8 +122,11 @@ public class Bullet implements GameObject, Projectile {
 		}
 	}
 
-	private State getState() {
-		if (debrisLifeFrame > 0) return State.DEBRIS;
+	    /**
+	     * 弾丸の現在の状態を取得します。
+	     * @return 弾丸の現在の状態 (NORMAL, DEBRIS, SHOULD_REMOVE)
+	     */
+	    private State getState() {		if (debrisLifeFrame > 0) return State.DEBRIS;
 		if (lifeFrame <= 0) return State.SHOULD_REMOVE;
 		return State.NORMAL;
 	}
@@ -112,9 +134,12 @@ public class Bullet implements GameObject, Projectile {
 	// ============================= GameObjectインタフェースのメソッド =============================
 
 
-	@Override
-	public void update() {
-		lifeFrame--;
+	    /**
+	     * 弾丸の状態を更新します。
+	     * 弾丸の寿命カウントダウン、移動、破片状態の演出などを処理します。
+	     */
+	    @Override
+	    public void update() {		lifeFrame--;
 		if (lifeFrame == 0) {
 			explode();
 			return;
@@ -134,9 +159,12 @@ public class Bullet implements GameObject, Projectile {
 	}
 
 
-	@Override
-	public void draw(Graphics2D graphics) {
-		BufferedImage image = getImage();
+	    /**
+	     * 弾丸自身を描画します。現在の状態、位置、速度に応じた画像を描画します。
+	     * @param graphics 描画に使用するGraphics2Dオブジェクト
+	     */
+	    @Override
+	    public void draw(Graphics2D graphics) {		BufferedImage image = getImage();
 		AffineTransform trans = new AffineTransform();
 		trans.translate(this.position.x, this.position.y);
 		trans.rotate(Math.atan2(dy, dx));
@@ -145,9 +173,13 @@ public class Bullet implements GameObject, Projectile {
 		graphics.drawImage(image, trans, null);
 	}
 
-	@Override
-	public void onCollision(GameObject other) {
-
+	    /**
+	     * 他のGameObjectとの衝突時に呼び出されます。
+	     * 衝突したオブジェクトが自身のチームと異なる場合、そのオブジェクトに被弾通知を送り、弾丸は爆発します。
+	     * @param other 衝突したGameObject
+	     */
+	    @Override
+	    public void onCollision(GameObject other) {
 		// 衝突が相手のオブジェクトなら、被弾通知をおくる。
 		if (other.getTeam() != this.getTeam()) {
 			other.onHitBy(this);
@@ -155,24 +187,40 @@ public class Bullet implements GameObject, Projectile {
 		}
 	}
 
-	@Override
-	public void onHitBy(Projectile other) {
-
+	    /**
+	     * 他のプロジェクタイルから被弾した際に呼び出されます。
+	     * 弾丸が他のプロジェクタイルに被弾した場合の特別な処理はありません。
+	     * @param other 衝突したプロジェクタイル
+	     */
+	    @Override
+	    public void onHitBy(Projectile other) {
 	}
 
-	@Override
-	public boolean isExpired() {
-		return getState() == State.SHOULD_REMOVE;
+	    /**
+	     * オブジェクトがステージから削除されるべきかを判定します。
+	     * 弾丸がSHOULD_REMOVE状態であればtrueを返します。
+	     * @return 弾丸が削除されるべきであればtrue、そうでなければfalse
+	     */
+	    @Override
+	    public boolean isExpired() {		return getState() == State.SHOULD_REMOVE;
 	}
 
-	@Override
-	public boolean hasRigidBody() {
-		return getState() == State.NORMAL;
+	    /**
+	     * オブジェクトが剛体として扱われるべきか、つまり衝突判定の対象となるべきかを判定します。
+	     * 弾丸はNORMAL状態でのみ剛体として扱われます。
+	     * @return 弾丸が剛体であればtrue、そうでなければfalse
+	     */
+	    @Override
+	    public boolean hasRigidBody() {		return getState() == State.NORMAL;
 	}
 
-	@Override
-	public RenderLayer getRenderLayer() {
-		switch (getState()) {
+	    /**
+	     * オブジェクトの描画レイヤーを取得します。
+	     * 状態によってPROJECTILEレイヤーまたはDEBRISレイヤーを返します。
+	     * @return 描画レイヤー
+	     */
+	    @Override
+	    public RenderLayer getRenderLayer() {		switch (getState()) {
 			case NORMAL:
 				return RenderLayer.PROJECTILE;
 			case DEBRIS:
@@ -183,31 +231,47 @@ public class Bullet implements GameObject, Projectile {
 		}
 	}
 
-	@Override
-	public Shape getShape() {
-		return new Circle(this.position, this.getCollisionRadius());
+	    /**
+	     * オブジェクトの衝突判定に使用される形状を取得します。
+	     * 弾丸は円形の形状を持ちます。
+	     * @return 弾丸の形状を表すShapeオブジェクト
+	     */
+	    @Override
+	    public Shape getShape() {		return new Circle(this.position, this.getCollisionRadius());
 	}
 
-	@Override
-	public Point2D.Double getPosition() {
-		return (Point2D.Double) this.position.clone();
+	    /**
+	     * 弾丸の中心座標を取得します。
+	     * @return 弾丸の中心座標のPoint2D.Doubleオブジェクト
+	     */
+	    @Override
+	    public Point2D.Double getPosition() {		return (Point2D.Double) this.position.clone();
 	}
 
-	@Override
-	public void setPosition(Point2D.Double position) {
-		this.position.setLocation(position);
+	    /**
+	     * 弾丸の中心座標を設定します。
+	     * @param position 設定する新しい中心座標のPoint2D.Doubleオブジェクト
+	     */
+	    @Override
+	    public void setPosition(Point2D.Double position) {		this.position.setLocation(position);
 	}
 
-	@Override
-	public int getHP() {
-		return 10;
+	    /**
+	     * 弾丸のHPを取得します。
+	     * @return 弾丸のHP。現在は常に10を返します。
+	     */
+	    @Override
+	    public int getHP() {		return 10;
 	}
 
 
 	// ============================= Projectileインタフェースのメソッド =============================
 
-	public int getDamageAbility() {
-		return DAMAGE_ABILITY;
+	    /**
+	     * 弾丸の与えるダメージ能力を取得します。
+	     * @return 弾丸のダメージ量
+	     */
+	    public int getDamageAbility() {		return DAMAGE_ABILITY;
 	}
 
 }

@@ -71,35 +71,56 @@ public class Base implements GameObject {
 
 	}
 
-	public Base(double x, double y, Team team) {
-		this.position = new Point2D.Double(x, y);
+	    /**
+	     * 新しいBaseオブジェクトを生成します。
+	     * @param x 基地の中心X座標
+	     * @param y 基地の中心Y座標
+	     * @param team 基地が所属するチーム
+	     */
+	    public Base(double x, double y, Team team) {		this.position = new Point2D.Double(x, y);
 		this.team = team;
 	}
 
 	// ============================= Baseクラス固有のメソッド =============================
 
-	private void damage(int damage) {
-		this.damageFlushFrame = DAMAGE_FLUSH_FRAME;
+	    /**
+	     * 基地にダメージを与えます。HPが0以下になった場合、onDie()を呼び出します。
+	     * ダメージを受けた際の点滅演出のためのフレームも設定します。
+	     * @param damage 与えるダメージ量
+	     */
+	    private void damage(int damage) {		this.damageFlushFrame = DAMAGE_FLUSH_FRAME;
 		hp -= damage;
 		if (hp <= 0) onDie();
 	}
 
-	private void onDie() {
-		// 爆発する
+	    /**
+	     * 基地のHPが0以下になったときに呼び出され、基地の破壊処理（爆発音再生など）を行います。
+	     */
+	    private void onDie() {		// 爆発する
 		debrisLifeFrame = DEBRIS_LIFE_FRAME;
 		sound.objectExplosion();
 	}
 
-	public Team getTeam() {
-		return this.team;
+	    /**
+	     * この基地が所属するチームを取得します。
+	     * @return この基地のチーム
+	     */
+	    public Team getTeam() {		return this.team;
 	}
 
-	public boolean isRuins() {
-		return getState() == State.RUINS;
+	    /**
+	     * 基地が廃墟状態であるかどうかを判定します。
+	     * @return 基地が廃墟状態であればtrue、そうでなければfalse
+	     */
+	    public boolean isRuins() {		return getState() == State.RUINS;
 	}
 
-	private BufferedImage getBaseImage() {
-		boolean isRed = this.team == RED;
+	    /**
+	     * 基地の現在の状態とチームに応じた画像を取得します。
+	     * ダメージを受けた直後は点滅演出のため透明な画像が返されることがあります。
+	     * @return 基地の画像
+	     */
+	    private BufferedImage getBaseImage() {		boolean isRed = this.team == RED;
 		boolean isFlushing = (damageFlushFrame > 0) && damageFlushFrame % 20 == 0;
 		switch (getState()) {
 			case NORMAL:
@@ -114,8 +135,12 @@ public class Base implements GameObject {
 		return normalRedBaseImage;
 	}
 
-	private BufferedImage getRingImage() {
-		boolean isFlushing = (damageFlushFrame > 0) && damageFlushFrame % 20 == 0;
+	    /**
+	     * 基地の現在の状態に応じたリング画像を取得します。
+	     * ダメージを受けた直後は点滅演出のため透明な画像が返されることがあります。
+	     * @return 基地のリング画像
+	     */
+	    private BufferedImage getRingImage() {		boolean isFlushing = (damageFlushFrame > 0) && damageFlushFrame % 20 == 0;
 		switch (getState()) {
 			case NORMAL:
 			case BROKEN:
@@ -129,8 +154,12 @@ public class Base implements GameObject {
 
 	}
 
-	public State getState() {
-		if (hp <= 0) return State.RUINS;
+	    /**
+	     * 基地の現在の状態（NORMAL, BROKEN, RUINS）を取得します。
+	     * HPに基づいて状態が決定されます。
+	     * @return 基地の現在の状態
+	     */
+	    public State getState() {		if (hp <= 0) return State.RUINS;
 		if (hp <= INIT_HP / 2) return State.BROKEN;
 		return State.NORMAL;
 	}
@@ -138,9 +167,11 @@ public class Base implements GameObject {
 
 	// ============================= GameObjectインタフェースのメソッド =============================
 
-	@Override
-	public void update() {
-
+	    /**
+	     * 基地の状態を更新します。リングの回転アニメーション、ダメージ点滅フレーム、残骸の寿命、破壊演出のスケールなどを処理します。
+	     */
+	    @Override
+	    public void update() {
 		// リングの回転
 		switch (getState()) {
 			case NORMAL:
@@ -167,9 +198,12 @@ public class Base implements GameObject {
 		if (getState() == State.RUINS) debrisScale += (GameEngine.FPS / 10.0) * debrisLifeFrame / 100.0;
 	}
 
-	@Override
-	public void draw(Graphics2D graphics) {
-		AffineTransform baseTrans = new AffineTransform();
+	    /**
+	     * 基地自身を描画します。基地の画像とリング画像を現在の状態と位置に基づいて描画します。
+	     * @param graphics 描画に使用するGraphics2Dオブジェクト
+	     */
+	    @Override
+	    public void draw(Graphics2D graphics) {		AffineTransform baseTrans = new AffineTransform();
 		BufferedImage baseImage = getBaseImage();
 		baseTrans.translate(position.x, position.y);
 		baseTrans.translate(-baseImage.getWidth() / 2.0, -baseImage.getHeight() / 2.0);
@@ -184,23 +218,39 @@ public class Base implements GameObject {
 		graphics.drawImage(ringImage, ringTrans, null);
 	}
 
-	@Override
-	public void onCollision(GameObject other) {
+	    /**
+	     * 他のGameObjectとの衝突時に呼び出されます。
+	     * 現在、基地に直接衝突することによる特殊な処理はありません。
+	     * @param other 衝突したGameObject
+	     */
+	    @Override
+	    public void onCollision(GameObject other) {	}
+
+	    /**
+	     * プロジェクタイルが基地に衝突した際に呼び出されます。
+	     * プロジェクタイルの持つダメージ能力に基づいて基地にダメージを与えます。
+	     * @param other 基地に衝突したプロジェクタイル
+	     */
+	    @Override
+	    public void onHitBy(Projectile other) {		damage(other.getDamageAbility());
 	}
 
-	@Override
-	public void onHitBy(Projectile other) {
-		damage(other.getDamageAbility());
+	    /**
+	     * オブジェクトがステージから削除されるべきかを判定します。
+	     * 基地はゲーム終了までステージに残り続けるため、常にfalseを返します。
+	     * @return 常にfalse
+	     */
+	    @Override
+	    public boolean isExpired() {		return false;
 	}
 
-	@Override
-	public boolean isExpired() {
-		return false;
-	}
-
-	@Override
-	public boolean hasRigidBody() {
-		switch (getState()) {
+	    /**
+	     * オブジェクトが剛体として扱われるべきか、つまり衝突判定の対象となるべきかを判定します。
+	     * 基地は通常状態または破損状態では剛体ですが、廃墟状態では剛体ではありません。
+	     * @return 基地が剛体であればtrue、そうでなければfalse
+	     */
+	    @Override
+	    public boolean hasRigidBody() {		switch (getState()) {
 			case NORMAL:
 			case BROKEN:
 				return true;
@@ -211,29 +261,46 @@ public class Base implements GameObject {
 		}
 	}
 
-	@Override
-	public RenderLayer getRenderLayer() {
-		return RenderLayer.DEBRIS;
+	    /**
+	     * オブジェクトの描画レイヤーを取得します。
+	     * 基地は残骸レイヤーとして描画されます。
+	     * @return 描画レイヤー
+	     */
+	    @Override
+	    public RenderLayer getRenderLayer() {		return RenderLayer.DEBRIS;
 	}
 
-	@Override
-	public Shape getShape() {
-		double width = getBaseImage().getWidth() * debrisScale;
+	    /**
+	     * オブジェクトの衝突判定に使用される形状を取得します。
+	     * 基地は円形の形状を持ちます。破壊状態に応じてスケールが変化します。
+	     * @return 基地の形状を表すShapeオブジェクト
+	     */
+	    @Override
+	    public Shape getShape() {		double width = getBaseImage().getWidth() * debrisScale;
 		return new Circle(this.position, width / 2.0);
 	}
 
-	@Override
-	public Point2D.Double getPosition() {
-		return (Point2D.Double) this.position.clone();
+	    /**
+	     * 基地の中心座標を取得します。
+	     * @return 基地の中心座標のPoint2D.Doubleオブジェクト
+	     */
+	    @Override
+	    public Point2D.Double getPosition() {		return (Point2D.Double) this.position.clone();
 	}
 
-	@Override
-	public void setPosition(Point2D.Double position) {
-		this.position.setLocation(position);
+	    /**
+	     * 基地の中心座標を設定します。
+	     * @param position 設定する新しい中心座標のPoint2D.Doubleオブジェクト
+	     */
+	    @Override
+	    public void setPosition(Point2D.Double position) {		this.position.setLocation(position);
 	}
 
-	@Override
-	public int getHP() {
-		return hp;
+	    /**
+	     * 基地の現在のHPを取得します。
+	     * @return 基地の現在のHP
+	     */
+	    @Override
+	    public int getHP() {		return hp;
 	}
 }

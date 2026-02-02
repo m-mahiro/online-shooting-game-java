@@ -32,12 +32,20 @@ public class AutoTank extends Tank {
     private int blockPlacementInterval = 0; // 次のブロックを置くまでのタイマー
 
 
+    /**
+     * コンストラクタ。AutoTankを指定された基地にスポーンさせ、ゲームステージに登録します。
+     * @param spawnBase スポーンする基地
+     * @param gameStage ゲームステージ
+     */
     public AutoTank(Base spawnBase, GameStage gameStage) {
         super(spawnBase);
         this.gameStage = gameStage;
         changeDirection();
     }
 
+    /**
+     * AutoTankの状態を更新します。これには、移動、射撃、ブロック設置の処理が含まれます。
+     */
     @Override
     public void update() {
         super.update();
@@ -59,6 +67,10 @@ public class AutoTank extends Tank {
         move(currentDirection);
     }
 
+    /**
+     * AutoTankの移動ロジックを処理します。一定時間ごとにランダムな方向に進行方向を変更します。
+     * ただし、ブロック設置中は方向転換しません。
+     */
     private void handleMovement() {
         // ブロック設置中は方向転換しない
         if (placingBlockCount > 0) {
@@ -71,6 +83,10 @@ public class AutoTank extends Tank {
         }
     }
 
+    /**
+     * AutoTankの射撃ロジックを処理します。クールダウン後、一定数の弾を連続して発射します。
+     * ブロック設置中は射撃しません。
+     */
     private void handleShooting() {
         // ブロック設置中は射撃しない
         if (placingBlockCount > 0) {
@@ -97,6 +113,9 @@ public class AutoTank extends Tank {
         }
     }
 
+    /**
+     * AutoTankのブロック設置ロジックを処理します。クールダウン後、一定数のブロックを連続して設置します。
+     */
     private void handleBlockPlacement() {
         // ブロック設置中
         if (placingBlockCount > 0) {
@@ -121,6 +140,10 @@ public class AutoTank extends Tank {
     }
 
 
+    /**
+     * 他のゲームオブジェクトとの衝突時に呼び出されます。壁に衝突した場合、進行方向を変更します。
+     * @param other 衝突した他のゲームオブジェクト
+     */
     @Override
     public void onCollision(GameObject other) {
         super.onCollision(other);
@@ -129,6 +152,9 @@ public class AutoTank extends Tank {
         }
     }
 
+    /**
+     * AutoTankの進行方向をランダムな8方向のいずれかに変更します。
+     */
     private void changeDirection() {
         directionChangeFrame = DIRECTION_CHANGE_FRAME;
         int angleDeg = random.nextInt(8) * 45; // 0, 45, 90, ..., 315

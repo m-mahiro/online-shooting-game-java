@@ -49,6 +49,10 @@ public class GameStage implements StageInfo {
 		}
 	}
 
+	/**
+	 * コンストラクタ。ステージジェネレータからステージの幅、高さ、各種初期オブジェクトを受け取り、ゲームステージを初期化します。
+	 * @param generator ステージの初期設定を含むStageGeneratorオブジェクト
+	 */
 	public GameStage(StageGenerator generator) {
 		this.stageWidth = generator.getStageWidth();
 		this.stageHeight = generator.getStageHeight();
@@ -61,10 +65,18 @@ public class GameStage implements StageInfo {
 		addScreenObjects(generator.getScreenObjects());
 	}
 
+	/**
+	 * ステージの幅を取得します。
+	 * @return ステージの幅
+	 */
 	public int getStageWidth() {
 		return stageWidth;
 	}
 
+	/**
+	 * ステージの高さを取得します。
+	 * @return ステージの高さ
+	 */
 	public int getStageHeight() {
 		return stageHeight;
 	}
@@ -338,26 +350,46 @@ public class GameStage implements StageInfo {
 	}
 	// ============================= StageInfoインターフェースのメソッド =============================
 
+	/**
+	 * 赤チームの基地のHPを取得します。
+	 * @return 赤チームの基地の現在のHP
+	 */
 	@Override
 	public int getRedBaseHP() {
 		return this.redBase.getHP();
 	}
 
+	/**
+	 * 青チームの基地のHPを取得します。
+	 * @return 青チームの基地の現在のHP
+	 */
 	@Override
 	public int getBlueBaseHP() {
 		return this.blueBase.getHP();
 	}
 
+	/**
+	 * 赤チームの基地の状態を取得します。
+	 * @return 赤チームの基地の現在の状態
+	 */
 	@Override
 	public Base.State getRedBaseState() {
 		return this.redBase.getState();
 	}
 
+	/**
+	 * 青チームの基地の状態を取得します。
+	 * @return 青チームの基地の現在の状態
+	 */
 	@Override
 	public Base.State getBlueBaseState() {
 		return this.blueBase.getState();
 	}
 
+	/**
+	 * 赤チームの残りの戦車数を取得します。
+	 * @return 赤チームの生存している戦車の数
+	 */
 	@Override
 	public int getRemainRedTank() {
 		int count = 0;
@@ -374,6 +406,10 @@ public class GameStage implements StageInfo {
 		return count;
 	}
 
+	/**
+	 * 青チームの残りの戦車数を取得します。
+	 * @return 青チームの生存している戦車の数
+	 */
 	@Override
 	public int getRemainBlueTank() {
 		int count = 0;

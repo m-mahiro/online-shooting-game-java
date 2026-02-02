@@ -61,25 +61,40 @@ public class Missile implements GameObject, Projectile {
 		}
 	}
 
-	public Missile(Tank shooter) {
-		this.shooter = shooter;
+	    /**
+	     * 新しいミサイルオブジェクトを生成します。
+	     * ミサイルは初期状態でチャージング状態であり、シューターの位置と向きに基づいて位置が設定されます。
+	     * @param shooter ミサイルを発射する戦車
+	     */
+	    public Missile(Tank shooter) {		this.shooter = shooter;
 		this.position = new Point2D.Double();
 		setPositionBaseOn(shooter);
 	}
 
 	// ============================= Missileクラス独自のメソッド =============================
 
-	public void decreaseDamageAbility(int damage) {
-		damageTotal += damage;
+	    /**
+	     * ミサイルのダメージ能力を減少させます。
+	     * ミサイルが何かに衝突してダメージを与えた際に、その対象のHP分だけミサイルのダメージ能力を減算します。
+	     * ダメージ能力が0以下になった場合、ミサイルは爆発します。
+	     * @param damage 減少させるダメージ量
+	     */
+	    public void decreaseDamageAbility(int damage) {		damageTotal += damage;
 		if (this.getHP() <= 0) explode();
 	}
 
-	public void explode() {
-		this.state = Status.DEBRIS;
+	    /**
+	     * ミサイルを爆発させ、状態をDEBRIS（破片）に変更します。
+	     */
+	    public void explode() {		this.state = Status.DEBRIS;
 	}
 
-	private void setPositionBaseOn(Tank shooter) {
-		this.angle = shooter.getGunAngle();
+	    /**
+	     * ミサイルの位置をシューター（戦車）に基づいて設定します。
+	     * 戦車の砲塔の向きと、弾丸の放出半径を考慮してミサイルが戦車の前に配置されます。
+	     * @param shooter 位置の基準となる戦車
+	     */
+	    private void setPositionBaseOn(Tank shooter) {		this.angle = shooter.getGunAngle();
 		double shooterRadius = shooter.getBulletReleaseRadius();
 		double missileRadius = this.getCollisionRadius();
 		Point2D.Double bulletPosition = (Point2D.Double) shooter.getPosition().clone();
@@ -88,16 +103,25 @@ public class Missile implements GameObject, Projectile {
 		this.setPosition(new Point2D.Double(x, y));
 	}
 
-	public void launch() {
-		this.state = Status.FLYING;
+	    /**
+	     * ミサイルを発射し、状態をFLYING（飛行中）に変更します。
+	     */
+	    public void launch() {		this.state = Status.FLYING;
 	}
 
-	public Team getTeam() {
-		return this.shooter.getTeam();
+	    /**
+	     * ミサイルを発射したシューターのチームを取得します。
+	     * @return ミサイルが所属するチーム
+	     */
+	    public Team getTeam() {		return this.shooter.getTeam();
 	}
 
-	private double getObjectScale() {
-		switch (this.state) {
+	    /**
+	     * ミサイルの描画スケールを取得します。
+	     * 状態やダメージ能力によってスケールが異なります。
+	     * @return ミサイルの描画スケール
+	     */
+	    private double getObjectScale() {		switch (this.state) {
 			case DEBRIS:
 			case CANCELLED:
 			case SHOULD_REMOVE:
@@ -110,12 +134,19 @@ public class Missile implements GameObject, Projectile {
 		}
 	}
 
-	private double getCollisionRadius() {
-		return getImage().getWidth() / 2.0 * getObjectScale();
+	    /**
+	     * ミサイルの衝突半径を取得します。
+	     * これはミサイルの画像サイズと現在のオブジェクトスケールに基づいて計算されます。
+	     * @return ミサイルの衝突半径
+	     */
+	    private double getCollisionRadius() {		return getImage().getWidth() / 2.0 * getObjectScale();
 	}
 
-	private BufferedImage getImage() {
-		boolean isRed = (getTeam() == RED);
+	    /**
+	     * ミサイルの現在の状態とチームに応じた画像を取得します。
+	     * @return ミサイルの現在の状態に対応するBufferedImage
+	     */
+	    private BufferedImage getImage() {		boolean isRed = (getTeam() == RED);
 		switch (this.state) {
 			case CHARGING:
 			case CANCELLED:
@@ -133,9 +164,12 @@ public class Missile implements GameObject, Projectile {
 
 	// ============================= GameObjectインターフェースのメソッド =============================
 
-	@Override
-	public void update() {
-
+	    /**
+	     * ミサイルの状態を更新します。
+	     * チャージ中または飛行中のミサイルの位置更新、アニメーションフレームのカウントダウン/アップなどを処理します。
+	     */
+	    @Override
+	    public void update() {
 		// チャージ中は戦車の位置や砲塔の向きに合わせてミサイルの位置を変える
 		switch (this.state) {
 			case CHARGING:
@@ -156,9 +190,12 @@ public class Missile implements GameObject, Projectile {
 		if (state == Status.CHARGING) chargeCount++;
 	}
 
-	@Override
-	public void draw(Graphics2D graphics) {
-		BufferedImage image = getImage();
+	    /**
+	     * ミサイル自身を描画します。現在の状態、位置、角度、スケールに基づいて画像を描画します。
+	     * @param graphics 描画に使用するGraphics2Dオブジェクト
+	     */
+	    @Override
+	    public void draw(Graphics2D graphics) {		BufferedImage image = getImage();
 		double objectScale = this.getObjectScale();
 		AffineTransform trans = new AffineTransform();
 		trans.translate(position.x, position.y);
@@ -168,9 +205,14 @@ public class Missile implements GameObject, Projectile {
 		graphics.drawImage(image, trans, null);
 	}
 
-	@Override
-	public void onCollision(GameObject other) {
-
+	    /**
+	     * 他のGameObjectとの衝突時に呼び出されます。
+	     * ミサイルがチャージ中に衝突した場合、爆発します。
+	     * 衝突したオブジェクトが自身のチームと異なる場合、そのオブジェクトに被弾通知を送り、ミサイルのダメージ能力を減少させます。
+	     * @param other 衝突したGameObject
+	     */
+	    @Override
+	    public void onCollision(GameObject other) {
 		if(this.state == Status.CHARGING) explode();
 
 		// 衝突が相手のオブジェクトなら、被弾通知をおくる。
@@ -182,14 +224,23 @@ public class Missile implements GameObject, Projectile {
 
 	}
 
-	@Override
-	public void onHitBy(Projectile other) {
-		decreaseDamageAbility(other.getDamageAbility());
+	    /**
+	     * 他のプロジェクタイルから被弾した際に呼び出されます。
+	     * 衝突したプロジェクタイルのダメージ能力分、ミサイルのダメージ能力を減少させます。
+	     * @param other 衝突したプロジェクタイル
+	     */
+	    @Override
+	    public void onHitBy(Projectile other) {		decreaseDamageAbility(other.getDamageAbility());
 	}
 
-	@Override
-	public boolean isExpired() {
-		switch (this.state) {
+	    /**
+	     * オブジェクトがステージから削除されるべきかを判定します。
+	     * キャンセル状態の場合、キャンセルアニメーションフレームが0以下であればtrueを返します。
+	     * SHOULD_REMOVE状態の場合は常にtrueを返します。
+	     * @return ミサイルが削除されるべきであればtrue、そうでなければfalse
+	     */
+	    @Override
+	    public boolean isExpired() {		switch (this.state) {
 			case CANCELLED:
 				return cancelAnimationFrame <= 0;
 			case SHOULD_REMOVE:
@@ -199,9 +250,13 @@ public class Missile implements GameObject, Projectile {
 		}
 	}
 
-	@Override
-	public boolean hasRigidBody() {
-		switch (this.state) {
+	    /**
+	     * オブジェクトが剛体として扱われるべきか、つまり衝突判定の対象となるべきかを判定します。
+	     * ミサイルはCHARGING状態またはFLYING状態でのみ剛体として扱われます。
+	     * @return ミサイルが剛体であればtrue、そうでなければfalse
+	     */
+	    @Override
+	    public boolean hasRigidBody() {		switch (this.state) {
 			case CHARGING:
 			case FLYING:
 				return true;
@@ -214,9 +269,13 @@ public class Missile implements GameObject, Projectile {
 		}
 	}
 
-	@Override
-	public RenderLayer getRenderLayer() {
-		switch (this.state) {
+	    /**
+	     * オブジェクトの描画レイヤーを取得します。
+	     * 状態によってPROJECTILEレイヤーまたはDEBRISレイヤーを返します。
+	     * @return 描画レイヤー
+	     */
+	    @Override
+	    public RenderLayer getRenderLayer() {		switch (this.state) {
 			case CHARGING:
 			case CANCELLED:
 			case FLYING:
@@ -229,32 +288,51 @@ public class Missile implements GameObject, Projectile {
 		}
 	}
 
-	@Override
-	public Shape getShape() {
-		return new Circle(this.position, getCollisionRadius());
+	    /**
+	     * オブジェクトの衝突判定に使用される形状を取得します。
+	     * ミサイルは円形の形状を持ちます。
+	     * @return ミサイルの形状を表すShapeオブジェクト
+	     */
+	    @Override
+	    public Shape getShape() {		return new Circle(this.position, getCollisionRadius());
 	}
 
-	@Override
-	public Point2D.Double getPosition() {
-		return (Point2D.Double) this.position.clone();
+	    /**
+	     * ミサイルの中心座標を取得します。
+	     * @return ミサイルの中心座標のPoint2D.Doubleオブジェクト
+	     */
+	    @Override
+	    public Point2D.Double getPosition() {		return (Point2D.Double) this.position.clone();
 	}
 
-	@Override
-	public void setPosition(Point2D.Double position) {
-		this.position.setLocation(position);
+	    /**
+	     * ミサイルの中心座標を設定します。
+	     * @param position 設定する新しい中心座標のPoint2D.Doubleオブジェクト
+	     */
+	    @Override
+	    public void setPosition(Point2D.Double position) {		this.position.setLocation(position);
 	}
 
-	@Override
-	public int getHP() {
-		return getDamageAbility();
+	    /**
+	     * ミサイルの現在のHPを取得します。
+	     * これはミサイルのダメージ能力に依存します。
+	     * @return ミサイルの現在のHP
+	     */
+	    @Override
+	    public int getHP() {		return getDamageAbility();
 	}
 
 
 	// ============================= Projectileインターフェースのメソッド =============================
 
 	@Override
-	public int getDamageAbility() {
-		if (this.state == Status.FLYING) {
+	    /**
+	     * ミサイルの与えるダメージ能力を取得します。
+	     * 飛行中のミサイルのチャージ時間と既に与えたダメージ量に基づいて計算されます。
+	     * @return ミサイルのダメージ量
+	     */
+	    @Override
+	    public int getDamageAbility() {		if (this.state == Status.FLYING) {
 			int damageAbility = Math.min(chargeCount / GameEngine.FPS * 10, MAX_DAMAGE_ABILITY) - damageTotal;
 			return Math.max(damageAbility, 0);
 		}
