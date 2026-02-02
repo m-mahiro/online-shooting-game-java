@@ -3,6 +3,8 @@ out/
 .idea
 !**/src/main/**/out/
 !**/src/test/**/out/
+.smp
+online-shooting-game-java.iml
 
 ### Eclipse ###
 .apt_generated
