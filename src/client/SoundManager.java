@@ -17,6 +17,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * ゲームの効果音とMIDI音楽を管理するクラス。
+ * 複数の効果音を同時に再生するためのClipプールを管理する。
+ */
 public class SoundManager {
 
 	// Clipプール
@@ -124,26 +128,45 @@ public class SoundManager {
 		clip.start();
 	}
 
+	/**
+	 * 弾丸爆発音を再生する。
+	 */
 	public void bulletExplosion() {
 		playFromPool(bulletExplosionPool);
 	}
 
+	/**
+	 * ブロック生成音を再生する。
+	 */
 	public void createBlock() {
 		playFromPool(createBlockPool);
 	}
 
+	/**
+	 * オブジェクト破壊音を再生する。
+	 */
 	public void objectBreak() {
 		playFromPool(objectBreakPool);
 	}
 
+	/**
+	 * オブジェクト爆発音を再生する。
+	 */
 	public void objectExplosion() {
 		playFromPool(objectExplosionPool);
 	}
 
+	/**
+	 * 銃発射音を再生する。
+	 */
 	public void shootGun() {
 		playFromPool(shotPool);
 	}
 
+	/**
+	 * ベル音をMIDIで再生する。
+	 * 別スレッドで非同期に再生される。
+	 */
 	public void playBell() {
 		new Thread(() -> {
 			try {
@@ -166,6 +189,10 @@ public class SoundManager {
 		}).start();
 	}
 
+	/**
+	 * ホイッスル音をMIDIで再生する。
+	 * 別スレッドで非同期に再生される。
+	 */
 	public void playWhistle() {
 		new Thread(() -> {
 			try {
@@ -194,8 +221,9 @@ public class SoundManager {
 	}
 
 	/**
-	 * Plays a victory sound as a longer sequence of single notes
-	 * that ascend to convey triumphant feeling.
+	 * 勝利音をMIDIで再生する。
+	 * 上昇する音階で勝利感を演出する。
+	 * 別スレッドで非同期に再生される。
 	 */
 	public void playVictorySound() {
 		new Thread(() -> {
@@ -227,8 +255,9 @@ public class SoundManager {
 	}
 
 	/**
-	 * Plays a game over sound as a longer sequence of single notes
-	 * that descend or feel denser to convey somber feeling.
+	 * ゲームオーバー音をMIDIで再生する。
+	 * 下降する音階で敗北感を演出する。
+	 * 別スレッドで非同期に再生される。
 	 */
 	public void playGameOverSound() {
 		new Thread(() -> {

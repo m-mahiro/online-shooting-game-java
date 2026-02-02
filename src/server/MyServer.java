@@ -6,7 +6,10 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-//スレッド部（各クライアントに応じて）
+/**
+ * 各クライアント接続を処理するスレッドクラス。
+ * クライアントからのメッセージを受信し、全クライアントにブロードキャストする。
+ */
 class ClientProcThread extends Thread {
 	private int number;//自分の番号
 	private Socket incoming;
@@ -16,6 +19,15 @@ class ClientProcThread extends Thread {
 	private String myName;//接続者の名前
 	private String myColor;
 
+	/**
+	 * ClientProcThreadのコンストラクタ。
+	 *
+	 * @param n クライアント番号
+	 * @param i クライアントとの接続ソケット
+	 * @param isr 入力ストリームリーダー
+	 * @param in バッファ付きリーダー
+	 * @param out 出力ライター
+	 */
 	public ClientProcThread(int n, Socket i, InputStreamReader isr, BufferedReader in, PrintWriter out) {
 		number = n;
 		incoming = i;
@@ -24,6 +36,11 @@ class ClientProcThread extends Thread {
 		myOut = out;
 	}
 
+	/**
+	 * クライアントとの通信を処理するメインループ。
+	 * クライアント番号を送信し、名前を受信し、色を割り当てる。
+	 * その後、クライアントからのメッセージを継続的に受信し、全クライアントにブロードキャストする。
+	 */
 	public void run() {
 		try {
 			myOut.println(number + " is client number");//初回だけ呼ばれる
@@ -59,6 +76,11 @@ class ClientProcThread extends Thread {
 	}
 }
 
+/**
+ * マルチクライアント対応のTCPサーバークラス。
+ * 複数のクライアントからの接続を受け付け、メッセージをブロードキャストする。
+ * ポート10000でクライアント接続を待ち受け、各接続に対して個別のスレッドを作成する。
+ */
 class MyServer {
 
 	private static int maxConnection=100;//最大接続数
@@ -70,7 +92,13 @@ class MyServer {
 	private static ClientProcThread[] myClientProcThread;//スレッド用の配列
 	public static int member;//接続しているメンバーの数
 
-	//全員にメッセージを送る
+	/**
+	 * 接続中の全クライアントにメッセージを送信する。
+	 * 接続フラグが立っているクライアントのみに送信する。
+	 *
+	 * @param str 送信するメッセージ
+	 * @param myName メッセージ送信者の名前
+	 */
 	public static void SendAll(String str, String myName){
 		//送られた来たメッセージを接続している全員に配る
 		for(int i=0;i<=member;i++){
@@ -82,12 +110,24 @@ class MyServer {
 		}
 	}
 
-	//フラグの設定を行う
+	/**
+	 * 指定されたクライアント番号の接続フラグを設定する。
+	 * クライアントの接続状態を管理するために使用される。
+	 *
+	 * @param n クライアント番号
+	 * @param value 設定するフラグの値（true: 接続中, false: 切断）
+	 */
 	public static void SetFlag(int n, boolean value){
 		flag[n] = value;
 	}
 
-	//mainプログラム
+	/**
+	 * サーバーのメインエントリーポイント。
+	 * ポート10000でサーバーソケットを作成し、クライアント接続を待ち受ける。
+	 * 各クライアント接続に対して個別のスレッドを作成して処理を行う。
+	 *
+	 * @param args コマンドライン引数（未使用）
+	 */
 	public static void main(String[] args) {
 		//必要な配列を確保する
 		incoming = new Socket[maxConnection];

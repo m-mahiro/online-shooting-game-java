@@ -12,6 +12,10 @@ import java.util.Objects;
 
 import static stage.Team.*;
 
+/**
+ * 勝利チーム情報を表示するクラス。
+ * ゲーム終了時に勝利チームのバナーをアニメーション付きで表示する。
+ */
 public class WinnerInfo implements UIContent {
 
 	private final Team team;
@@ -24,6 +28,12 @@ public class WinnerInfo implements UIContent {
 
 	private static final int MOTION_DURATION = GameEngine.FPS * 4;
 
+	/**
+	 * WinnerInfoのコンストラクタ。
+	 * 勝利チームのバナー画像を読み込む。
+	 *
+	 * @param team 勝利したチーム
+	 */
 	public WinnerInfo(Team team) {
 		this.team = team;
 		try {
@@ -41,6 +51,12 @@ public class WinnerInfo implements UIContent {
 		}
 	}
 
+	/**
+	 * バナーの遠近法に基づくスケールを計算する。
+	 *
+	 * @param x バナーのX座標
+	 * @return 計算されたスケール値
+	 */
 	private double getScale(double x) {
 		double h1 = 639;   // 図形の左端の長さ
 		double h2 = 3085;  // 図形の右端の長さ
@@ -48,19 +64,32 @@ public class WinnerInfo implements UIContent {
 		return (h2 - h1) / h2 * (-x / w) * imageScale;
 	}
 
-
+	/**
+	 * アニメーションの進行に基づいてバナーのX座標を計算する。
+	 *
+	 * @param windowWidth ウィンドウの幅
+	 * @return 計算されたX座標
+	 */
 	private double getX(double windowWidth) {
 		double passageTimeRate = (double) animationCounter / MOTION_DURATION;
 		double coefficient = windowWidth * 4;
 		return coefficient * Math.pow(passageTimeRate - 0.5, 3) - vanishingPoint;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * アニメーションカウンターを更新し、アニメーション終了時に期限切れフラグを設定する。
+	 */
 	@Override
 	public void update() {
 		animationCounter++;
 		if (animationCounter > MOTION_DURATION) isExpired = true;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * 勝利チームのバナーを遠近法を用いたアニメーションで画面中央に描画する。
+	 */
 	@Override
 	public void draw(Graphics2D graphics, int windowWidth, int windowHeight) {
 		boolean isRed = team == RED;
@@ -83,6 +112,10 @@ public class WinnerInfo implements UIContent {
 		graphics.drawImage(image, trans, null);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * アニメーション終了後にtrueを返す。
+	 */
 	@Override
 	public boolean isExpired() {
 		return isExpired;

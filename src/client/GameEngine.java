@@ -10,8 +10,13 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * ゲームのメインエンジンクラス。
+ * ゲームループ、入力処理、描画、ゲームオブジェクトの管理を担当します。
+ */
 public class GameEngine implements Runnable {
 
+    /** ゲームのフレームレート（1秒あたりのフレーム数） */
     public static final int FPS = 60;
 
     // ゲームオブジェクト
@@ -43,6 +48,14 @@ public class GameEngine implements Runnable {
 
     private final Runnable repaintCallback;
 
+    /**
+     * GameEngineのコンストラクタ。
+     * ゲームの初期化、ステージ生成、ネットワーク接続、入力戦略の設定を行います。
+     *
+     * @param repaintCallback 画面を再描画するためのコールバック
+     * @param inputHandler ユーザー入力を処理するInputHandler
+     * @param generator ステージの初期設定を提供するStageGenerator
+     */
     public GameEngine(Runnable repaintCallback, InputHandler inputHandler, StageGenerator generator) {
         this.repaintCallback = repaintCallback;
         this.input = inputHandler;
@@ -50,7 +63,7 @@ public class GameEngine implements Runnable {
 
         // StageGeneratorを使ってステージを生成
         this.stage = new GameStage(generator);
-        
+
         if (generator.isNetworked()) {
             // 通常モード
             this.network = new NetworkManager(this);
@@ -73,8 +86,11 @@ public class GameEngine implements Runnable {
             throw new RuntimeException("My assigned object (" + myTankID + ") is not a Tank!");
         }
 
+        // 初期ScreenObjectの追加
+        addScreenObjects(generator.getScreenObjects());
+
         // 自分の戦車にマーカーを追加
-        stage.addScreenObject(new Marker(myTank));
+        this.addScreenObject(new Marker(myTank));
 
         // UIを生成
         this.ui = new GameUI(stage, myTank.getTeam());
@@ -89,6 +105,14 @@ public class GameEngine implements Runnable {
     }
 
     /**
+     * ウィンドウサイズを設定します。
+     *
+     * @param width ウィンドウの幅
+     * @param height ウィンドウの高さ
+     */
+    public void setWindowSize(int width, int height) {
+        this.windowWidth = width;
+        this.windowHeight = height;
     }
 
     /**
@@ -104,8 +128,24 @@ public class GameEngine implements Runnable {
         gameThread.start();
         this.zoomDegrees = this.getJustZoom(width, height) * 0.9;
     }
+
+    /**
+     * ステージ全体が表示されるちょうど良いズーム倍率を計算します。
+     *
+     * @param windowWidth ウィンドウの幅
+     * @param windowHeight ウィンドウの高さ
+     * @return ステージ全体が表示されるズーム倍率
+     */
+    public double getJustZoom(double windowWidth, double windowHeight) {
+        double x = windowWidth / stage.getStageWidth();
+        double y = windowHeight / stage.getStageHeight();
+        return Math.min(x, y);
     }
 
+    /**
+     * ゲームループを実行します。
+     * 一定のフレームレートで更新と描画を繰り返します。
+     */
     @Override
     public void run() {
         long drawInterval = 1000000000L / FPS;
@@ -127,12 +167,25 @@ public class GameEngine implements Runnable {
         }
     }
 
+    /**
+     * ゲーム状態を1フレーム分更新します。
+     * ステージ、UI、入力、戦車の状態などを更新します。
+     */
     public void update() {
+        // 各クラスにフレーム更新を通知
         stage.update();
         ui.update();
         inputStrategy.onFrameUpdate();
 
-        input.onFrameUpdate();
+        // 削除可能なScreenObjectがあれば削除
+        Iterator<ScreenObject> iterator = this.screenObjects.values().iterator();
+        while (iterator.hasNext()) {
+            ScreenObject object = iterator.next();
+            object.update();
+            if (object.isExpired()) {
+                iterator.remove();
+            }
+        }
 
         if (myTank.isDead()) return;
 
@@ -152,26 +205,23 @@ public class GameEngine implements Runnable {
             }
         }
 
-        // 練習モードではここで処理終了
-        if (!generator.isNetworked()) {
-            return;
-        }
-
-        // --- 通常モードでのみ実行される処理 ---
-
         // 移動
+        Point2D.Double moveVector = inputStrategy.getMoveVector(getCanvasTransform());
         if (moveVector.x != 0 || moveVector.y != 0) {
             myTank.move(moveVector);
+            if (generator.isNetworked()) {
+                network.locateTank(myTankID, myTank.getPosition());
+            }
         }
-        network.locateTank(myTankID, myTank.getPosition());
-
 
         // ブロック生成
         if (inputStrategy.createBlock()) {
             Block block = myTank.createBlock();
             if (block != null) {
                 stage.addGameObject(block);
-                network.createBlock(myTankID);
+                if (generator.isNetworked()) {
+                    network.createBlock(myTankID);
+                }
             }
         }
     }
@@ -205,7 +255,13 @@ public class GameEngine implements Runnable {
 
         graphics.setTransform(originalTransform);  // 元の座標系に戻しておく
     }
-    
+
+    /**
+     * カメラのズームを変更します。
+     * ズームの上限と下限が適用されます。
+     *
+     * @param zoomDelta ズームの変化量（負の値でズームイン、正の値でズームアウト）
+     */
     public void zoomCamera(double zoomDelta) {
         this.zoomDegrees -= zoomDelta;
         if (this.zoomDegrees < CAMERA_ZOOM_LOWER_THRESHOLD) {
@@ -215,6 +271,11 @@ public class GameEngine implements Runnable {
         }
     }
 
+    /**
+     * キャンバスの座標変換（カメラ位置とズームを反映）を取得します。
+     *
+     * @return カメラ変換を含むAffineTransform
+     */
     public AffineTransform getCanvasTransform() {
         AffineTransform trans = new AffineTransform();
         trans.translate(this.windowWidth / 2.0, this.windowHeight / 2.0);
@@ -223,19 +284,100 @@ public class GameEngine implements Runnable {
         return trans;
     }
 
+    /**
+     * ステージ全体がちょうど表示される適切なズーム倍率を計算します。
+     *
+     * @return 適切なズーム倍率
+     */
+    public double setJustZoomDegrees() {
+        double x = this.windowWidth / this.stage.getStageWidth();
+        double y = this.windowHeight / this.stage.getStageHeight();
+        return Math.min(x, y);
+    }
+
+    /**
+     * ゲームステージを取得します。
+     *
+     * @return ゲームステージ
+     */
     public GameStage getStage() {
         return stage;
     }
 
+    /**
+     * ゲームUIを取得します。
+     *
+     * @return ゲームUI
+     */
     public GameUI getUi() {
         return ui;
     }
 
+    /**
+     * プレイヤーが操作する戦車のIDを取得します。
+     *
+     * @return 自分の戦車のID
+     */
     public int getMyTankID() {
         return myTankID;
     }
-    
+
+    /**
+     * 現在のズーム倍率を取得します。
+     *
+     * @return ズーム倍率
+     */
     public double getZoomDegrees() {
         return zoomDegrees;
+    }
+
+    /**
+     * ステージの座標系を用いてスクリーンに表示されるオブジェクト(<code>ScreenObject</code>)を追加します。
+     *
+     * @param screenObject 追加したいスクリーンオブジェクト
+     * @return 追加されたスクリーンオブジェクトに割り振られたオブジェクトID
+     */
+    public int addScreenObject(ScreenObject screenObject) {
+        if (screenObject == null) return -1;
+        int id = getNextScreenObjectID();
+        screenObjects.put(id, screenObject);
+        return id;
+    }
+
+    /**
+     * ステージの座標系を用いてスクリーンに表示されるオブジェクト(<code>ScreenObject</code>)を追加します。
+     *
+     * @param screenObjects 追加したいスクリーンオブジェクトの配列
+     * @return 追加されたスクリーンオブジェクトに割り振られたオブジェクトIDの配列。順番は引数に与えれた<code>screenObjects</code>に対応しています。
+     */
+    public int[] addScreenObjects(ScreenObject[] screenObjects) {
+        int length = screenObjects.length;
+        int[] idList = new int[length];
+        int i = 0;
+        for (ScreenObject obj : screenObjects) idList[i++] = addScreenObject(obj);
+        return idList;
+    }
+
+    /**
+     * 与えらえらたオブジェクトIDに対応する<code>ScreenObject</code>を返す。
+     *
+     * @param id オブジェクトID
+     * @return idに対応する対応する<code>ScreenObject</code>
+     */
+    public ScreenObject getScreenObject(int id) {
+        return screenObjects.get(id);
+    }
+
+    /**
+     * オブジェクトIDを返す。
+     *
+     * @return オブジェクトID
+     */
+    private int getNextScreenObjectID() {
+        synchronized (this) {
+            int id = nextScreenObjectID;
+            nextScreenObjectID++;
+            return id;
+        }
     }
 }

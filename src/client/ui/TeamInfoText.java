@@ -13,6 +13,10 @@ import stage.Team;
 import stage.Base;
 import static stage.Team.*;
 
+/**
+ * チーム情報テキストを表示するクラス。
+ * 基地のHPまたは戦車の残り台数を大きな数字で画面に表示する。
+ */
 public class TeamInfoText implements UIContent {
 
 	// どちらのチーム用の画面を表示すれば良いか
@@ -21,6 +25,12 @@ public class TeamInfoText implements UIContent {
 	// 表示する情報の提供元
 	private StageInfo info;
 
+	/**
+	 * TeamInfoTextのコンストラクタ。
+	 *
+	 * @param team 表示するチーム
+	 * @param info ステージ情報
+	 */
 	public TeamInfoText(Team team, StageInfo info) {
 		this.team = team;
 		this.info = info;
@@ -28,11 +38,18 @@ public class TeamInfoText implements UIContent {
 
 	// ============================= UIContentインターフェースのメソッド =============================
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void update() {
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * 基地のHPまたは戦車の残り台数を縁取り付きの大きな数字で描画する。
+	 */
 	@Override
 	public void draw(Graphics2D graphics, int windowWidth, int windowHeight) {
 
@@ -98,6 +115,10 @@ public class TeamInfoText implements UIContent {
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * このUI要素は常に表示されるため、常にfalseを返す。
+	 */
 	@Override
 	public boolean isExpired() {
 		return false;

@@ -13,6 +13,10 @@ import java.util.Objects;
 import static stage.Base.State.*;
 import static stage.Team.*;
 
+/**
+ * チーム情報アイコンを表示するクラス。
+ * 基地の状態（通常、破損、廃墟）に応じたアイコンまたは戦車アイコンを表示する。
+ */
 public class TeamInfoIcon implements UIContent {
 
 	// どちらのチームの情報を表示するのか?
@@ -26,6 +30,10 @@ public class TeamInfoIcon implements UIContent {
 	private static Image normalBlueBaseImage, brokenBlueBaseImage;
 	private static Image redTankImage, blueTankImage;
 
+	/**
+	 * 静的初期化ブロック。
+	 * すべてのチームの基地画像と戦車画像を読み込む。
+	 */
 	static {
 		try {
 			// REDチームの基地の画像
@@ -46,11 +54,22 @@ public class TeamInfoIcon implements UIContent {
 
 	}
 
+	/**
+	 * TeamInfoIconのコンストラクタ。
+	 *
+	 * @param team 表示するチーム
+	 * @param info ステージ情報
+	 */
 	public TeamInfoIcon(Team team, StageInfo info) {
 		this.info = info;
 		this.team = team;
 	}
 
+	/**
+	 * 基地の状態に応じた画像を取得する。
+	 *
+	 * @return 基地の状態に対応する画像（通常、破損、廃墟時は戦車）
+	 */
 	private Image getImage() {
 		boolean isRed = this.team == RED;
 		switch (getBaseState()) {
@@ -65,10 +84,20 @@ public class TeamInfoIcon implements UIContent {
 		}
 	}
 
+	/**
+	 * 基地が廃墟状態かどうかを判定する。
+	 *
+	 * @return 廃墟状態の場合true、そうでない場合false
+	 */
 	private boolean isRuins() {
 		return getBaseState() == RUINS;
 	}
 
+	/**
+	 * 基地の状態を取得する。
+	 *
+	 * @return 基地の状態
+	 */
 	private Base.State getBaseState() {
 		boolean isRed = this.team == RED;
 		return isRed ? info.getRedBaseState() : info.getBlueBaseState();
@@ -76,10 +105,17 @@ public class TeamInfoIcon implements UIContent {
 
 	// ============================= UIContentインターフェースのメソッド =============================
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void update() {
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * 基地の状態に応じたアイコンを画面下部の左右に描画する。
+	 */
 	@Override
 	public void draw(Graphics2D graphics, int windowWidth, int windowHeight) {
 
@@ -110,6 +146,10 @@ public class TeamInfoIcon implements UIContent {
 		graphics.drawImage(image, baseTrans, null);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * このUI要素は常に表示されるため、常にfalseを返す。
+	 */
 	@Override
 	public boolean isExpired() {
 		return false;

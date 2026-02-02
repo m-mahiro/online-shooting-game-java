@@ -12,6 +12,10 @@ import java.util.Objects;
 
 import static stage.Team.*;
 
+/**
+ * チーム情報カードを表示するクラス。
+ * 画面下部の左右にチームカラーの背景画像を表示する。
+ */
 public class TeamInfoCard implements UIContent {
 
 
@@ -25,6 +29,13 @@ public class TeamInfoCard implements UIContent {
 	private double imageScale = 0.5;
 	private BufferedImage cardImage;
 
+	/**
+	 * TeamInfoCardのコンストラクタ。
+	 * 指定されたチームのカード画像を読み込む。
+	 *
+	 * @param team 表示するチーム
+	 * @param info ステージ情報
+	 */
 	public TeamInfoCard(Team team, StageInfo info) {
 		this.team = team;
 		this.info = info;
@@ -44,11 +55,18 @@ public class TeamInfoCard implements UIContent {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void update() {
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * チーム情報カードを画面下部の左右に描画する。
+	 */
 	@Override
 	public void draw(Graphics2D graphics, int windowWidth, int windowHeight) {
 
@@ -65,6 +83,10 @@ public class TeamInfoCard implements UIContent {
 
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * このUI要素は常に表示されるため、常にfalseを返す。
+	 */
 	@Override
 	public boolean isExpired() {
 		return false;

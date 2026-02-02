@@ -9,6 +9,10 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+/**
+ * ネットワーク通信を管理するクラス。
+ * サーバーとの通信を行い、ゲーム状態を同期する。
+ */
 public class NetworkManager extends Thread {
 
 	private GameEngine gameEngine;
@@ -19,6 +23,12 @@ public class NetworkManager extends Thread {
 	private int networkClientID;
 	private int myTankID;
 
+	/**
+	 * ネットワークマネージャーを初期化し、サーバーに接続する。
+	 * クライアントIDを受信し、プレイヤー名を送信する。
+	 *
+	 * @param gameEngine ゲームエンジンのインスタンス
+	 */
 	public NetworkManager(GameEngine gameEngine) {
 		this.gameEngine = gameEngine;
 		try {
@@ -49,18 +59,37 @@ public class NetworkManager extends Thread {
 		}
 	}
 
+	/**
+	 * 自分のタンクIDを設定する。
+	 *
+	 * @param myTankID 設定するタンクID
+	 */
 	private void setMyTankID(int myTankID) {
 		this.myTankID = myTankID;
 	}
 
+	/**
+	 * 自分のタンクIDを取得する。
+	 *
+	 * @return タンクID
+	 */
 	public int getMyTankID() {
 		return this.myTankID;
 	}
 
+	/**
+	 * ネットワーククライアントIDを取得する。
+	 *
+	 * @return ネットワーククライアントID
+	 */
 	public int getNetworkClientID() {
 		return this.networkClientID;
 	}
 
+	/**
+	 * スレッドの実行メソッド。
+	 * サーバーからのメッセージを継続的に受信し、解釈する。
+	 */
 	@Override
 	public void run() {
 		try {
@@ -84,7 +113,11 @@ public class NetworkManager extends Thread {
 		}
 	}
 
-	// メッセージの解釈
+	/**
+	 * サーバーから受信したメッセージを解釈し、対応する処理を実行する。
+	 *
+	 * @param msg 受信したメッセージ文字列
+	 */
 	private void parseMessage(String msg) {
 		String[] tokens = msg.split(" ");
 		String cmd = tokens[0];
@@ -132,33 +165,63 @@ public class NetworkManager extends Thread {
 		}
 	}
 
-	// --- 送信メソッド ---
-
+	/**
+	 * タンクの位置をサーバーに送信する。
+	 *
+	 * @param id タンクのID
+	 * @param position タンクの位置座標
+	 */
 	public void locateTank(int id, Point2D.Double position) {
 		if (out == null) return;
 		out.println("LOCATE " + id + " " + position.x + " " + position.y);
 	}
 
+	/**
+	 * 弾丸発射をサーバーに通知する。
+	 *
+	 * @param tankID 発射するタンクのID
+	 */
 	public void shootGun(int tankID) {
 		if (out == null) return;
 		out.println("BULLET " + tankID);
 	}
 
+	/**
+	 * エネルギーチャージ開始をサーバーに通知する。
+	 *
+	 * @param tankID チャージを開始するタンクのID
+	 */
 	public void startCharge(int tankID) {
 		if (out == null) return;
 		out.println("START_CHARGE " + tankID);
 	}
 
+	/**
+	 * エネルギーチャージ完了をサーバーに通知する。
+	 *
+	 * @param tankID チャージを完了するタンクのID
+	 */
 	public void finishCharge(int tankID) {
 		if (out == null) return;
 		out.println("FINISH_CHARGE " + tankID);
 	}
 
+	/**
+	 * タンクの照準位置をサーバーに送信する。
+	 *
+	 * @param id タンクのID
+	 * @param aimPosition 照準の位置座標
+	 */
 	public void aimAt(int id, Point2D.Double aimPosition) {
 		if (out == null) return;
 		out.println("AIM " + id + " " + aimPosition.x + " " + aimPosition.y);
 	}
 
+	/**
+	 * ブロック生成をサーバーに通知する。
+	 *
+	 * @param tankID ブロックを生成するタンクのID
+	 */
 	public void createBlock(int tankID) {
 		if (out == null) return;
 		out.println("BLOCK " + tankID);

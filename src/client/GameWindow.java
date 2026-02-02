@@ -9,8 +9,16 @@ import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionListener;
 
+/**
+ * ゲームのメインウィンドウを管理するクラス。
+ * スタート画面とゲーム画面の切り替えを行う。
+ */
 public class GameWindow extends JFrame {
 
+	/**
+	 * ゲームウィンドウを初期化し、フルスクリーンモードで表示する。
+	 * 初期状態ではスタート画面を表示する。
+	 */
 	public GameWindow() {
 		setTitle("Tank Game 2D");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -34,6 +42,10 @@ public class GameWindow extends JFrame {
 		}
 	}
 
+	/**
+	 * スタート画面を表示する。
+	 * ユーザーがクリックするとゲームが開始される。
+	 */
 	private void showStartScreen() {
 		// スタート画面のリスナーを作成（クリックされたらゲームを開始する）
 		ActionListener startListener = e -> startGame(true);
@@ -45,6 +57,12 @@ public class GameWindow extends JFrame {
 		this.repaint();
 	}
 
+	/**
+	 * ゲームを開始する。
+	 * 練習モードまたは通常モードのステージを生成し、ゲームパネルに切り替える。
+	 *
+	 * @param isPractice true の場合は練習モード、false の場合は通常モード
+	 */
 	private void startGame(boolean isPractice) {
 		
 		StageGenerator generator;

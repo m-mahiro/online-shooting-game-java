@@ -11,6 +11,10 @@ import java.util.Iterator;
 import static stage.Base.State.*;
 import static stage.Team.*;
 
+/**
+ * ゲーム画面のUI管理クラス。
+ * チーム情報カード、アイコン、テキストなどのUI要素を管理し、画面への描画を制御する。
+ */
 public class GameUI {
 
 	// UIコンテンツ
@@ -24,6 +28,13 @@ public class GameUI {
 
 	private boolean hasDisplayedWinner = false;
 
+	/**
+	 * GameUIのコンストラクタ。
+	 * 両チームの情報表示用UI要素（カード、アイコン、テキスト）を初期化する。
+	 *
+	 * @param info ステージ情報
+	 * @param myTeam 自分のチーム
+	 */
 	public GameUI(StageInfo info, Team myTeam) {
 		this.info = info;
 		TeamInfoCard redCard = new TeamInfoCard(RED, info);
@@ -40,6 +51,11 @@ public class GameUI {
 		contents.add(blueText);
 	}
 
+	/**
+	 * UI要素を更新する。
+	 * 有効期限切れの要素を削除し、各UI要素の状態を更新する。
+	 * ゲーム終了時には勝利チームの表示とホイッスル音を再生する。
+	 */
 	public void update() {
 		synchronized (this.contents) {
 			Iterator<UIContent> iterator = this.contents.iterator();
@@ -64,6 +80,13 @@ public class GameUI {
 		}
 	}
 
+	/**
+	 * すべてのUI要素を画面に描画する。
+	 *
+	 * @param graphics 描画に使用するGraphics2Dオブジェクト
+	 * @param windowWidth ウィンドウの幅
+	 * @param windowHeight ウィンドウの高さ
+	 */
 	public void draw(Graphics2D graphics, int windowWidth, int windowHeight) {
 		synchronized (this.contents) {
 			for (UIContent content : this.contents) {

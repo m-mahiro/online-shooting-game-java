@@ -6,6 +6,10 @@ import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import client.GameEngine;
 
+/**
+ * マウスとキーボードによる入力を処理するクラス。
+ * InputHandlerインターフェースを実装し、各種リスナーを通じて入力を検知する。
+ */
 public class MouseKeyboardInput
 		implements
 		InputHandler,
@@ -15,6 +19,12 @@ public class MouseKeyboardInput
 		MouseWheelListener {
 
 
+	/**
+	 * マウスとキーボードの入力ハンドラを初期化する。
+	 * 各種リスナーをゲームパネルに登録する。
+	 *
+	 * @param gamePanel 入力を受け取るゲームパネル
+	 */
 	public MouseKeyboardInput(GamePanel gamePanel) {
 		gamePanel.addKeyListener(this);
 		gamePanel.addMouseMotionListener(this);
@@ -48,6 +58,10 @@ public class MouseKeyboardInput
 
 	// ============================= InputHandlerの実装 =============================
 
+	/**
+	 * {@inheritDoc}
+	 * WASDキーの入力から移動ベクトルを計算する。
+	 */
 	@Override
 	public Point2D.Double getMoveVector(AffineTransform canvasTransform) {
 
@@ -63,6 +77,10 @@ public class MouseKeyboardInput
 		return new Point2D.Double(x, y);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * マウスカーソルの位置をゲーム世界座標に変換する。
+	 */
 	@Override
 	public Point2D.Double getAimedCoordinate(AffineTransform canvasTransform) {
 		Point2D.Double sourcePoint = new Point2D.Double(this.mouseX, this.mouseY);
@@ -78,6 +96,10 @@ public class MouseKeyboardInput
 		return new Point2D.Double(x, y);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * 左クリックの状態をチェックし、発射可能であれば弾丸を発射する。
+	 */
 	@Override
 	public boolean shootBullet() {
 		boolean pressed = this.leftClicked;
@@ -86,6 +108,10 @@ public class MouseKeyboardInput
 		return result;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * チャージ状態がPOST_CHARGE_STARTの場合にtrueを返す。
+	 */
 	@Override
 	public boolean startEnergyCharge() {
 		boolean temp = chargeState == ChargeState.POST_CHARGE_START;
@@ -93,6 +119,10 @@ public class MouseKeyboardInput
 		return temp;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * チャージ状態がPOST_CHARGE_FINISHの場合にtrueを返す。
+	 */
 	@Override
 	public boolean finishEnergyCharge() {
 		boolean temp = chargeState == ChargeState.POST_CHARGE_FINISH;
@@ -100,6 +130,10 @@ public class MouseKeyboardInput
 		return temp;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * 右クリックの状態をチェックし、ブロックを生成する。
+	 */
 	@Override
 	public boolean createBlock() {
 		boolean pressed = this.rightClicked;
@@ -107,6 +141,10 @@ public class MouseKeyboardInput
 		return pressed;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * マウスホイールのスクロール量を返す。
+	 */
 	@Override
 	public int getZoomAmount() {
 		int zoomAmount = this.scrollAmount;
@@ -114,7 +152,10 @@ public class MouseKeyboardInput
 		return zoomAmount;
 	}
 
-	//　hack: フレームが更新されてから、他のどのInputHandlerメソッドよりも先に呼ばれる必要がある。
+	/**
+	 * {@inheritDoc}
+	 * 左クリックの継続時間を計測し、チャージ状態を更新する。
+	 */
 	@Override
 	public void onFrameUpdate() {
 		if (leftClicked) {
@@ -140,10 +181,18 @@ public class MouseKeyboardInput
 
 	// ============================= KeyListenerの実装 =============================
 
+	/**
+	 * {@inheritDoc}
+	 * 使用しない。
+	 */
 	@Override
 	public void keyTyped(KeyEvent e) {
-	} // 使わない
+	}
 
+	/**
+	 * {@inheritDoc}
+	 * WASDキーが押された時、対応する方向フラグをONにする。
+	 */
 	@Override
 	public void keyPressed(KeyEvent e) {
 		int code = e.getKeyCode();
@@ -155,6 +204,10 @@ public class MouseKeyboardInput
 		if (code == KeyEvent.VK_D) right = true;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * WASDキーが離された時、対応する方向フラグをOFFにする。
+	 */
 	@Override
 	public void keyReleased(KeyEvent e) {
 		int code = e.getKeyCode();
@@ -168,6 +221,10 @@ public class MouseKeyboardInput
 
 	// ============================= MouseMotionListenerの実装 =============================
 
+	/**
+	 * {@inheritDoc}
+	 * マウスがドラッグされた時、マウス座標を更新する。
+	 */
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		// ドラッグ中も位置を更新する
@@ -175,6 +232,10 @@ public class MouseKeyboardInput
 		mouseY = e.getY();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * マウスが移動した時、マウス座標を更新する。
+	 */
 	@Override
 	public void mouseMoved(MouseEvent e) {
 		// マウスが動いたら位置を更新する
@@ -185,6 +246,10 @@ public class MouseKeyboardInput
 
 	// ============================= MouseListenerの実装 =============================
 
+	/**
+	 * {@inheritDoc}
+	 * マウスボタンが押された時、対応するフラグをONにする。
+	 */
 	@Override
 	public void mousePressed(MouseEvent e) {
 		int button = e.getButton();
@@ -199,6 +264,10 @@ public class MouseKeyboardInput
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * マウスボタンが離された時、クリック状態とチャージ状態をリセットする。
+	 */
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		this.leftClicked = false;
@@ -206,20 +275,36 @@ public class MouseKeyboardInput
 		continuousLeftPressedCount = 0;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * 使用しない。
+	 */
 	@Override
 	public void mouseClicked(MouseEvent e) {
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * 使用しない。
+	 */
 	@Override
 	public void mouseEntered(MouseEvent e) {
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * 使用しない。
+	 */
 	@Override
 	public void mouseExited(MouseEvent e) {
 	}
 
 	// ============================= MouseWheelListenerの実装 =============================
 
+	/**
+	 * {@inheritDoc}
+	 * マウスホイールが動いた時、スクロール量を累積する。
+	 */
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
 		this.scrollAmount += e.getWheelRotation();
