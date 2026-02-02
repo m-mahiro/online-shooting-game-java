@@ -31,13 +31,11 @@ public class Tank implements GameObject {
     // 演出用定数
     private final static int DAMAGE_FLUSH_FRAME = (int) (GameEngine.FPS * 1.5);
     private final static int DEBRIS_LIFE_FRAME = (int) (GameEngine.FPS * 0.25);
-    private final static int RESPAWN_LAG_FRAME = GameEngine.FPS * 3;
     private final static int RESPAWN_ANIMATE_FRAME = GameEngine.FPS;
 
     // 演出用変数（クライアント間の同期は必要ない）
     private int damageFlushFrame = 0;
     private int debrisLifeFrame = 0;
-    private int respawnLagFrame = 0;
     private int respawnAnimateFrame = RESPAWN_ANIMATE_FRAME;
     private boolean hadBroken = false;
     private boolean isOnBase = false;
@@ -197,7 +195,6 @@ public class Tank implements GameObject {
         this.hp = 0;
         this.damageFlushFrame = 0;
         this.debrisLifeFrame = DEBRIS_LIFE_FRAME;
-        base.reserveRespawn(this);
     }
 
     /**
@@ -245,7 +242,6 @@ public class Tank implements GameObject {
         switch (getState()) {
             case RESPAWNING:
                 return isRed ? redTransparentChassisImage : blueTransparentChassisImage;
-//			case RESPAWNING: return isRed ? redNormalChassisImage : blueNormalChassisImage;
             case NORMAL:
                 if (isFlushing) return noneImage;
                 return isRed ? redNormalChassisImage : blueNormalChassisImage;
@@ -273,7 +269,6 @@ public class Tank implements GameObject {
         switch (getState()) {
             case RESPAWNING:
                 return isRed ? redTransparentGunImage : blueTransparentGunImage;
-//			case RESPAWNING: return isRed ? redNormalGunImage : blueNormalGunImage;
             case NORMAL:
                 if (isFlushing) return noneImage;
                 return isRed ? redNormalGunImage : blueNormalGunImage;
