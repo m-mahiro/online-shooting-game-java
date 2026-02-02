@@ -14,4 +14,8 @@ public interface StageInfo {
 
 	int getRemainBlueTank();
 
+	boolean hasFinished();
+
+	Team getWinner();
+
 }

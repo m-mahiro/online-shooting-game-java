@@ -426,5 +426,18 @@ public class GameStage implements StageInfo {
 		return count;
 	}
 
+	@Override
+	public boolean hasFinished() {
+		boolean redAllDead = redBase.isRuins() && getRemainBlueTank() == 0;
+		boolean blueAllDead = blueBase.isRuins() && getRemainBlueTank() == 0;
+		return redAllDead || blueAllDead;
+	}
+
+	@Override
+	public Team getWinner() {
+		if (!hasFinished()) return null;
+		boolean redWon = getRemainRedTank() > getRemainBlueTank();
+		return redWon ? RED : BLUE;
+	}
 
 }
