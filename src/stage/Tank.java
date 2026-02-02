@@ -32,10 +32,12 @@ public class Tank implements GameObject {
     private final static int DAMAGE_FLUSH_FRAME = (int) (GameEngine.FPS * 1.5);
     private final static int DEBRIS_LIFE_FRAME = (int) (GameEngine.FPS * 0.25);
     private final static int RESPAWN_ANIMATE_FRAME = GameEngine.FPS;
+    private final static int RESPAWN_LAG_FRAME = GameEngine.FPS * 3;
 
     // 演出用変数（クライアント間の同期は必要ない）
     private int damageFlushFrame = 0;
     private int debrisLifeFrame = 0;
+    private int respawnLagFrame = 0;
     private int respawnAnimateFrame = RESPAWN_ANIMATE_FRAME;
     private boolean hadBroken = false;
     private boolean isOnBase = false;
@@ -181,6 +183,7 @@ public class Tank implements GameObject {
      */
     public void damage(int damage) {
         this.damageFlushFrame = DAMAGE_FLUSH_FRAME;
+        this.respawnLagFrame = RESPAWN_LAG_FRAME;
         this.hp -= damage;
         if (this.hp <= 0) {
             onDie();
@@ -339,6 +342,12 @@ public class Tank implements GameObject {
         if (respawnAnimateFrame > 0) respawnAnimateFrame--;
         if (damageFlushFrame > 0) damageFlushFrame--;
         if (debrisLifeFrame > 0) debrisLifeFrame--;
+        if (respawnLagFrame > 0) {
+            respawnLagFrame--;
+        } else {
+            if (hp == 0) respawn();
+        }
+
     }
 
 
@@ -473,10 +482,10 @@ public class Tank implements GameObject {
     @Override
     public boolean hasRigidBody() {
         switch (getState()) {
+            case RESPAWNING:
             case NORMAL:
             case BROKEN:
                 return true;
-            case RESPAWNING:
             case DEBRIS:
             case NONE:
                 return false;

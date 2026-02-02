@@ -88,6 +88,7 @@ public class GameEngine implements Runnable {
     public void setWindowSize(int width, int height) {
         this.windowWidth = width;
         this.windowHeight = height;
+        this.zoomDegrees = getJustZoom(width, height);
     }
 
     /**
