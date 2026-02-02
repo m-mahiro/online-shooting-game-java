@@ -18,6 +18,7 @@ public class GameEngine implements Runnable {
 
     // 入力・ネットワーク関連
     private InputHandler input;
+    private InputStrategy inputStrategy;
     private NetworkManager network;
 
     // ゲームの状態
@@ -48,11 +49,13 @@ public class GameEngine implements Runnable {
             this.network = new NetworkManager(this);
             networkID = this.network.getNetworkClientID();
             myTankID = this.network.getMyTankID();
+            this.inputStrategy = new OnlineInputStrategy(inputHandler);
         } else {
             // 練習モード (ネットワークなし)
             this.network = null;
             // 練習モードでは、生成された最初の戦車を操作対象とする
             this.myTankID = 0;
+            this.inputStrategy = new PracticeInputStrategy(this.stage);
         }
 
         // ステージから自分の戦車を取得
@@ -114,20 +117,21 @@ public class GameEngine implements Runnable {
     public void update() {
         stage.update();
         ui.update();
+        inputStrategy.onFrameUpdate();
 
         input.onFrameUpdate();
 
         if (myTank.isDead()) return;
 
         // 照準合わせ
-        Point2D.Double coordinate = input.getAimedCoordinate(getCanvasTransform());
+        Point2D.Double coordinate = inputStrategy.getAimedCoordinate(getCanvasTransform());
         myTank.aimAt(coordinate);
         if (generator.isNetworked()) {
             network.aimAt(myTankID, coordinate);
         }
 
         // 発射
-        if (input.shootBullet()) {
+        if (inputStrategy.shootBullet()) {
             Bullet bullet = myTank.shootBullet();
             stage.addGameObject(bullet);
             if (generator.isNetworked()) {
@@ -143,7 +147,6 @@ public class GameEngine implements Runnable {
         // --- 通常モードでのみ実行される処理 ---
 
         // 移動
-        Point2D.Double moveVector = input.getMoveVector(getCanvasTransform());
         if (moveVector.x != 0 || moveVector.y != 0) {
             myTank.move(moveVector);
         }
@@ -151,7 +154,7 @@ public class GameEngine implements Runnable {
 
 
         // ブロック生成
-        if (input.createBlock()) {
+        if (inputStrategy.createBlock()) {
             Block block = myTank.createBlock();
             if (block != null) {
                 stage.addGameObject(block);
