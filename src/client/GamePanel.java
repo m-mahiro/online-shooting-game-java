@@ -121,8 +121,9 @@ public class GamePanel extends JPanel {
      */
     private StageGenerator createStageGenerator(int playerCount) {
             return new StageGenerator() {
-                private final Base redBase = new Base(2000, 2000, Team.RED);
-                private final Base blueBase = new Base(-2000, -2000, Team.BLUE);
+                private final int respawnInterval = 120;
+                private final Base redBase = new Base(2000, 2000, Team.RED, respawnInterval);
+                private final Base blueBase = new Base(-2000, -2000, Team.BLUE, respawnInterval);
                 private final int stageWidth = 6000;
                 private final int stageHeight = 6000;
 
@@ -133,6 +134,7 @@ public class GamePanel extends JPanel {
                     // 戦車の生成
                     for (int i = 0; i < playerCount; i++) {
                         Tank tank = new Tank(i % 2 == 0 ? redBase : blueBase);
+                        tank.respawn();
                         objects.add(tank);
                     }
 

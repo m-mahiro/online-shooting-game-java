@@ -9,7 +9,9 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.Objects;
+import java.util.Queue;
 
 import static stage.Team.*;
 
@@ -23,9 +25,14 @@ public class Base implements GameObject {
     private final Point2D.Double position;
     private final Team team;
 
+    // リスポーン関連
+    private final Queue<Tank> respawnQueue = new LinkedList<>();
+
+
     // 定数(演出用)
     private static final int DAMAGE_FLUSH_FRAME = (int) (GameEngine.FPS * 1.5);
     private static final int DEBRIS_LIFE_FRAME = GameEngine.FPS / 4;
+    private final int respawnInterval;
 
     // 状態(演出用)
     private double debrisScale = 1.0;
@@ -34,6 +41,7 @@ public class Base implements GameObject {
     private int debrisLifeFrame = 0;
     private boolean isBroken = false;
     private final SoundManager sound = new SoundManager();
+    private int respawnFrame = 0;
 
     // 画像リソース
     private static BufferedImage normalRedBaseImage, brokenRedBaseImage, redBaseRuinsImage;
@@ -76,9 +84,10 @@ public class Base implements GameObject {
      * @param y    基地の中心Y座標
      * @param team 基地が所属するチーム
      */
-    public Base(double x, double y, Team team) {
+    public Base(double x, double y, Team team, int respawnInterval) {
         this.position = new Point2D.Double(x, y);
         this.team = team;
+        this.respawnInterval = respawnInterval;
     }
 
     // ============================= Baseクラス固有のメソッド =============================
@@ -101,6 +110,16 @@ public class Base implements GameObject {
     private void onDie() {        // 爆発する
         debrisLifeFrame = DEBRIS_LIFE_FRAME;
         sound.objectExplosion();
+    }
+
+    /**
+     * タンクをリスポーン予約キューに追加します。
+     * 数秒待機後にrespawnが実行されます。
+     *
+     * @param tank リスポーンさせるタンク
+     */
+    public void reserveRespawn(Tank tank) {
+        respawnQueue.offer(tank);
     }
 
     /**
@@ -184,6 +203,14 @@ public class Base implements GameObject {
      */
     @Override
     public void update() {
+        // リスポーンキューの処理
+        if (!respawnQueue.isEmpty() && respawnFrame <= 0) {
+            Tank tank = respawnQueue.peek();
+            respawnQueue.poll();
+            tank.setPosition(this.getPosition());
+            respawnFrame = this.respawnInterval;
+        }
+
         // リングの回転
         switch (getState()) {
             case NORMAL:
@@ -208,6 +235,9 @@ public class Base implements GameObject {
 
         // 破壊されたときの残骸が飛び散る演出用に、オブジェクトのスケールを二次関数的に増加させる。
         if (getState() == State.RUINS) debrisScale += (GameEngine.FPS / 10.0) * debrisLifeFrame / 100.0;
+
+        // リスポーンインタバール
+        if (respawnFrame > 0) respawnFrame--;
 
     }
 
