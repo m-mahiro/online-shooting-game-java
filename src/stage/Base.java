@@ -9,7 +9,9 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.Objects;
+import java.util.Queue;
 
 import static stage.Team.*;
 
@@ -17,11 +19,26 @@ public class Base implements GameObject {
 
 	// 定数
 	private static final int INIT_HP = 1000;
+	private static final int RESPAWN_DELAY_FRAMES = GameEngine.FPS * 3; // 3秒
 
 	// 状態
 	private int hp = INIT_HP;
 	private final Point2D.Double position;
 	private Team team;
+
+	// リスポーンキュー
+	private final Queue<RespawnRequest> respawnQueue = new LinkedList<>();
+
+	// リスポーン予約を管理する内部クラス
+	private static class RespawnRequest {
+		Tank tank;
+		int remainingFrames;
+
+		RespawnRequest(Tank tank, int frames) {
+			this.tank = tank;
+			this.remainingFrames = frames;
+		}
+	}
 
 	// 定数(演出用)
 	private static final int EXPLOSION_FRAME = GameEngine.FPS / 2;
@@ -106,6 +123,14 @@ public class Base implements GameObject {
 	     * @return この基地のチーム
 	     */
 	    public Team getTeam() {		return this.team;
+	}
+
+	    /**
+	     * Tankをリスポーンキューに追加します。指定された遅延時間後にrespawn()が呼び出されます。
+	     * @param tank リスポーンさせるTank
+	     */
+	    public void reserveRespawn(Tank tank) {
+		respawnQueue.add(new RespawnRequest(tank, RESPAWN_DELAY_FRAMES));
 	}
 
 	    /**
@@ -196,6 +221,16 @@ public class Base implements GameObject {
 
 		// 破壊されたときの残骸が飛び散る演出用に、オブジェクトのスケールを二次関数的に増加させる。
 		if (getState() == State.RUINS) debrisScale += (GameEngine.FPS / 10.0) * debrisLifeFrame / 100.0;
+
+		// リスポーンキューの処理
+		if (!respawnQueue.isEmpty()) {
+			RespawnRequest request = respawnQueue.peek();
+			request.remainingFrames--;
+			if (request.remainingFrames <= 0) {
+				respawnQueue.poll();
+				request.tank.respawn();
+			}
+		}
 	}
 
 	    /**

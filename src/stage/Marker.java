@@ -1,42 +1,69 @@
 package stage;
 
-import java.awt.Graphics2D;
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.Objects;
 
 public class Marker implements ScreenObject {
-    private Tank target;
 
-    /**
-     * 新しいマーカーオブジェクトを生成します。
-     * @param target マーカーが追跡する対象の戦車
-     */
-    public Marker(Tank target) {
-        this.target = target;
+    private final Tank tank;
+    private final Point2D.Double position;
+
+    private BufferedImage image;
+
+    private int animationCounter = 0;
+
+    public Marker(Tank tank) {
+        this.tank = tank;
+        this.position = tank.getPosition();
+        try {
+            switch (tank.getTeam()) {
+                case BLUE:
+                    this.image = ImageIO.read(Objects.requireNonNull(Marker.class.getResource("../client/assets/marker_blue.png")));
+                    break;
+                case RED:
+                    this.image = ImageIO.read(Objects.requireNonNull(Marker.class.getResource("../client/assets/marker_red.png")));
+                    break;
+                default:
+                    throw new RuntimeException();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    /**
-     * マーカーを描画します。
-     * @param g 描画に使用するGraphics2Dオブジェクト
-     */
-    @Override
-    public void draw(Graphics2D g) {
-        // TODO: Implement drawing logic for the marker
-    }
-
-    /**
-     * マーカーの状態を更新します。
-     * 現在は特別なアニメーションロジックがないため、空の実装です。
-     */
     @Override
     public void update() {
-        // TODO: Implement update logic if marker needs to be animated
+        animationCounter++;
     }
 
-    /**
-     * マーカーが関連付けられている戦車が死亡している場合、マーカーも期限切れと判断されます。
-     * @return ターゲットの戦車が死亡している場合はtrue、それ以外はfalse
-     */
+    @Override
+    public void draw(Graphics2D graphics) {
+        if (this.tank.isDead()) return;
+        Point2D.Double tankPosition = this.tank.getPosition();
+        AffineTransform trans = new AffineTransform();
+        trans.translate(tankPosition.x, tankPosition.y);
+        trans.scale(Math.sin(animationCounter / 10.0), 1);
+        trans.translate(-this.image.getWidth() / 2.0, -this.image.getHeight() - tank.getHeight() / 2.0);
+        graphics.drawImage(this.image, trans, null);
+    }
+
     @Override
     public boolean isExpired() {
-        return target.isDead();
+        return tank.isExpired();
+    }
+
+    @Override
+    public Point2D.Double getPosition() {
+        return (Point2D.Double) this.position.clone();
+    }
+
+    @Override
+    public void setPosition(Point2D.Double position) {
+        this.position.setLocation(position);
     }
 }

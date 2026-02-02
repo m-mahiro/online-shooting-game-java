@@ -4,6 +4,7 @@ public interface StageGenerator {
 
     /**
      * ゲームステージに配置するGameObjectの配列を取得します。
+     * これには<code>getRedBase()</code>や<code>getBlueBase()</code>が返すオブジェクトも含まれます。
      * @return 配置するGameObjectの配列
      */
     GameObject[] getGameObjects();
@@ -37,16 +38,4 @@ public interface StageGenerator {
      * @return ステージの高さ
      */
     int getStageHeight();
-
-    /**
-     * ステージに配置する戦車の配列を取得します。
-     * @return 配置する戦車の配列
-     */
-    Tank[] getTanks();
-
-    /**
-     * ステージがネットワーク対応であるかどうかを判定します。
-     * @return ネットワーク対応であればtrue、そうでなければfalse
-     */
-    boolean isNetworked();
 }

@@ -19,30 +19,26 @@ public class GameEngine implements Runnable {
     /** ゲームのフレームレート（1秒あたりのフレーム数） */
     public static final int FPS = 60;
 
-    // ゲームオブジェクト
+    // 表示関連
     private GameStage stage;
     private GameUI ui;
-    private Tank myTank;
 
-    // 入力・ネットワーク関連
-    private InputHandler input;
-    private InputStrategy inputStrategy;
-    private NetworkManager network;
+    // 入力用
+    private InputStrategy input;
 
-    // ゲームの状態
-    private int networkID;
-    private int myTankID;
+    // update→drawのゲームループ用スレッド
     private Thread gameThread;
-    private final StageGenerator generator;
 
     // オブジェクト管理
     private int nextScreenObjectID = 0;
     private final Map<Integer, ScreenObject> screenObjects = new ConcurrentHashMap<>();
+    private Tank myTank;
+    private int myTankObjectID;
 
     // キャンバス・カメラ関連
     private int windowWidth, windowHeight;
     private double zoomDegrees;
-    private Point2D.Double cameraPosition = new Point2D.Double();
+    private Point2D.Double cameraPosition;
     public double CAMERA_ZOOM_UPPER_THRESHOLD = 5;
     public double CAMERA_ZOOM_LOWER_THRESHOLD = 0.07;
 
@@ -53,41 +49,25 @@ public class GameEngine implements Runnable {
      * ゲームの初期化、ステージ生成、ネットワーク接続、入力戦略の設定を行います。
      *
      * @param repaintCallback 画面を再描画するためのコールバック
-     * @param inputHandler ユーザー入力を処理するInputHandler
+     * @param inputStrategy 入力処理とネットワーク送信を管理するInputStrategy
      * @param generator ステージの初期設定を提供するStageGenerator
      */
-    public GameEngine(Runnable repaintCallback, InputHandler inputHandler, StageGenerator generator) {
+    public GameEngine(Runnable repaintCallback, InputStrategy inputStrategy, StageGenerator generator, int myTankObjectID) {
         this.repaintCallback = repaintCallback;
-        this.input = inputHandler;
-        this.generator = generator;
+        this.input = inputStrategy;
+        this.myTankObjectID = myTankObjectID;
 
         // StageGeneratorを使ってステージを生成
         this.stage = new GameStage(generator);
-
-        if (generator.isNetworked()) {
-            // 通常モード
-            this.network = new NetworkManager(this);
-            networkID = this.network.getNetworkClientID();
-            myTankID = this.network.getMyTankID();
-            this.inputStrategy = new OnlineInputStrategy(inputHandler);
-        } else {
-            // 練習モード (ネットワークなし)
-            this.network = null;
-            // 練習モードでは、生成された最初の戦車を操作対象とする
-            this.myTankID = 0;
-            this.inputStrategy = new PracticeInputStrategy(this.stage);
-        }
-
-        // ステージから自分の戦車を取得
-        GameObject myTankObject = this.stage.getGameObject(myTankID);
-        if (myTankObject instanceof Tank) {
-            this.myTank = (Tank) myTankObject;
-        } else {
-            throw new RuntimeException("My assigned object (" + myTankID + ") is not a Tank!");
-        }
-
-        // 初期ScreenObjectの追加
         addScreenObjects(generator.getScreenObjects());
+
+        // 自分の戦車を取得
+        GameObject object = stage.getGameObject(myTankObjectID);
+        if (object instanceof Tank) {
+            this.myTank = (Tank) this.stage.getGameObject(myTankObjectID);
+        } else {
+            throw new RuntimeException();
+        }
 
         // 自分の戦車にマーカーを追加
         this.addScreenObject(new Marker(myTank));
@@ -97,11 +77,6 @@ public class GameEngine implements Runnable {
 
         // カメラの初期設定
         this.cameraPosition = new Point2D.Double(0, 0);
-
-        // サーバーからのメッセージ受信を開始
-        if (generator.isNetworked()) {
-            this.network.start();
-        }
     }
 
     /**
@@ -172,10 +147,11 @@ public class GameEngine implements Runnable {
      * ステージ、UI、入力、戦車の状態などを更新します。
      */
     public void update() {
+
         // 各クラスにフレーム更新を通知
         stage.update();
         ui.update();
-        inputStrategy.onFrameUpdate();
+        input.onFrameUpdate();
 
         // 削除可能なScreenObjectがあれば削除
         Iterator<ScreenObject> iterator = this.screenObjects.values().iterator();
@@ -190,38 +166,26 @@ public class GameEngine implements Runnable {
         if (myTank.isDead()) return;
 
         // 照準合わせ
-        Point2D.Double coordinate = inputStrategy.getAimedCoordinate(getCanvasTransform());
+        Point2D.Double coordinate = input.getAimedCoordinate(getCanvasTransform());
         myTank.aimAt(coordinate);
-        if (generator.isNetworked()) {
-            network.aimAt(myTankID, coordinate);
-        }
 
         // 発射
-        if (inputStrategy.shootBullet()) {
+        if (input.shootBullet()) {
             Bullet bullet = myTank.shootBullet();
             stage.addGameObject(bullet);
-            if (generator.isNetworked()) {
-                network.shootGun(myTankID);
-            }
         }
 
         // 移動
-        Point2D.Double moveVector = inputStrategy.getMoveVector(getCanvasTransform());
+        Point2D.Double moveVector = input.getMoveVector(getCanvasTransform());
         if (moveVector.x != 0 || moveVector.y != 0) {
             myTank.move(moveVector);
-            if (generator.isNetworked()) {
-                network.locateTank(myTankID, myTank.getPosition());
-            }
         }
 
         // ブロック生成
-        if (inputStrategy.createBlock()) {
+        if (input.createBlock()) {
             Block block = myTank.createBlock();
             if (block != null) {
                 stage.addGameObject(block);
-                if (generator.isNetworked()) {
-                    network.createBlock(myTankID);
-                }
             }
         }
     }
@@ -236,8 +200,8 @@ public class GameEngine implements Runnable {
         // カメラの移動・ズームを反映させるアフィン変換を作成
         AffineTransform canvasTransform = new AffineTransform();
         canvasTransform.translate(this.windowWidth / 2.0, this.windowHeight / 2.0);
-        canvasTransform.scale(this.zoomDegrees, this.zoomDegrees);
         canvasTransform.translate(-this.cameraPosition.x, -this.cameraPosition.y);
+        canvasTransform.scale(this.zoomDegrees, this.zoomDegrees);
 
         // カメラに映る(ウィンドウから見える)範囲を計算
         double visibleWidth = this.windowWidth / this.zoomDegrees;
@@ -253,7 +217,11 @@ public class GameEngine implements Runnable {
             object.draw(graphics);
         }
 
-        graphics.setTransform(originalTransform);  // 元の座標系に戻しておく
+        graphics.setTransform(originalTransform);  // 元の座標系に戻す
+
+        // GameUIの描画
+        ui.draw(graphics, this.windowWidth, this.windowHeight);
+
     }
 
     /**
@@ -285,17 +253,6 @@ public class GameEngine implements Runnable {
     }
 
     /**
-     * ステージ全体がちょうど表示される適切なズーム倍率を計算します。
-     *
-     * @return 適切なズーム倍率
-     */
-    public double setJustZoomDegrees() {
-        double x = this.windowWidth / this.stage.getStageWidth();
-        double y = this.windowHeight / this.stage.getStageHeight();
-        return Math.min(x, y);
-    }
-
-    /**
      * ゲームステージを取得します。
      *
      * @return ゲームステージ
@@ -318,8 +275,8 @@ public class GameEngine implements Runnable {
      *
      * @return 自分の戦車のID
      */
-    public int getMyTankID() {
-        return myTankID;
+    public int getMyTankObjectID() {
+        return myTankObjectID;
     }
 
     /**

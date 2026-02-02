@@ -1,8 +1,6 @@
 package client;
 
 import client.ui.StartScreenPanel;
-import stage.*;
-import stage.Team;
 
 import javax.swing.JFrame;
 import java.awt.GraphicsDevice;
@@ -64,67 +62,12 @@ public class GameWindow extends JFrame {
 	 * @param isPractice true の場合は練習モード、false の場合は通常モード
 	 */
 	private void startGame(boolean isPractice) {
-		
-		StageGenerator generator;
-		if (isPractice) {
-			generator = new StageGenerator() {
-				private final Base redBase = new Base(0, 0, Team.RED);
-				private final Base blueBase = new Base(9999, 9999, Team.BLUE);
-				private final Tank practiceTank = new Tank(redBase);
-
-				@Override
-				public GameObject[] getGameObjects() {
-					return new GameObject[]{ practiceTank };
-				}
-
-				@Override
-				public ScreenObject[] getScreenObjects() {
-					return new ScreenObject[0];
-				}
-
-				@Override
-				public Base getRedBase() {
-					return redBase;
-				}
-
-				@Override
-				public Base getBlueBase() {
-					return blueBase;
-				}
-
-				@Override
-				public int getStageWidth() {
-					return 3000;
-				}
-
-				@Override
-				public int getStageHeight() {
-					return 3000;
-				}
-
-				@Override
-				public Tank[] getTanks() {
-					return new Tank[]{ practiceTank };
-				}
-
-				@Override
-				public boolean isNetworked() {
-					return false;
-				}
-			};
-		} else {
-			// 通常モード用のStageGeneratorをここに実装
-			throw new UnsupportedOperationException("通常モードはまだ実装されていません");
-		}
-
-		GamePanel gamePanel = new GamePanel(generator);
+		GamePanel gamePanel = new GamePanel();
 
 		this.getContentPane().removeAll();
 		this.add(gamePanel);
 		gamePanel.requestFocusInWindow(); // GamePanelにフォーカスを移す
 		this.revalidate();
 		this.repaint();
-
-		// ゲーム開始 (GamePanelのaddNotifyが呼ばれてからスレッドが開始される)
 	}
 }

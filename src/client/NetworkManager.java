@@ -22,15 +22,14 @@ public class NetworkManager extends Thread {
 
 	private int networkClientID;
 	private int myTankID;
+	private int playerCount;
 
 	/**
 	 * ネットワークマネージャーを初期化し、サーバーに接続する。
 	 * クライアントIDを受信し、プレイヤー名を送信する。
 	 *
-	 * @param gameEngine ゲームエンジンのインスタンス
 	 */
-	public NetworkManager(GameEngine gameEngine) {
-		this.gameEngine = gameEngine;
+	public NetworkManager() {
 		try {
 			socket = new Socket("localhost", 10000);
 			out = new PrintWriter(socket.getOutputStream(), true);
@@ -38,15 +37,15 @@ public class NetworkManager extends Thread {
 
 			System.out.println("サーバーに接続しました。");
 
-			// 1. 最初の行は "ID is client number" 形式で来る想定
+			// 最初の行は "ID is client number" 形式で来る想定
 			String initMsg = in.readLine();
 			if (initMsg != null) {
 				String[] tokens = initMsg.split(" ");
+
 				this.networkClientID = Integer.parseInt(tokens[0]);
+				this.playerCount = 10;
+				this.myTankID = networkClientID % this.playerCount;
 
-
-				int myTankID = networkClientID % 10;
-				this.setMyTankID(myTankID);
 
 				// 名前送信（サーバーが期待しているので送る）
 				out.println("Player" + myTankID);
@@ -59,14 +58,14 @@ public class NetworkManager extends Thread {
 		}
 	}
 
-	/**
-	 * 自分のタンクIDを設定する。
-	 *
-	 * @param myTankID 設定するタンクID
-	 */
-	private void setMyTankID(int myTankID) {
-		this.myTankID = myTankID;
+	public void setGameEngine(GameEngine gameEngine) {
+		this.gameEngine = gameEngine;
 	}
+
+	public int getPlayerCount() {
+		return playerCount;
+	}
+
 
 	/**
 	 * 自分のタンクIDを取得する。
@@ -119,19 +118,27 @@ public class NetworkManager extends Thread {
 	 * @param msg 受信したメッセージ文字列
 	 */
 	private void parseMessage(String msg) {
+
 		String[] tokens = msg.split(" ");
 		String cmd = tokens[0];
+
+		if (cmd.equals("PLAYER_COUNT")) {
+			playerCount = Integer.parseInt(tokens[1]);
+			return;
+		}
+
+		if (gameEngine == null) return;
 		GameStage stage = gameEngine.getStage();
-		int tankID = Integer.parseInt(tokens[1]);
-		if (gameEngine.getMyTankID() == tankID) return;
-		Tank tank = (Tank) gameEngine.getStage().getGameObject(tankID);
+		int tankObjectID = Integer.parseInt(tokens[1]);
+		if (gameEngine.getMyTankObjectID() == tankObjectID) return;
+		Tank tank = (Tank) gameEngine.getStage().getGameObject(tankObjectID);
 
 		try {
 			switch (cmd) {
 				case "LOCATE": {
 					double x = Double.parseDouble(tokens[2]);
 					double y = Double.parseDouble(tokens[3]);
-					stage.getGameObject(tankID).setPosition(new Point2D.Double(x, y));
+					stage.getGameObject(tankObjectID).setPosition(new Point2D.Double(x, y));
 					break;
 				}
 				case "BULLET": {

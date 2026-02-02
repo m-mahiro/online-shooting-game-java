@@ -31,10 +31,8 @@ public class GameStage implements StageInfo {
 	// ステージ上のオブジェクト。
 	private final Map<Integer, GameObject> objects = new ConcurrentHashMap<>();
 
-
 	// ステージ外のテクスチャのアニメーション用
 	double outerStageAnimationFrame = 0;
-
 
 	// 画像リソース
 	private static BufferedImage floorTexture, outerStageTexture;
@@ -57,9 +55,6 @@ public class GameStage implements StageInfo {
 		this.stageHeight = generator.getStageHeight();
 		this.redBase = generator.getRedBase();
 		this.blueBase = generator.getBlueBase();
-
-		addGameObject(this.redBase);
-		addGameObject(this.blueBase);
 		addGameObjects(generator.getGameObjects());
 	}
 
@@ -85,7 +80,7 @@ public class GameStage implements StageInfo {
 	 * @return 配置されたゲームオブジェクトに割り振られたオブジェクトID
 	 */
 	public int addGameObject(GameObject gameObject) {
-		if (gameObject == null) return -1;
+		if (gameObject == null) throw new NullPointerException();
 		int id = getNextPrivateObjectID();
 		objects.put(id, gameObject);
 		return id;
@@ -104,10 +99,6 @@ public class GameStage implements StageInfo {
 		return idList;
 	}
 
-
-
-
-
 	/**
 	 * 与えらたオブジェクトIDに対応する<code>GameObject</code>を返す。
 	 * @param id オブジェクトID
@@ -116,8 +107,6 @@ public class GameStage implements StageInfo {
 	public GameObject getGameObject(int id) {
 		return objects.get(id);
 	}
-
-
 
 	/**
 	 * 与えられた<code>Graphics2D</code>に、ステージ上の<code>GameObject</code>を描画していく。

@@ -30,10 +30,6 @@ public class TeamInfoIcon implements UIContent {
 	private static Image normalBlueBaseImage, brokenBlueBaseImage;
 	private static Image redTankImage, blueTankImage;
 
-	/**
-	 * 静的初期化ブロック。
-	 * すべてのチームの基地画像と戦車画像を読み込む。
-	 */
 	static {
 		try {
 			// REDチームの基地の画像
