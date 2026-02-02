@@ -37,7 +37,7 @@ public class Tank implements GameObject {
     // 演出用変数（クライアント間の同期は必要ない）
     private int damageFlushFrame = 0;
     private int debrisLifeFrame = 0;
-    private int respawnLagFrame = RESPAWN_LAG_FRAME;
+    private int respawnLagFrame = 0;
     private int respawnAnimateFrame = RESPAWN_ANIMATE_FRAME;
     private boolean hadBroken = false;
     private boolean isOnBase = false;
@@ -208,7 +208,8 @@ public class Tank implements GameObject {
         if (base.isRuins()) return;
         this.hp = INITIAL_HP;
         this.respawnAnimateFrame = RESPAWN_ANIMATE_FRAME;
-        base.reserveRespawn(this);
+        Point2D.Double spawnPoint = base.getPosition();
+        this.setPosition(spawnPoint);
     }
 
     /**
@@ -310,8 +311,6 @@ public class Tank implements GameObject {
      * @return 戦車の現在の状態
      */
     private State getState() {
-        if (respawnLagFrame > 0) return State.NONE;
-
         if (respawnAnimateFrame > 0) return State.RESPAWNING;
 
         // 残骸は一定時間経過後画面から消える
