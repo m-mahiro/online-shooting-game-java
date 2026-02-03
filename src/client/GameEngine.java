@@ -27,9 +27,6 @@ public class GameEngine implements Runnable {
     // 入力用
     private InputStrategy input;
 
-    // ネットワーク通信用
-    private NetworkStrategy network;
-
     // update→drawのゲームループ用スレッド
     private Thread gameThread;
 
@@ -54,15 +51,13 @@ public class GameEngine implements Runnable {
      *
      * @param repaintCallback 画面を再描画するためのコールバック
      * @param inputStrategy 入力処理を管理するInputStrategy
-     * @param networkStrategy ネットワーク送信を管理するNetworkStrategy
      */
-    public GameEngine(GameStage stage, GameUI ui, int myTankID, Runnable repaintCallback, InputStrategy inputStrategy, NetworkStrategy networkStrategy) {
+    public GameEngine(GameStage stage, GameUI ui, int myTankID, Runnable repaintCallback, InputStrategy inputStrategy) {
         this.stage = stage;
         this.ui = ui;
         this.myTankID = myTankID;
         this.repaintCallback = repaintCallback;
         this.input = inputStrategy;
-        this.network = networkStrategy;
 
 
         // 自分の戦車を取得
@@ -157,36 +152,10 @@ public class GameEngine implements Runnable {
                 iterator.remove();
             }
         }
-        
-        // =========================== 自分の戦車の操作 ===========================
 
-        if (myTank.isDead()) return;
-
-        // 照準合わせ
-        Point2D.Double coordinate = input.getAimedCoordinate(getCanvasTransform());
-        myTank.aimAt(coordinate);
-        network.aimAt(myTankID, coordinate);
-
-        // 発射
-        if (input.shootBullet()) {
-            Bullet bullet = myTank.shootBullet();
-            stage.addGameObject(bullet);
-            network.shootGun(myTankID);
-        }
-
-        // 移動
-        Point2D.Double moveVector = input.getMotionDirection(getCanvasTransform());
-        if (moveVector.x != 0 || moveVector.y != 0) {
-            myTank.move(moveVector);
-        }
-
-        // ブロック生成
-        if (input.createBlock()) {
-            Block block = myTank.createBlock();
-            if (block != null) {
-                stage.addGameObject(block);
-                network.createBlock(myTankID);
-            }
+        // 自分の戦車の操作（InputStrategyに委譲）
+        if (!myTank.isDead()) {
+            input.handleInput(myTank, getCanvasTransform(), stage);
         }
     }
 

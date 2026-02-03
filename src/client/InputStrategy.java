@@ -1,7 +1,9 @@
 package client;
 
+import stage.GameStage;
+import stage.Tank;
+
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
 
 /**
  * ゲームモードに応じた入力処理の戦略を定義するインターフェース。
@@ -10,55 +12,14 @@ import java.awt.geom.Point2D;
 public interface InputStrategy {
 
     /**
-     * プレイヤーの移動ベクトルを取得します。
+     * 入力を処理し、戦車を操作します。
+     * 場面（JPanel）によって受け付ける入力と受け付けない入力を切り替えることができます。
      *
+     * @param myTank 操作対象の戦車
      * @param canvasTransform キャンバスの座標変換
-     * @return 移動ベクトル
+     * @param stage ゲームステージ
      */
-    Point2D.Double getMotionDirection(AffineTransform canvasTransform);
-
-    /**
-     * プレイヤーの照準座標を取得します。
-     *
-     * @param canvasTransform キャンバスの座標変換
-     * @return 照準座標
-     */
-    Point2D.Double getAimedCoordinate(AffineTransform canvasTransform);
-
-    /**
-     * 弾を発射するかどうかを判定します。
-     *
-     * @return 発射する場合true
-     */
-    boolean shootBullet();
-
-    /**
-     * エネルギーチャージを開始するかどうかを判定します。
-     *
-     * @return チャージを開始する場合true
-     */
-    boolean startEnergyCharge();
-
-    /**
-     * エネルギーチャージを終了するかどうかを判定します。
-     *
-     * @return チャージを終了する場合true
-     */
-    boolean finishEnergyCharge();
-
-    /**
-     * ブロック生成が可能かどうかを判定します。
-     *
-     * @return ブロック生成が可能な場合true
-     */
-    boolean createBlock();
-
-    /**
-     * カメラのズーム量を取得します。
-     *
-     * @return ズーム量
-     */
-    int getZoomAmount();
+    void handleInput(Tank myTank, AffineTransform canvasTransform, GameStage stage);
 
     /**
      * フレーム更新時の処理を行います。

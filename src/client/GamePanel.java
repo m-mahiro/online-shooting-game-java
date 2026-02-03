@@ -50,11 +50,11 @@ public class GamePanel extends JPanel {
         GameUI ui = new GamePanelUI(stage, myTeam);
 
         // 入力や通信に関する取り決め(Strategy)を作成
-        InputStrategy inputStrategy = createInputStrategy(new MouseKeyboardInput(this));
         NetworkStrategy networkStrategy = createNetworkStrategy();
+        InputStrategy inputStrategy = createInputStrategy(new MouseKeyboardInput(this), networkStrategy, myTankID);
 
         // GameEngineを作成
-        this.gameEngine = new GameEngine(stage, ui, myTankID, this::repaint, inputStrategy, networkStrategy);
+        this.gameEngine = new GameEngine(stage, ui, myTankID, this::repaint, inputStrategy);
 
         // エンジンにリサイズを通知するためのリスナーを追加
         this.addComponentListener(new ComponentAdapter() {
@@ -101,44 +101,43 @@ public class GamePanel extends JPanel {
      * ゲーム画面用のInputStrategyを生成する。
      *
      * @param inputHandler ユーザー入力を処理するInputHandler
+     * @param network ネットワーク通信を管理するNetworkStrategy
+     * @param tankID 戦車のID
      * @return 生成されたInputStrategy
      */
-    private InputStrategy createInputStrategy(InputHandler inputHandler) {
+    private InputStrategy createInputStrategy(InputHandler inputHandler, NetworkStrategy network, int tankID) {
         return new InputStrategy() {
 
             @Override
-            public Point2D.Double getMotionDirection(AffineTransform canvasTransform) {
-                return inputHandler.getMotionDirection(canvasTransform);
-            }
+            public void handleInput(Tank myTank, AffineTransform canvasTransform, GameStage stage) {
+                // 照準合わせ
+                Point2D.Double coordinate = inputHandler.getAimedCoordinate(canvasTransform);
+                myTank.aimAt(coordinate);
+                network.aimAt(tankID, coordinate);
 
-            @Override
-            public Point2D.Double getAimedCoordinate(AffineTransform canvasTransform) {
-                return inputHandler.getAimedCoordinate(canvasTransform);
-            }
+                // 発射
+                if (inputHandler.shootBullet()) {
+                    Bullet bullet = myTank.shootBullet();
+                    if (bullet != null) {
+                        stage.addGameObject(bullet);
+                        network.shootGun(tankID);
+                    }
+                }
 
-            @Override
-            public boolean shootBullet() {
-                return inputHandler.shootBullet();
-            }
+                // 移動
+                Point2D.Double moveVector = inputHandler.getMotionDirection(canvasTransform);
+                if (moveVector.x != 0 || moveVector.y != 0) {
+                    myTank.move(moveVector);
+                }
 
-            @Override
-            public boolean startEnergyCharge() {
-                return inputHandler.startEnergyCharge();
-            }
-
-            @Override
-            public boolean finishEnergyCharge() {
-                return inputHandler.finishEnergyCharge();
-            }
-
-            @Override
-            public boolean createBlock() {
-                return inputHandler.createBlock();
-            }
-
-            @Override
-            public int getZoomAmount() {
-                return inputHandler.getZoomAmount();
+                // ブロック生成
+                if (inputHandler.createBlock()) {
+                    Block block = myTank.createBlock();
+                    if (block != null) {
+                        stage.addGameObject(block);
+                        network.createBlock(tankID);
+                    }
+                }
             }
 
             @Override

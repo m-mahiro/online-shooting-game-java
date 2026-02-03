@@ -18,7 +18,7 @@ import java.util.ArrayList;
  */
 public class StartPanel extends JPanel {
     private final GameEngine gameEngine;
-    private JButton startButton;
+    private final JButton startButton;
 
     /**
      * StartScreenPanelのコンストラクタ。
@@ -81,7 +81,7 @@ public class StartPanel extends JPanel {
         NetworkStrategy networkStrategy = createNetworkStrategy();
 
         // GameEngineを作成
-        this.gameEngine = new GameEngine(stage, ui, myTankID, this::repaint, inputStrategy, networkStrategy);
+        this.gameEngine = new GameEngine(stage, ui, myTankID, this::repaint, inputStrategy);
 
         // エンジンにリサイズを通知するためのリスナーを追加
         this.addComponentListener(new ComponentAdapter() {
@@ -123,51 +123,21 @@ public class StartPanel extends JPanel {
 
     /**
      * スタート画面用のInputStrategyを生成する。
+     * スタート画面では入力があっても何もしない
      *
      * @param inputHandler ユーザー入力を処理するInputHandler
      * @return 生成されたInputStrategy
      */
     private InputStrategy createInputStrategy(InputHandler inputHandler) {
         return new InputStrategy() {
-
             @Override
-            public Point2D.Double getMotionDirection(AffineTransform canvasTransform) {
-                return inputHandler.getMotionDirection(canvasTransform);
-            }
-
-            @Override
-            public Point2D.Double getAimedCoordinate(AffineTransform canvasTransform) {
-                return inputHandler.getAimedCoordinate(canvasTransform);
-            }
-
-            @Override
-            public boolean shootBullet() {
-                return inputHandler.shootBullet();
-            }
-
-            @Override
-            public boolean startEnergyCharge() {
-                return inputHandler.startEnergyCharge();
-            }
-
-            @Override
-            public boolean finishEnergyCharge() {
-                return inputHandler.finishEnergyCharge();
-            }
-
-            @Override
-            public boolean createBlock() {
-                return inputHandler.createBlock();
-            }
-
-            @Override
-            public int getZoomAmount() {
-                return inputHandler.getZoomAmount();
+            public void handleInput(Tank myTank, AffineTransform canvasTransform, GameStage stage) {
+                //　何もしない
             }
 
             @Override
             public void onFrameUpdate() {
-                inputHandler.onFrameUpdate();
+                // 何もしない
             }
         };
     }
@@ -206,15 +176,13 @@ public class StartPanel extends JPanel {
         return new StageGenerator() {
             private final Base redBase = new Base(2000, 2000, Team.RED, 100);
             private final Base blueBase = new Base(-2000, -2000, Team.BLUE, 100);
-            private final int stageWidth = 6000;
-            private final int stageHeight = 6000;
-            private final int playerCount = 2;
 
             @Override
             public GameObject[] getGameObjects() {
                 ArrayList<GameObject> objects = new ArrayList<>();
 
                 // 戦車の生成
+                int playerCount = 2;
                 for (int i = 0; i < playerCount; i++) {
                     Tank tank = new Tank(i % 2 == 0 ? redBase : blueBase);
                     objects.add(tank);
@@ -245,12 +213,12 @@ public class StartPanel extends JPanel {
 
             @Override
             public int getStageWidth() {
-                return stageWidth;
+                return 6000;
             }
 
             @Override
             public int getStageHeight() {
-                return stageHeight;
+                return 6000;
             }
 
             @Override
