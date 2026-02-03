@@ -28,6 +28,7 @@ public class GamePanel extends JPanel {
      * パネルの設定、入力ハンドラの登録、ゲームエンジンの生成を行う。
      */
     public GamePanel() {
+
         // パネル設定
         this.setBackground(Color.WHITE);
         this.setDoubleBuffered(true);
@@ -36,15 +37,14 @@ public class GamePanel extends JPanel {
         // サーバに接続して色々情報をもらう
         // todo: 接続してから、これら二つの情報をもらうまではかなり時間がかかるので、将来的には別のJPanelにしないといけない
         this.networkManager = new NetworkManager();
-        int playerCount = networkManager.getPlayerCount();
         this.myTankID = networkManager.getMyTankID();
+        int playerCount = networkManager.getPlayerCount();
 
         // ゲームエンジンの作成
         InputStrategy inputStrategy = createInputStrategy(new MouseKeyboardInput(this));
+        NetworkStrategy networkStrategy = createNetworkStrategy();
         StageGenerator generator = createStageGenerator(playerCount);
-        this.gameEngine = new GameEngine(this::repaint, inputStrategy, generator, myTankID);
-
-        this.networkManager.setGameEngine(gameEngine);
+        this.gameEngine = new GameEngine(this::repaint, inputStrategy, networkStrategy, generator, myTankID);
 
         // エンジンにリサイズを通知するためのリスナーを追加
         this.addComponentListener(new ComponentAdapter() {
@@ -53,6 +53,9 @@ public class GamePanel extends JPanel {
                 gameEngine.setWindowSize(getWidth(), getHeight());
             }
         });
+
+        // サーバからの情報を基にGameEngineを操作する必要がある
+        this.networkManager.setGameEngine(gameEngine);
 
         // この後、画面が描画されたらaddNotify()が呼ばれ、GameEngineが始動する。
     }
@@ -100,32 +103,26 @@ public class GamePanel extends JPanel {
 
             @Override
             public Point2D.Double getAimedCoordinate(AffineTransform canvasTransform) {
-                Point2D.Double coordinate = inputHandler.getAimedCoordinate(canvasTransform);
-                networkManager.aimAt(myTankID, coordinate);
-                return coordinate;
+                return inputHandler.getAimedCoordinate(canvasTransform);
             }
 
             @Override
             public boolean shootBullet() {
-                networkManager.shootGun(myTankID);
                 return inputHandler.shootBullet();
             }
 
             @Override
             public boolean startEnergyCharge() {
-                networkManager.startCharge(myTankID);
                 return inputHandler.startEnergyCharge();
             }
 
             @Override
             public boolean finishEnergyCharge() {
-                networkManager.finishCharge(myTankID);
                 return inputHandler.finishEnergyCharge();
             }
 
             @Override
             public boolean createBlock() {
-                networkManager.createBlock(myTankID);
                 return inputHandler.createBlock();
             }
 
@@ -137,6 +134,40 @@ public class GamePanel extends JPanel {
             @Override
             public void onFrameUpdate() {
                 inputHandler.onFrameUpdate();
+            }
+        };
+    }
+
+    /**
+     * NetworkStrategyを生成する。
+     *
+     * @return 生成されたNetworkStrategy
+     */
+    private NetworkStrategy createNetworkStrategy() {
+        return new NetworkStrategy() {
+            @Override
+            public void aimAt(int tankID, Point2D.Double coordinate) {
+                networkManager.aimAt(tankID, coordinate);
+            }
+
+            @Override
+            public void shootGun(int tankID) {
+                networkManager.shootGun(tankID);
+            }
+
+            @Override
+            public void startCharge(int tankID) {
+                networkManager.startCharge(tankID);
+            }
+
+            @Override
+            public void finishCharge(int tankID) {
+                networkManager.finishCharge(tankID);
+            }
+
+            @Override
+            public void createBlock(int tankID) {
+                networkManager.createBlock(tankID);
             }
         };
     }

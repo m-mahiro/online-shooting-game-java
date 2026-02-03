@@ -18,6 +18,9 @@ public class StartScreenPanel extends JPanel {
      * @param startListener スタートボタンが押された時の処理
      */
     public StartScreenPanel(ActionListener startListener) {
+
+        // =========================== スタートボタンの配置 ===========================
+
         // レイアウトマネージャーを設定
         setLayout(new GridBagLayout());
 
@@ -47,7 +50,40 @@ public class StartScreenPanel extends JPanel {
 
         // ボタンをパネル中央に配置
         add(startButton);
+
+
+        // =========================== 背景のデモ映像(ゲームステージ)を作成 ===========================
+
+
+
+
     }
 
+    /**
+     * パネルがコンテナに追加された際に呼ばれる。
+     * ゲームスレッドを開始する。
+     */
+    @Override
+    public void addNotify() {
+        super.addNotify();
+        if (gameEngine == null) return;
+        gameEngine.startGameThread(getWidth(), getHeight());
+    }
+
+    /**
+     * パネルの描画を行う。
+     * ゲームオブジェクトとUIを描画する。
+     *
+     * @param graphics 描画に使用するGraphicsオブジェクト
+     */
+    @Override
+    protected void paintComponent(Graphics graphics) {
+        super.paintComponent(graphics);
+        Graphics2D g = (Graphics2D) graphics;
+
+        if (gameEngine == null) return;
+        gameEngine.draw(g);
+
+    }
 
 }

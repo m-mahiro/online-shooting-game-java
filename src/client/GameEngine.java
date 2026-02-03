@@ -26,6 +26,9 @@ public class GameEngine implements Runnable {
     // 入力用
     private InputStrategy input;
 
+    // ネットワーク通信用
+    private NetworkStrategy network;
+
     // update→drawのゲームループ用スレッド
     private Thread gameThread;
 
@@ -49,12 +52,14 @@ public class GameEngine implements Runnable {
      * ゲームの初期化、ステージ生成、ネットワーク接続、入力戦略の設定を行います。
      *
      * @param repaintCallback 画面を再描画するためのコールバック
-     * @param inputStrategy 入力処理とネットワーク送信を管理するInputStrategy
+     * @param inputStrategy 入力処理を管理するInputStrategy
+     * @param networkStrategy ネットワーク送信を管理するNetworkStrategy
      * @param generator ステージの初期設定を提供するStageGenerator
      */
-    public GameEngine(Runnable repaintCallback, InputStrategy inputStrategy, StageGenerator generator, int myTankObjectID) {
+    public GameEngine(Runnable repaintCallback, InputStrategy inputStrategy, NetworkStrategy networkStrategy, StageGenerator generator, int myTankObjectID) {
         this.repaintCallback = repaintCallback;
         this.input = inputStrategy;
+        this.network = networkStrategy;
         this.myTankObjectID = myTankObjectID;
 
         // StageGeneratorを使ってステージを生成
@@ -163,17 +168,21 @@ public class GameEngine implements Runnable {
                 iterator.remove();
             }
         }
+        
+        // =========================== 自分の戦車の操作 ===========================
 
         if (myTank.isDead()) return;
 
         // 照準合わせ
         Point2D.Double coordinate = input.getAimedCoordinate(getCanvasTransform());
         myTank.aimAt(coordinate);
+        network.aimAt(myTankObjectID, coordinate);
 
         // 発射
         if (input.shootBullet()) {
             Bullet bullet = myTank.shootBullet();
             stage.addGameObject(bullet);
+            network.shootGun(myTankObjectID);
         }
 
         // 移動
@@ -187,6 +196,7 @@ public class GameEngine implements Runnable {
             Block block = myTank.createBlock();
             if (block != null) {
                 stage.addGameObject(block);
+                network.createBlock(myTankObjectID);
             }
         }
     }
