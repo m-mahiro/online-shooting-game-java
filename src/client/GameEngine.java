@@ -1,5 +1,6 @@
 package client;
 
+import client.ui.GamePanelUI;
 import client.ui.GameUI;
 import stage.*;
 
@@ -36,7 +37,7 @@ public class GameEngine implements Runnable {
     private int nextScreenObjectID = 0;
     private final Map<Integer, ScreenObject> screenObjects = new ConcurrentHashMap<>();
     private Tank myTank;
-    private int myTankObjectID;
+    private int myTankID;
 
     // キャンバス・カメラ関連
     private int windowWidth, windowHeight;
@@ -54,31 +55,24 @@ public class GameEngine implements Runnable {
      * @param repaintCallback 画面を再描画するためのコールバック
      * @param inputStrategy 入力処理を管理するInputStrategy
      * @param networkStrategy ネットワーク送信を管理するNetworkStrategy
-     * @param generator ステージの初期設定を提供するStageGenerator
      */
-    public GameEngine(Runnable repaintCallback, InputStrategy inputStrategy, NetworkStrategy networkStrategy, StageGenerator generator, int myTankObjectID) {
+    public GameEngine(GameStage stage, GameUI ui, int myTankID, Runnable repaintCallback, InputStrategy inputStrategy, NetworkStrategy networkStrategy) {
+        this.stage = stage;
+        this.ui = ui;
+        this.myTankID = myTankID;
         this.repaintCallback = repaintCallback;
         this.input = inputStrategy;
         this.network = networkStrategy;
-        this.myTankObjectID = myTankObjectID;
 
-        // StageGeneratorを使ってステージを生成
-        this.stage = new GameStage(generator);
-        addScreenObjects(generator.getScreenObjects());
 
         // 自分の戦車を取得
-        GameObject object = stage.getGameObject(myTankObjectID);
-        if (object instanceof Tank) {
-            this.myTank = (Tank) this.stage.getGameObject(myTankObjectID);
-        } else {
-            throw new RuntimeException();
-        }
+        this.myTank = (Tank) this.stage.getGameObject(myTankID);
 
         // 自分の戦車にマーカーを追加
         this.addScreenObject(new Marker(myTank));
 
         // UIを生成
-        this.ui = new GameUI(stage, myTank.getTeam());
+        this.ui = new GamePanelUI(stage, myTank.getTeam());
 
         // カメラの初期設定
         this.cameraPosition = new Point2D.Double(0, 0);
@@ -99,15 +93,10 @@ public class GameEngine implements Runnable {
     /**
      * ゲームスレッドを開始します。
      * ゲームループが別スレッドで実行されます。
-     *
-     * @param width ウィンドウの幅
-     * @param height ウィンドウの高さ
      */
-    public void startGameThread(int width, int height) {
-        setWindowSize(width, height);
+    public void startGameThread() {
         this.gameThread = new Thread(this);
         gameThread.start();
-        this.zoomDegrees = this.getJustZoom(width, height) * 0.9;
     }
 
     /**
@@ -176,17 +165,17 @@ public class GameEngine implements Runnable {
         // 照準合わせ
         Point2D.Double coordinate = input.getAimedCoordinate(getCanvasTransform());
         myTank.aimAt(coordinate);
-        network.aimAt(myTankObjectID, coordinate);
+        network.aimAt(myTankID, coordinate);
 
         // 発射
         if (input.shootBullet()) {
             Bullet bullet = myTank.shootBullet();
             stage.addGameObject(bullet);
-            network.shootGun(myTankObjectID);
+            network.shootGun(myTankID);
         }
 
         // 移動
-        Point2D.Double moveVector = input.getMoveVector(getCanvasTransform());
+        Point2D.Double moveVector = input.getMotionDirection(getCanvasTransform());
         if (moveVector.x != 0 || moveVector.y != 0) {
             myTank.move(moveVector);
         }
@@ -196,7 +185,7 @@ public class GameEngine implements Runnable {
             Block block = myTank.createBlock();
             if (block != null) {
                 stage.addGameObject(block);
-                network.createBlock(myTankObjectID);
+                network.createBlock(myTankID);
             }
         }
     }
@@ -272,22 +261,14 @@ public class GameEngine implements Runnable {
         return stage;
     }
 
-    /**
-     * ゲームUIを取得します。
-     *
-     * @return ゲームUI
-     */
-    public GameUI getUi() {
-        return ui;
-    }
 
     /**
      * プレイヤーが操作する戦車のIDを取得します。
      *
      * @return 自分の戦車のID
      */
-    public int getMyTankObjectID() {
-        return myTankObjectID;
+    public int getMyTankID() {
+        return myTankID;
     }
 
     /**

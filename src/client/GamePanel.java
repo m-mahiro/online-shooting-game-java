@@ -1,12 +1,11 @@
 package client;
 
+import client.ui.GamePanelUI;
+import client.ui.GameUI;
 import stage.*;
 
 import javax.swing.*;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.geom.AffineTransform;
@@ -20,7 +19,6 @@ import java.util.ArrayList;
 public class GamePanel extends JPanel {
 
     private final GameEngine gameEngine;
-    private final int myTankID;
     private final NetworkManager networkManager;
 
     /**
@@ -37,14 +35,26 @@ public class GamePanel extends JPanel {
         // サーバに接続して色々情報をもらう
         // todo: 接続してから、これら二つの情報をもらうまではかなり時間がかかるので、将来的には別のJPanelにしないといけない
         this.networkManager = new NetworkManager();
-        this.myTankID = networkManager.getMyTankID();
+        int myTankID = networkManager.getMyTankID();
         int playerCount = networkManager.getPlayerCount();
 
-        // ゲームエンジンの作成
+        // ステージの作成
+        StageGenerator generator = createStageGenerator(playerCount);
+        GameStage stage = new GameStage(generator);
+
+        // 自分の戦車とチームを取得
+        Tank myTank = (Tank) stage.getGameObject(myTankID);
+        Team myTeam = myTank.getTeam();
+
+        // UIの作成
+        GameUI ui = new GamePanelUI(stage, myTeam);
+
+        // 入力や通信に関する取り決め(Strategy)を作成
         InputStrategy inputStrategy = createInputStrategy(new MouseKeyboardInput(this));
         NetworkStrategy networkStrategy = createNetworkStrategy();
-        StageGenerator generator = createStageGenerator(playerCount);
-        this.gameEngine = new GameEngine(this::repaint, inputStrategy, networkStrategy, generator, myTankID);
+
+        // GameEngineを作成
+        this.gameEngine = new GameEngine(stage, ui, myTankID, this::repaint, inputStrategy, networkStrategy);
 
         // エンジンにリサイズを通知するためのリスナーを追加
         this.addComponentListener(new ComponentAdapter() {
@@ -68,7 +78,7 @@ public class GamePanel extends JPanel {
     public void addNotify() {
         super.addNotify();
         if (gameEngine == null) return;
-        gameEngine.startGameThread(getWidth(), getHeight());
+        gameEngine.startGameThread();
     }
 
     /**
@@ -88,7 +98,7 @@ public class GamePanel extends JPanel {
     }
 
     /**
-     * ゲームモードに応じたInputStrategyを生成する。
+     * ゲーム画面用のInputStrategyを生成する。
      *
      * @param inputHandler ユーザー入力を処理するInputHandler
      * @return 生成されたInputStrategy
@@ -97,8 +107,8 @@ public class GamePanel extends JPanel {
         return new InputStrategy() {
 
             @Override
-            public Point2D.Double getMoveVector(AffineTransform canvasTransform) {
-                return inputHandler.getMoveVector(canvasTransform);
+            public Point2D.Double getMotionDirection(AffineTransform canvasTransform) {
+                return inputHandler.getMotionDirection(canvasTransform);
             }
 
             @Override
@@ -139,7 +149,7 @@ public class GamePanel extends JPanel {
     }
 
     /**
-     * NetworkStrategyを生成する。
+     * ゲーム画面用のNetworkStrategyを生成する。
      *
      * @return 生成されたNetworkStrategy
      */
@@ -173,7 +183,7 @@ public class GamePanel extends JPanel {
     }
 
     /**
-     * ゲームモードに応じたStageGeneratorを生成する。
+     * ゲーム画面用のStageGeneratorを生成する。
      *
      * @return 生成されたStageGenerator
      */
@@ -239,6 +249,34 @@ public class GamePanel extends JPanel {
                 @Override
                 public int getStageHeight() {
                     return stageHeight;
+                }
+
+                @Override
+                public void drawBackground(Graphics2D graphics, double visibleWidth, double visibleHeight, double animationFrame) {
+                    // 画像リソースの読み込み
+                    java.awt.image.BufferedImage floorTexture, outerStageTexture;
+                    try {
+                        floorTexture = javax.imageio.ImageIO.read(java.util.Objects.requireNonNull(getClass().getResource("assets/floor_texture.png")));
+                        outerStageTexture = javax.imageio.ImageIO.read(java.util.Objects.requireNonNull(getClass().getResource("assets/ocean_texture.png")));
+                    } catch (java.io.IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    // ステージ外の描画
+                    double textureSize = 1000;
+                    double translate = animationFrame * 10 % textureSize;
+                    java.awt.geom.Rectangle2D outerStageAnchor = new java.awt.geom.Rectangle2D.Double(translate, translate, textureSize, textureSize);
+                    TexturePaint outerStagePaint = new TexturePaint(outerStageTexture, outerStageAnchor);
+                    graphics.setPaint(outerStagePaint);
+                    int fillWidth = (int) (stageWidth + visibleWidth);
+                    int fillHeight = (int) (stageHeight + visibleHeight);
+                    graphics.fillRect(-fillWidth / 2, -fillHeight / 2, fillWidth, fillHeight);
+
+                    // フローリングの描画
+                    java.awt.geom.Rectangle2D floorAnchor = new java.awt.geom.Rectangle2D.Double(0, 0, floorTexture.getWidth(), floorTexture.getHeight());
+                    TexturePaint floorPaint = new TexturePaint(floorTexture, floorAnchor);
+                    graphics.setPaint(floorPaint);
+                    graphics.fillRect(-stageWidth / 2, -stageHeight / 2, stageWidth, stageHeight);
                 }
             };
     }

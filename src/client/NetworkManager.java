@@ -130,7 +130,7 @@ public class NetworkManager extends Thread {
 		if (gameEngine == null) return;
 		GameStage stage = gameEngine.getStage();
 		int tankObjectID = Integer.parseInt(tokens[1]);
-		if (gameEngine.getMyTankObjectID() == tankObjectID) return;
+		if (gameEngine.getMyTankID() == tankObjectID) return;
 		Tank tank = (Tank) gameEngine.getStage().getGameObject(tankObjectID);
 
 		try {
