@@ -30,14 +30,44 @@ public class WaitingRoomPanel extends JPanel {
 		// WAITING...の文字を作成
 		rotationCharsList = new ArrayList<>();
 		String[] chars = {"W", "A", "I", "T", "I", "N", "G", "..."};
-		double startX = 200;
-		double y = 300;
-		double spacing = 60;
 
+		// 初期位置で作成（後で更新される）
 		for (int i = 0; i < chars.length; i++) {
-			double x = startX + i * spacing;
-			rotationCharsList.add(new RotationChars(chars[i], new Point2D.Double(x, y), i * 0.15));
+			rotationCharsList.add(new RotationChars(chars[i], new Point2D.Double(0, 0), i * 0.15));
 		}
+
+		// 画面サイズに応じて文字位置を更新するメソッド
+		Runnable updateCharPositions = () -> {
+			int panelWidth = getWidth();
+			int panelHeight = getHeight();
+
+			if (panelWidth > 0 && panelHeight > 0) {
+				// 文字の総幅を計算
+				int charCount = chars.length;
+				double spacing = RotationChars.size * 1.2; // 文字間隔
+				double totalWidth = spacing * (charCount - 1);
+
+				// 中央揃え用のx座標開始位置
+				double startX = (panelWidth - totalWidth) / 2.0;
+				double y = panelHeight / 2.0;
+
+				// 各文字の位置を更新
+				for (int i = 0; i < rotationCharsList.size(); i++) {
+					double x = startX + i * spacing;
+					rotationCharsList.get(i).setPosition(new Point2D.Double(x, y));
+				}
+			}
+		};
+
+		// 初期配置
+		updateCharPositions.run();
+
+		// ウィンドウサイズ変更時に再配置
+		addComponentListener(new java.awt.event.ComponentAdapter() {
+			public void componentResized(java.awt.event.ComponentEvent evt) {
+				updateCharPositions.run();
+			}
+		});
 
 		// アニメーションタイマーを開始
 		animationTimer = new Timer(16, e -> {
