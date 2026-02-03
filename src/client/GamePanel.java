@@ -41,6 +41,7 @@ public class GamePanel extends JPanel {
         // ステージの作成
         StageGenerator generator = createStageGenerator(playerCount);
         GameStage stage = new GameStage(generator);
+        ScreenObject[] screenObjects = generator.getScreenObjects();
 
         // 自分の戦車とチームを取得
         Tank myTank = (Tank) stage.getGameObject(myTankID);
@@ -54,7 +55,7 @@ public class GamePanel extends JPanel {
         InputStrategy inputStrategy = createInputStrategy(new MouseKeyboardInput(this), networkStrategy, myTankID);
 
         // GameEngineを作成
-        this.gameEngine = new GameEngine(stage, ui, myTankID, this::repaint, inputStrategy);
+        this.gameEngine = new GameEngine(stage, ui, screenObjects, myTankID, this::repaint, inputStrategy);
 
         // エンジンにリサイズを通知するためのリスナーを追加
         this.addComponentListener(new ComponentAdapter() {
@@ -241,12 +242,12 @@ public class GamePanel extends JPanel {
                 }
 
                 @Override
-                public int getStageWidth() {
+                public double getStageWidth() {
                     return stageWidth;
                 }
 
                 @Override
-                public int getStageHeight() {
+                public double getStageHeight() {
                     return stageHeight;
                 }
 

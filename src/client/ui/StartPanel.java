@@ -12,234 +12,316 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
+import static stage.Team.*;
+
 /**
  * スタート画面のパネルクラス。
  * ゲーム開始ボタンを配置し、ゲームの開始を制御する。
  */
 public class StartPanel extends JPanel {
-    private final GameEngine gameEngine;
-    private final JButton startButton;
+	private final GameEngine gameEngine;
+	private final JButton startButton;
+	private final JButton howToPlayButton;
 
-    /**
-     * StartScreenPanelのコンストラクタ。
-     * スタートボタンを生成し、中央に配置する。
-     *
-     * @param startListener スタートボタンが押された時の処理
-     */
-    public StartPanel(ActionListener startListener) {
+	/**
+	 * StartScreenPanelのコンストラクタ。
+	 * スタートボタンとHowToPlayボタンを生成し、配置する。
+	 *
+	 * @param onStartGame スタートボタンが押された時の処理
+	 * @param onHowToPlay HowToPlayボタンが押された時の処理
+	 */
+	public StartPanel(ActionListener onStartGame, ActionListener onHowToPlay) {
 
-        // =========================== スタートボタンの配置 ===========================
+		// ===========================　ボタンの配置  ===========================
 
-        // レイアウトマネージャーを設定
-        setLayout(new GridBagLayout());
+		// レイアウトマネージャーを設定（GridBagLayoutで4x4グリッド）
+		setLayout(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
 
-        // モダンなスタートボタンを生成
-        startButton = new JButton("Start Game");
-        startButton.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        startButton.setPreferredSize(new Dimension(250, 80));
+		// How to Playボタンを生成
+		howToPlayButton = new JButton("How to Play");
+		howToPlayButton.setFont(new Font("Segoe UI", Font.BOLD, 28));
+		howToPlayButton.setPreferredSize(new Dimension(250, 80));
 
-        // モダンな色設定
-        startButton.setBackground(new Color(0, 122, 255)); // 鮮やかな青
-        startButton.setForeground(Color.WHITE);
-        startButton.setFocusPainted(false);
-        startButton.setBorderPainted(false);
+		// Start Gameボタンを生成
+		startButton = new JButton("Start Game");
+		startButton.setFont(new Font("Segoe UI", Font.BOLD, 28));
+		startButton.setPreferredSize(new Dimension(250, 80));
 
-        // 角丸ボーダー風の効果（マウスホバー時のエフェクト）
-        startButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                startButton.setBackground(new Color(0, 100, 220));
-            }
+		// モダンな色設定
+		howToPlayButton.setBackground(new Color(0, 122, 255)); // 鮮やかな青
+		howToPlayButton.setForeground(Color.WHITE);
+		howToPlayButton.setFocusPainted(false);
+		howToPlayButton.setBorderPainted(false);
 
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                startButton.setBackground(new Color(0, 122, 255));
-            }
-        });
+		// モダンな色設定
+		startButton.setBackground(new Color(0, 122, 255)); // 鮮やかな青
+		startButton.setForeground(Color.WHITE);
+		startButton.setFocusPainted(false);
+		startButton.setBorderPainted(false);
 
-        // ボタンにアクションリスナーを設定
-        startButton.addActionListener(startListener);
+		// ボタンにアクションリスナーを設定
+		startButton.addActionListener(onStartGame);
 
-        // ボタンをパネル中央に配置
-        add(startButton);
+		// How to Playボタンにアクションリスナーを設定
+		howToPlayButton.addActionListener(onHowToPlay);
 
+		// How to Playボタンを配置
+		gbc.gridx = 2;
+		gbc.gridy = 4;
+		gbc.weightx = 1.0;
+		gbc.weighty = 1.0;
+		add(howToPlayButton, gbc);
 
-        // =========================== 背景のデモ映像(ゲームステージ)を作成 ===========================
+		// Start Gameボタンを配置
+		gbc.gridx = 3;
+		gbc.gridy = 4;
+		add(startButton, gbc);
 
-        // ステージの作成
-        StageGenerator generator = createStageGenerator();
-        GameStage stage = new GameStage(generator);
+		// 角丸ボーダー風の効果（マウスホバー時のエフェクト）
+		howToPlayButton.addMouseListener(new java.awt.event.MouseAdapter() {
+			public void mouseEntered(java.awt.event.MouseEvent evt) {
+				howToPlayButton.setBackground(new Color(0, 100, 220));
+			}
 
-        // 自分の戦車とチームを取得
-        int myTankID = 0;
-        Tank myTank = (Tank) stage.getGameObject(myTankID);
-        Team myTeam = myTank.getTeam();
+			public void mouseExited(java.awt.event.MouseEvent evt) {
+				howToPlayButton.setBackground(new Color(0, 122, 255));
+			}
+		});
 
-        // UIの作成
-        GameUI ui = createGameUI();
+		// 角丸ボーダー風の効果（マウスホバー時のエフェクト）
+		startButton.addMouseListener(new java.awt.event.MouseAdapter() {
+			public void mouseEntered(java.awt.event.MouseEvent evt) {
+				startButton.setBackground(new Color(0, 100, 220));
+			}
 
-        // 入力や通信に関する取り決め(Strategy)を作成
-        InputStrategy inputStrategy = createInputStrategy(new MouseKeyboardInput(this));
-        NetworkStrategy networkStrategy = createNetworkStrategy();
-
-        // GameEngineを作成
-        this.gameEngine = new GameEngine(stage, ui, myTankID, this::repaint, inputStrategy);
-
-        // エンジンにリサイズを通知するためのリスナーを追加
-        this.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                gameEngine.setWindowSize(getWidth(), getHeight());
-            }
-        });
-
-    }
-
-    /**
-     * パネルがコンテナに追加された際に呼ばれる。
-     * ゲームスレッドを開始する。
-     */
-    @Override
-    public void addNotify() {
-        super.addNotify();
-        if (gameEngine == null) return;
-        gameEngine.startGameThread();
-    }
-
-    /**
-     * パネルの描画を行う。
-     * ゲームオブジェクトとUIを描画する。
-     *
-     * @param graphics 描画に使用するGraphicsオブジェクト
-     */
-    @Override
-    protected void paintComponent(Graphics graphics) {
-        super.paintComponent(graphics);
-        Graphics2D g = (Graphics2D) graphics;
-
-        if (gameEngine == null) return;
-        gameEngine.draw(g);
-
-    }
+			public void mouseExited(java.awt.event.MouseEvent evt) {
+				startButton.setBackground(new Color(0, 122, 255));
+			}
+		});
 
 
-    /**
-     * スタート画面用のInputStrategyを生成する。
-     * スタート画面では入力があっても何もしない
-     *
-     * @param inputHandler ユーザー入力を処理するInputHandler
-     * @return 生成されたInputStrategy
-     */
-    private InputStrategy createInputStrategy(InputHandler inputHandler) {
-        return new InputStrategy() {
-            @Override
-            public void handleInput(Tank myTank, AffineTransform canvasTransform, GameStage stage) {
-                //　何もしない
-            }
 
-            @Override
-            public void onFrameUpdate() {
-                // 何もしない
-            }
-        };
-    }
+		// =========================== 背景のデモ映像(ゲームステージ)を作成 ===========================
 
-    /**
-     * スタート画面用のNetworkStrategyを生成する。
-     * スタート画面では何も通信を行わない。
-     *
-     * @return 生成されたNetworkStrategy
-     */
-    private NetworkStrategy createNetworkStrategy() {
-        return new NetworkStrategy() {
-            @Override
-            public void aimAt(int tankID, Point2D.Double coordinate) {}
+		// ステージの作成
+		StageGenerator generator = createStageGenerator();
+		GameStage stage = new GameStage(generator);
+		ScreenObject[] screenObjects = generator.getScreenObjects();
 
-            @Override
-            public void shootGun(int tankID) {}
-
-            @Override
-            public void startCharge(int tankID) {}
-
-            @Override
-            public void finishCharge(int tankID) {}
-
-            @Override
-            public void createBlock(int tankID) {}
-        };
-    }
-
-    /**
-     * スタート画面用のStageGeneratorを生成する。
-     *
-     * @return 生成されたStageGenerator
-     */
-    private StageGenerator createStageGenerator() {
-        return new StageGenerator() {
-            private final Base redBase = new Base(2000, 2000, Team.RED, 100);
-            private final Base blueBase = new Base(-2000, -2000, Team.BLUE, 100);
-
-            @Override
-            public GameObject[] getGameObjects() {
-                ArrayList<GameObject> objects = new ArrayList<>();
-
-                // 戦車の生成
-                int playerCount = 2;
-                for (int i = 0; i < playerCount; i++) {
-                    Tank tank = new Tank(i % 2 == 0 ? redBase : blueBase);
-                    objects.add(tank);
-                }
-
-                // リスポーン地点の生成
-                objects.add(redBase);
-                objects.add(blueBase);
+		// UIの作成
+		GameUI ui = createGameUI();
 
 
-                return objects.toArray(new GameObject[0]);
-            }
+		// 入力や通信に関する取り決め(Strategy)を作成
+		InputStrategy inputStrategy = createInputStrategy(new MouseKeyboardInput(this));
 
-            @Override
-            public ScreenObject[] getScreenObjects() {
-                return new ScreenObject[0];
-            }
+		// GameEngineを作成
+		int myTankID = 0;
+		this.gameEngine = new GameEngine(stage, ui, screenObjects, myTankID, this::repaint, inputStrategy);
 
-            @Override
-            public Base getRedBase() {
-                return redBase;
-            }
+		// エンジンにリサイズを通知するためのリスナーを追加
+		this.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				gameEngine.setWindowSize(getWidth(), getHeight());
+			}
+		});
 
-            @Override
-            public Base getBlueBase() {
-                return blueBase;
-            }
+	}
 
-            @Override
-            public int getStageWidth() {
-                return 6000;
-            }
+	/**
+	 * パネルがコンテナに追加された際に呼ばれる。
+	 * ゲームスレッドを開始する。
+	 */
+	@Override
+	public void addNotify() {
+		super.addNotify();
+		if (gameEngine == null) return;
+		gameEngine.startGameThread();
+	}
 
-            @Override
-            public int getStageHeight() {
-                return 6000;
-            }
+	/**
+	 * パネルの描画を行う。
+	 * ゲームオブジェクトとUIを描画する。
+	 *
+	 * @param graphics 描画に使用するGraphicsオブジェクト
+	 */
+	@Override
+	protected void paintComponent(Graphics graphics) {
+		super.paintComponent(graphics);
+		Graphics2D g = (Graphics2D) graphics;
 
-            @Override
-            public void drawBackground(Graphics2D graphics, double visibleWidth, double visibleHeight, double animationFrame) {
-                // スタート画面では何も描画しない
-            }
-        };
-    }
+		if (gameEngine == null) return;
+		gameEngine.draw(g);
 
-    private GameUI createGameUI() {
-        return new GameUI() {
-            @Override
-            public void update() {
+	}
 
-            }
 
-            @Override
-            public void draw(Graphics2D graphics2D, int windowWidth, int windowHeight) {
+	/**
+	 * スタート画面用のInputStrategyを生成する。
+	 * スタート画面では入力があっても何もしない
+	 *
+	 * @param inputHandler ユーザー入力を処理するInputHandler
+	 * @return 生成されたInputStrategy
+	 */
+	private InputStrategy createInputStrategy(InputHandler inputHandler) {
+		return new InputStrategy() {
+			@Override
+			public void handleInput(Tank myTank, AffineTransform canvasTransform, GameStage stage) {
+				//　何もしない
+			}
 
-            }
-        };
-    }
+			@Override
+			public void onFrameUpdate() {
+				// 何もしない
+			}
+		};
+	}
+
+	/**
+	 * スタート画面用のNetworkStrategyを生成する。
+	 * スタート画面では何も通信を行わない。
+	 *
+	 * @return 生成されたNetworkStrategy
+	 */
+	private NetworkStrategy createNetworkStrategy() {
+		return new NetworkStrategy() {
+			@Override
+			public void aimAt(int tankID, Point2D.Double coordinate) {
+			}
+
+			@Override
+			public void shootGun(int tankID) {
+			}
+
+			@Override
+			public void startCharge(int tankID) {
+			}
+
+			@Override
+			public void finishCharge(int tankID) {
+			}
+
+			@Override
+			public void createBlock(int tankID) {
+			}
+		};
+	}
+
+	/**
+	 * スタート画面用のStageGeneratorを生成する。
+	 * 背景のデモ映像として使用するゲームステージを作成する。
+	 *
+	 * @return 生成されたStageGenerator
+	 */
+	private StageGenerator createStageGenerator() {
+		return new StageGenerator() {
+			private final double baseHorizontalOffset = 1500;
+			private final double baseVerticalOffset = 800;
+			private final Base redBase = new Base(baseHorizontalOffset, baseVerticalOffset, RED, 100);
+			private final Base blueBase = new Base(-baseHorizontalOffset, -baseVerticalOffset, BLUE, 100);
+
+			@Override
+			public GameObject[] getGameObjects() {
+				ArrayList<GameObject> objects = new ArrayList<>();
+
+				// 自動で動くスタート画面用の戦車
+				int tankCount = 10;
+				double spawnIntervalFrame = 120;
+				double velocity = 5;
+				double travelLimit = velocity * spawnIntervalFrame * tankCount;
+				for (int i = 0; i < 10; i++) {
+					double x = spawnIntervalFrame * velocity * i;
+					Tank redTank = new StartScreenTank(redBase, velocity, travelLimit);
+					Tank blueTank = new StartScreenTank(blueBase, velocity, travelLimit);
+					double redX = redBase.getPosition().x - x;
+					double blueX = blueBase.getPosition().x + x;
+					double redY = redBase.getPosition().y;
+					double blueY = blueBase.getPosition().y;
+					redTank.setPosition(new Point2D.Double(redX, redY));
+					blueTank.setPosition(new Point2D.Double(blueX, blueY));
+					objects.add(redTank);
+					objects.add(blueTank);
+				}
+
+				// リスポーン地点
+				objects.add(redBase);
+				objects.add(blueBase);
+
+				return objects.toArray(new GameObject[0]);
+			}
+
+			@Override
+			public ScreenObject[] getScreenObjects() {
+				int n = 8;
+				ScreenObject[] screenObjects = new ScreenObject[n];
+
+				// RESPAWN!!
+				String[] list = new String[n];
+				list[0] = "R";
+				list[1] = "E";
+				list[2] = "S";
+				list[3] = "P";
+				list[4] = "A";
+				list[5] = "W";
+				list[6] = "N";
+				list[7] = "!!";
+
+				for (int i = 0; i < list.length; i++) {
+					String s = list[i];
+					double x = 400.0 * (i - list.length / 2.0) + TitleCharacter.size / 2.0;
+					double y = -300;
+					screenObjects[i] = new TitleCharacter(s, new Point2D.Double(x, y), i * 10);
+				}
+				return screenObjects;
+			}
+
+			@Override
+			public Base getRedBase() {
+				return redBase;
+			}
+
+			@Override
+			public Base getBlueBase() {
+				return blueBase;
+			}
+
+			@Override
+			public double getStageWidth() {
+				return baseHorizontalOffset * 3;
+			}
+
+			@Override
+			public double getStageHeight() {
+				return 1;
+			}
+
+			@Override
+			public void drawBackground(Graphics2D graphics, double visibleWidth, double visibleHeight, double animationFrame) {
+				// スタート画面では何も描画しない
+			}
+		};
+	}
+
+	/**
+	 * スタート画面用のGameUIを生成する。
+	 * スタート画面では何も描画しないため、空の実装を返す。
+	 *
+	 * @return 生成されたGameUI
+	 */
+	private GameUI createGameUI() {
+		return new GameUI() {
+			@Override
+			public void update() {
+
+			}
+
+			@Override
+			public void draw(Graphics2D graphics2D, int windowWidth, int windowHeight) {
+
+			}
+		};
+	}
 
 }

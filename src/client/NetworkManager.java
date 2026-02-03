@@ -58,10 +58,19 @@ public class NetworkManager extends Thread {
 		}
 	}
 
+	/**
+	 * ゲームエンジンのインスタンスを設定する。
+	 * ネットワークメッセージに基づいてゲーム状態を更新するために使用される。
+	 */
 	public void setGameEngine(GameEngine gameEngine) {
 		this.gameEngine = gameEngine;
 	}
 
+	/**
+	 * ゲームに参加しているプレイヤー数を取得する。
+	 *
+	 * @return プレイヤー数
+	 */
 	public int getPlayerCount() {
 		return playerCount;
 	}
@@ -86,8 +95,9 @@ public class NetworkManager extends Thread {
 	}
 
 	/**
-	 * スレッドの実行メソッド。
+	 * {@inheritDoc}
 	 * サーバーからのメッセージを継続的に受信し、解釈する。
+	 * 接続が切断されるまでループを続ける。
 	 */
 	@Override
 	public void run() {

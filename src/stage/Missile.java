@@ -64,8 +64,6 @@ public class Missile implements GameObject, Projectile {
     /**
      * 新しいミサイルオブジェクトを生成します。
      * ミサイルは初期状態でチャージング状態であり、シューターの位置と向きに基づいて位置が設定されます。
-     *
-     * @param shooter ミサイルを発射する戦車
      */
     public Missile(Tank shooter) {
         this.shooter = shooter;
@@ -79,8 +77,6 @@ public class Missile implements GameObject, Projectile {
      * ミサイルのダメージ能力を減少させます。
      * ミサイルが何かに衝突してダメージを与えた際に、その対象のHP分だけミサイルのダメージ能力を減算します。
      * ダメージ能力が0以下になった場合、ミサイルは爆発します。
-     *
-     * @param damage 減少させるダメージ量
      */
     public void decreaseDamageAbility(int damage) {
         damageTotal += damage;
@@ -97,8 +93,6 @@ public class Missile implements GameObject, Projectile {
     /**
      * ミサイルの位置をシューター（戦車）に基づいて設定します。
      * 戦車の砲塔の向きと、弾丸の放出半径を考慮してミサイルが戦車の前に配置されます。
-     *
-     * @param shooter 位置の基準となる戦車
      */
     private void setPositionBaseOn(Tank shooter) {
         this.angle = shooter.getGunAngle();
@@ -118,9 +112,7 @@ public class Missile implements GameObject, Projectile {
     }
 
     /**
-     * ミサイルを発射したシューターのチームを取得します。
-     *
-     * @return ミサイルが所属するチーム
+     * {@inheritDoc}
      */
     public Team getTeam() {
         return this.shooter.getTeam();
@@ -129,8 +121,6 @@ public class Missile implements GameObject, Projectile {
     /**
      * ミサイルの描画スケールを取得します。
      * 状態やダメージ能力によってスケールが異なります。
-     *
-     * @return ミサイルの描画スケール
      */
     private double getObjectScale() {
         switch (this.state) {
@@ -149,8 +139,6 @@ public class Missile implements GameObject, Projectile {
     /**
      * ミサイルの衝突半径を取得します。
      * これはミサイルの画像サイズと現在のオブジェクトスケールに基づいて計算されます。
-     *
-     * @return ミサイルの衝突半径
      */
     private double getCollisionRadius() {
         return getImage().getWidth() / 2.0 * getObjectScale();
@@ -158,8 +146,6 @@ public class Missile implements GameObject, Projectile {
 
     /**
      * ミサイルの現在の状態とチームに応じた画像を取得します。
-     *
-     * @return ミサイルの現在の状態に対応するBufferedImage
      */
     private BufferedImage getImage() {
         boolean isRed = (getTeam() == RED);
@@ -181,7 +167,7 @@ public class Missile implements GameObject, Projectile {
     // ============================= GameObjectインターフェースのメソッド =============================
 
     /**
-     * ミサイルの状態を更新します。
+     * {@inheritDoc}
      * チャージ中または飛行中のミサイルの位置更新、アニメーションフレームのカウントダウン/アップなどを処理します。
      */
     @Override
@@ -207,9 +193,8 @@ public class Missile implements GameObject, Projectile {
     }
 
     /**
-     * ミサイル自身を描画します。現在の状態、位置、角度、スケールに基づいて画像を描画します。
-     *
-     * @param graphics 描画に使用するGraphics2Dオブジェクト
+     * {@inheritDoc}
+     * 現在の状態、位置、角度、スケールに基づいて画像を描画します。
      */
     @Override
     public void draw(Graphics2D graphics) {
@@ -224,11 +209,9 @@ public class Missile implements GameObject, Projectile {
     }
 
     /**
-     * 他のGameObjectとの衝突時に呼び出されます。
+     * {@inheritDoc}
      * ミサイルがチャージ中に衝突した場合、爆発します。
      * 衝突したオブジェクトが自身のチームと異なる場合、そのオブジェクトに被弾通知を送り、ミサイルのダメージ能力を減少させます。
-     *
-     * @param other 衝突したGameObject
      */
     @Override
     public void onCollision(GameObject other) {
@@ -244,10 +227,8 @@ public class Missile implements GameObject, Projectile {
     }
 
     /**
-     * 他のプロジェクタイルから被弾した際に呼び出されます。
+     * {@inheritDoc}
      * 衝突したプロジェクタイルのダメージ能力分、ミサイルのダメージ能力を減少させます。
-     *
-     * @param other 衝突したプロジェクタイル
      */
     @Override
     public void onHitBy(Projectile other) {
@@ -255,11 +236,9 @@ public class Missile implements GameObject, Projectile {
     }
 
     /**
-     * オブジェクトがステージから削除されるべきかを判定します。
+     * {@inheritDoc}
      * キャンセル状態の場合、キャンセルアニメーションフレームが0以下であればtrueを返します。
      * SHOULD_REMOVE状態の場合は常にtrueを返します。
-     *
-     * @return ミサイルが削除されるべきであればtrue、そうでなければfalse
      */
     @Override
     public boolean isExpired() {
@@ -274,10 +253,8 @@ public class Missile implements GameObject, Projectile {
     }
 
     /**
-     * オブジェクトが剛体として扱われるべきか、つまり衝突判定の対象となるべきかを判定します。
+     * {@inheritDoc}
      * ミサイルはCHARGING状態またはFLYING状態でのみ剛体として扱われます。
-     *
-     * @return ミサイルが剛体であればtrue、そうでなければfalse
      */
     @Override
     public boolean hasRigidBody() {
@@ -295,10 +272,8 @@ public class Missile implements GameObject, Projectile {
     }
 
     /**
-     * オブジェクトの描画レイヤーを取得します。
+     * {@inheritDoc}
      * 状態によってPROJECTILEレイヤーまたはDEBRISレイヤーを返します。
-     *
-     * @return 描画レイヤー
      */
     @Override
     public RenderLayer getRenderLayer() {
@@ -316,10 +291,8 @@ public class Missile implements GameObject, Projectile {
     }
 
     /**
-     * オブジェクトの衝突判定に使用される形状を取得します。
+     * {@inheritDoc}
      * ミサイルは円形の形状を持ちます。
-     *
-     * @return ミサイルの形状を表すShapeオブジェクト
      */
     @Override
     public Shape getShape() {
@@ -327,9 +300,7 @@ public class Missile implements GameObject, Projectile {
     }
 
     /**
-     * ミサイルの中心座標を取得します。
-     *
-     * @return ミサイルの中心座標のPoint2D.Doubleオブジェクト
+     * {@inheritDoc}
      */
     @Override
     public Point2D.Double getPosition() {
@@ -337,9 +308,7 @@ public class Missile implements GameObject, Projectile {
     }
 
     /**
-     * ミサイルの中心座標を設定します。
-     *
-     * @param position 設定する新しい中心座標のPoint2D.Doubleオブジェクト
+     * {@inheritDoc}
      */
     @Override
     public void setPosition(Point2D.Double position) {
@@ -347,10 +316,8 @@ public class Missile implements GameObject, Projectile {
     }
 
     /**
-     * ミサイルの現在のHPを取得します。
+     * {@inheritDoc}
      * これはミサイルのダメージ能力に依存します。
-     *
-     * @return ミサイルの現在のHP
      */
     @Override
     public int getHP() {
@@ -361,9 +328,8 @@ public class Missile implements GameObject, Projectile {
     // ============================= Projectileインターフェースのメソッド =============================
 
     /**
-     * ミサイルの与えるダメージ能力を取得します。
+     * {@inheritDoc}
      * 飛行中のミサイルのチャージ時間と既に与えたダメージ量に基づいて計算されます。
-     * @return ミサイルのダメージ量
      */
     @Override
     public int getDamageAbility() {

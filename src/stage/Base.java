@@ -71,10 +71,7 @@ public class Base implements GameObject {
 
     /**
      * 新しいBaseオブジェクトを生成します。
-     *
-     * @param x    基地の中心X座標
-     * @param y    基地の中心Y座標
-     * @param team 基地が所属するチーム
+     * 基地の初期位置、所属チーム、初期HPを設定して初期化します。
      */
     public Base(double x, double y, Team team, int hp) {
         this.position = new Point2D.Double(x, y);
@@ -85,10 +82,9 @@ public class Base implements GameObject {
     // ============================= Baseクラス固有のメソッド =============================
 
     /**
-     * 基地にダメージを与えます。HPが0以下になった場合、onDie()を呼び出します。
+     * 基地にダメージを与えます。
+     * HPが0以下になった場合、onDie()を呼び出します。
      * ダメージを受けた際の点滅演出のためのフレームも設定します。
-     *
-     * @param damage 与えるダメージ量
      */
     private void damage(int damage) {
         this.damageFlushFrame = DAMAGE_FLUSH_FRAME;
@@ -125,8 +121,6 @@ public class Base implements GameObject {
     /**
      * 基地の現在の状態とチームに応じた画像を取得します。
      * ダメージを受けた直後は点滅演出のため透明な画像が返されることがあります。
-     *
-     * @return 基地の画像
      */
     private BufferedImage getBaseImage() {
         boolean isRed = this.team == RED;
@@ -147,8 +141,6 @@ public class Base implements GameObject {
     /**
      * 基地の現在の状態に応じたリング画像を取得します。
      * ダメージを受けた直後は点滅演出のため透明な画像が返されることがあります。
-     *
-     * @return 基地のリング画像
      */
     private BufferedImage getRingImage() {
         boolean isFlushing = (damageFlushFrame > 0) && damageFlushFrame % 20 == 0;
@@ -168,8 +160,6 @@ public class Base implements GameObject {
     /**
      * 基地の現在の状態（NORMAL, BROKEN, RUINS）を取得します。
      * HPに基づいて状態が決定されます。
-     *
-     * @return 基地の現在の状態
      */
     public State getState() {
         if (hp <= 0) return State.RUINS;
@@ -181,19 +171,13 @@ public class Base implements GameObject {
     // ============================= GameObjectインタフェースのメソッド =============================
 
     /**
-     * 基地の状態を更新します。リングの回転アニメーション、ダメージ点滅フレーム、残骸の寿命、破壊演出のスケールなどを処理します。
+     * {@inheritDoc}
+     * リングの回転アニメーション、ダメージ点滅フレーム、残骸の寿命、破壊演出のスケールなどを処理します。
      */
     @Override
     public void update() {
         // リングの回転
-        switch (getState()) {
-            case NORMAL:
-                ringRotation += 0.1;
-                break;
-            case BROKEN:
-                ringRotation += 0.05;
-                break;
-        }
+        ringRotation = 0.05;
 
         // ひびが入った時のサウンド
         if (hp < INIT_HP / 2 && !isBroken) {
@@ -213,9 +197,8 @@ public class Base implements GameObject {
     }
 
     /**
-     * 基地自身を描画します。基地の画像とリング画像を現在の状態と位置に基づいて描画します。
-     *
-     * @param graphics 描画に使用するGraphics2Dオブジェクト
+     * {@inheritDoc}
+     * 基地の画像とリング画像を現在の状態と位置に基づいて描画します。
      */
     @Override
     public void draw(Graphics2D graphics) {
@@ -235,20 +218,16 @@ public class Base implements GameObject {
     }
 
     /**
-     * 他のGameObjectとの衝突時に呼び出されます。
+     * {@inheritDoc}
      * 現在、基地に直接衝突することによる特殊な処理はありません。
-     *
-     * @param other 衝突したGameObject
      */
     @Override
     public void onCollision(GameObject other) {
     }
 
     /**
-     * プロジェクタイルが基地に衝突した際に呼び出されます。
+     * {@inheritDoc}
      * プロジェクタイルの持つダメージ能力に基づいて基地にダメージを与えます。
-     *
-     * @param other 基地に衝突したプロジェクタイル
      */
     @Override
     public void onHitBy(Projectile other) {
@@ -256,10 +235,8 @@ public class Base implements GameObject {
     }
 
     /**
-     * オブジェクトがステージから削除されるべきかを判定します。
+     * {@inheritDoc}
      * 基地はゲーム終了までステージに残り続けるため、常にfalseを返します。
-     *
-     * @return 常にfalse
      */
     @Override
     public boolean isExpired() {
@@ -267,10 +244,8 @@ public class Base implements GameObject {
     }
 
     /**
-     * オブジェクトが剛体として扱われるべきか、つまり衝突判定の対象となるべきかを判定します。
+     * {@inheritDoc}
      * 基地は通常状態または破損状態では剛体ですが、廃墟状態では剛体ではありません。
-     *
-     * @return 基地が剛体であればtrue、そうでなければfalse
      */
     @Override
     public boolean hasRigidBody() {
@@ -286,10 +261,8 @@ public class Base implements GameObject {
     }
 
     /**
-     * オブジェクトの描画レイヤーを取得します。
+     * {@inheritDoc}
      * 基地は残骸レイヤーとして描画されます。
-     *
-     * @return 描画レイヤー
      */
     @Override
     public RenderLayer getRenderLayer() {
@@ -297,10 +270,8 @@ public class Base implements GameObject {
     }
 
     /**
-     * オブジェクトの衝突判定に使用される形状を取得します。
+     * {@inheritDoc}
      * 基地は円形の形状を持ちます。破壊状態に応じてスケールが変化します。
-     *
-     * @return 基地の形状を表すShapeオブジェクト
      */
     @Override
     public Shape getShape() {
@@ -309,9 +280,7 @@ public class Base implements GameObject {
     }
 
     /**
-     * 基地の中心座標を取得します。
-     *
-     * @return 基地の中心座標のPoint2D.Doubleオブジェクト
+     * {@inheritDoc}
      */
     @Override
     public Point2D.Double getPosition() {
@@ -319,9 +288,7 @@ public class Base implements GameObject {
     }
 
     /**
-     * 基地の中心座標を設定します。
-     *
-     * @param position 設定する新しい中心座標のPoint2D.Doubleオブジェクト
+     * {@inheritDoc}
      */
     @Override
     public void setPosition(Point2D.Double position) {
@@ -329,9 +296,7 @@ public class Base implements GameObject {
     }
 
     /**
-     * 基地の現在のHPを取得します。
-     *
-     * @return 基地の現在のHP
+     * {@inheritDoc}
      */
     @Override
     public int getHP() {

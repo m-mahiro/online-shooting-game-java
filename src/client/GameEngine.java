@@ -1,6 +1,5 @@
 package client;
 
-import client.ui.GamePanelUI;
 import client.ui.GameUI;
 import stage.*;
 
@@ -49,25 +48,25 @@ public class GameEngine implements Runnable {
      * GameEngineのコンストラクタ。
      * ゲームの初期化、ステージ生成、ネットワーク接続、入力戦略の設定を行います。
      *
+     * @param screenObjects
      * @param repaintCallback 画面を再描画するためのコールバック
-     * @param inputStrategy 入力処理を管理するInputStrategy
+     * @param inputStrategy   入力処理を管理するInputStrategy
      */
-    public GameEngine(GameStage stage, GameUI ui, int myTankID, Runnable repaintCallback, InputStrategy inputStrategy) {
+    public GameEngine(GameStage stage, GameUI ui, ScreenObject[] screenObjects, int myTankID, Runnable repaintCallback, InputStrategy inputStrategy) {
         this.stage = stage;
         this.ui = ui;
         this.myTankID = myTankID;
         this.repaintCallback = repaintCallback;
         this.input = inputStrategy;
 
+        // スクリーンオブジェクトを追加
+        this.addScreenObjects(screenObjects);
 
         // 自分の戦車を取得
         this.myTank = (Tank) this.stage.getGameObject(myTankID);
 
         // 自分の戦車にマーカーを追加
         this.addScreenObject(new Marker(myTank));
-
-        // UIを生成
-        this.ui = new GamePanelUI(stage, myTank.getTeam());
 
         // カメラの初期設定
         this.cameraPosition = new Point2D.Double(0, 0);
@@ -148,9 +147,7 @@ public class GameEngine implements Runnable {
         while (iterator.hasNext()) {
             ScreenObject object = iterator.next();
             object.update();
-            if (object.isExpired()) {
-                iterator.remove();
-            }
+            if (object.isExpired()) iterator.remove();
         }
 
         // 自分の戦車の操作（InputStrategyに委譲）
@@ -176,8 +173,10 @@ public class GameEngine implements Runnable {
         double visibleWidth = this.windowWidth / this.zoomDegrees;
         double visibleHeight = this.windowHeight / this.zoomDegrees;
 
-        // ステージを描画
+        // カメラの位置に合わしてキャンバスを移動
         AffineTransform originalTransform = graphics.getTransform();
+
+        // ステージを描画
         graphics.setTransform(canvasTransform);
         this.stage.draw(graphics, visibleWidth, visibleHeight);
 
@@ -191,21 +190,6 @@ public class GameEngine implements Runnable {
         // GameUIの描画
         ui.draw(graphics, this.windowWidth, this.windowHeight);
 
-    }
-
-    /**
-     * カメラのズームを変更します。
-     * ズームの上限と下限が適用されます。
-     *
-     * @param zoomDelta ズームの変化量（負の値でズームイン、正の値でズームアウト）
-     */
-    public void zoomCamera(double zoomDelta) {
-        this.zoomDegrees -= zoomDelta;
-        if (this.zoomDegrees < CAMERA_ZOOM_LOWER_THRESHOLD) {
-            this.zoomDegrees = CAMERA_ZOOM_LOWER_THRESHOLD;
-        } else if (CAMERA_ZOOM_UPPER_THRESHOLD < this.zoomDegrees) {
-            this.zoomDegrees = CAMERA_ZOOM_UPPER_THRESHOLD;
-        }
     }
 
     /**

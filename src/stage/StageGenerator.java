@@ -31,15 +31,17 @@ public interface StageGenerator {
 
     /**
      * ステージの幅を取得します。
+     *
      * @return ステージの幅
      */
-    int getStageWidth();
+    double getStageWidth();
 
     /**
      * ステージの高さを取得します。
+     *
      * @return ステージの高さ
      */
-    int getStageHeight();
+    double getStageHeight();
 
     /**
      * 背景（ステージのテクスチャとステージ外の背景）を描画します。

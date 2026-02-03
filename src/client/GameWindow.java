@@ -42,12 +42,14 @@ public class GameWindow extends JFrame {
 
 	/**
 	 * スタート画面を表示する。
-	 * ユーザーがクリックするとゲームが開始される。
+	 * ユーザーがボタンをクリックするとゲームが開始される。
+	 * 現在のコンテンツをクリアし、スタートパネルに切り替える。
 	 */
 	private void showStartScreen() {
-		// スタート画面のリスナーを作成（クリックされたらゲームを開始する）
-		ActionListener startListener = e -> startGame(true);
-		StartPanel startPanel = new StartPanel(startListener);
+		// スタート画面のリスナーを作成
+		ActionListener onStartGame = e -> startGame();
+		ActionListener onHowToPlay = e -> showHowToPlay();
+		StartPanel startPanel = new StartPanel(onStartGame, onHowToPlay);
 
 		this.getContentPane().removeAll();
 		this.add(startPanel);
@@ -56,12 +58,21 @@ public class GameWindow extends JFrame {
 	}
 
 	/**
+	 * How to Play画面を表示する。
+	 * TODO: 実装予定
+	 */
+	private void showHowToPlay() {
+		System.out.println("How to Play button clicked!");
+		// TODO: How to Play画面の実装
+	}
+
+	/**
 	 * ゲームを開始する。
 	 * 練習モードまたは通常モードのステージを生成し、ゲームパネルに切り替える。
 	 *
 	 * @param isPractice true の場合は練習モード、false の場合は通常モード
 	 */
-	private void startGame(boolean isPractice) {
+	private void startGame() {
 		GamePanel gamePanel = new GamePanel();
 
 		this.getContentPane().removeAll();

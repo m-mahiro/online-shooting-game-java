@@ -14,8 +14,8 @@ import static stage.Team.*;
 public class GameStage implements StageInfo {
 
 	// 描画範囲の情報
-	private final int stageWidth;
-	private final int stageHeight;
+	private final double stageWidth;
+	private final double stageHeight;
 
 	// オブジェクト管理
 	private int nextPrivateObjectID = 0;
@@ -47,17 +47,19 @@ public class GameStage implements StageInfo {
 
 	/**
 	 * ステージの幅を取得します。
+	 *
 	 * @return ステージの幅
 	 */
-	public int getStageWidth() {
+	public double getStageWidth() {
 		return stageWidth;
 	}
 
 	/**
 	 * ステージの高さを取得します。
+	 *
 	 * @return ステージの高さ
 	 */
-	public int getStageHeight() {
+	public double getStageHeight() {
 		return stageHeight;
 	}
 
