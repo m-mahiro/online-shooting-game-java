@@ -58,6 +58,33 @@ public class GamePanel extends JPanel {
     }
 
     /**
+     * パネルがコンテナに追加された際に呼ばれる。
+     * ゲームスレッドを開始する。
+     */
+    @Override
+    public void addNotify() {
+        super.addNotify();
+        if (gameEngine == null) return;
+        gameEngine.startGameThread(getWidth(), getHeight());
+    }
+
+    /**
+     * パネルの描画を行う。
+     * ゲームオブジェクトとUIを描画する。
+     *
+     * @param graphics 描画に使用するGraphicsオブジェクト
+     */
+    @Override
+    protected void paintComponent(Graphics graphics) {
+        super.paintComponent(graphics);
+        Graphics2D g = (Graphics2D) graphics;
+
+        if (gameEngine == null) return;
+        gameEngine.draw(g);
+
+    }
+
+    /**
      * ゲームモードに応じたInputStrategyを生成する。
      *
      * @param inputHandler ユーザー入力を処理するInputHandler
@@ -185,30 +212,4 @@ public class GamePanel extends JPanel {
             };
     }
 
-    /**
-     * パネルがコンテナに追加された際に呼ばれる。
-     * ゲームスレッドを開始する。
-     */
-    @Override
-    public void addNotify() {
-        super.addNotify();
-        if (gameEngine == null) return;
-        gameEngine.startGameThread(getWidth(), getHeight());
-    }
-
-    /**
-     * パネルの描画を行う。
-     * ゲームオブジェクトとUIを描画する。
-     *
-     * @param graphics 描画に使用するGraphicsオブジェクト
-     */
-    @Override
-    protected void paintComponent(Graphics graphics) {
-        super.paintComponent(graphics);
-        Graphics2D g = (Graphics2D) graphics;
-
-        if (gameEngine == null) return;
-        gameEngine.draw(g);
-
-    }
 }

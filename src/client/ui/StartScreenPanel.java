@@ -20,15 +20,34 @@ public class StartScreenPanel extends JPanel {
     public StartScreenPanel(ActionListener startListener) {
         // レイアウトマネージャーを設定
         setLayout(new GridBagLayout());
-        
-        // スタートボタンを生成
+
+        // モダンなスタートボタンを生成
         startButton = new JButton("Start Game");
-        startButton.setFont(new Font("Arial", Font.BOLD, 24));
-        
+        startButton.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        startButton.setPreferredSize(new Dimension(250, 80));
+
+        // モダンな色設定
+        startButton.setBackground(new Color(0, 122, 255)); // 鮮やかな青
+        startButton.setForeground(Color.WHITE);
+        startButton.setFocusPainted(false);
+        startButton.setBorderPainted(false);
+
+        // 角丸ボーダー風の効果（マウスホバー時のエフェクト）
+        startButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                startButton.setBackground(new Color(0, 100, 220));
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                startButton.setBackground(new Color(0, 122, 255));
+            }
+        });
+
         // ボタンにアクションリスナーを設定
         startButton.addActionListener(startListener);
-        
+
         // ボタンをパネル中央に配置
         add(startButton);
     }
+
+
 }

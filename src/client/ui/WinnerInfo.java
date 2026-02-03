@@ -104,9 +104,9 @@ public class WinnerInfo implements UIContent {
 
 		AffineTransform trans = new AffineTransform();
 		trans.translate(windowWidth / 2.0, windowHeight / 3.0);
-		trans.rotate(isRed ? rotate : -rotate);
-		trans.translate(isRed ? vanishingPoint : -vanishingPoint, 0);
-		trans.translate(isRed ? x : -x , 0);
+		trans.rotate(isRed ? -rotate : rotate);
+		trans.translate(isRed ? -vanishingPoint : vanishingPoint, 0);
+		trans.translate(isRed ? -x : x , 0);
 		trans.scale(scale, scale);
 		trans.translate(-this.image.getWidth() / 2.0, -this.image.getHeight() / 2.0);
 		graphics.drawImage(image, trans, null);

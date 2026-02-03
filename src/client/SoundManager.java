@@ -24,7 +24,7 @@ import java.util.List;
 public class SoundManager {
 
 	// Clipプール
-	private static final int POOL_SIZE = 5;
+	private static final int POOL_SIZE = 10;
 	private static List<Clip> bulletExplosionPool;
 	private static List<Clip> createBlockPool;
 	private static List<Clip> objectBreakPool;
