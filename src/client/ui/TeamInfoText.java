@@ -60,7 +60,7 @@ public class TeamInfoText implements UIContent {
 
 		// このクラスでは、基地のHPか、戦車の残り代数のどちらかを表示する
 		int baseHp = isRed ? info.getRedBaseHP() : info.getBlueBaseHP();
-		int tankCount = isRed ? info.getRemainRedTank() : info.getRemainBlueTank();
+		int tankCount = isRed ? info.getRedTank() : info.getBlueTank();
 		String tankCountText = Integer.toString(tankCount);
 		String baseHpText = Integer.toString(baseHp);
 

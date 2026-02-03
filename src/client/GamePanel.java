@@ -121,8 +121,8 @@ public class GamePanel extends JPanel {
      */
     private StageGenerator createStageGenerator(int playerCount) {
             return new StageGenerator() {
-                private final Base redBase = new Base(2000, 2000, Team.RED);
-                private final Base blueBase = new Base(-2000, -2000, Team.BLUE);
+                private final Base redBase = new Base(2000, 2000, Team.RED, playerCount * 80);
+                private final Base blueBase = new Base(-2000, -2000, Team.BLUE, playerCount * 80);
                 private final int stageWidth = 6000;
                 private final int stageHeight = 6000;
 

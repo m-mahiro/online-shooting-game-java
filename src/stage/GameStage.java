@@ -340,7 +340,7 @@ public class GameStage implements StageInfo {
 	 * @return 赤チームの生存している戦車の数
 	 */
 	@Override
-	public int getRemainRedTank() {
+	public int getRedTank() {
 		int count = 0;
 		synchronized (this.objects) {
 			for (GameObject object : this.objects.values()) {
@@ -360,7 +360,7 @@ public class GameStage implements StageInfo {
 	 * @return 青チームの生存している戦車の数
 	 */
 	@Override
-	public int getRemainBlueTank() {
+	public int getBlueTank() {
 		int count = 0;
 		synchronized (this.objects) {
 			for (GameObject object : this.objects.values()) {
@@ -377,15 +377,15 @@ public class GameStage implements StageInfo {
 
 	@Override
 	public boolean hasFinished() {
-		boolean redAllDead = redBase.isRuins() && getRemainBlueTank() == 0;
-		boolean blueAllDead = blueBase.isRuins() && getRemainBlueTank() == 0;
+		boolean redAllDead = redBase.isRuins() && getRedTank() == 0;
+		boolean blueAllDead = blueBase.isRuins() && getBlueTank() == 0;
 		return redAllDead || blueAllDead;
 	}
 
 	@Override
 	public Team getWinner() {
 		if (!hasFinished()) return null;
-		boolean redWon = getRemainRedTank() > getRemainBlueTank();
+		boolean redWon = getRedTank() > getBlueTank();
 		return redWon ? RED : BLUE;
 	}
 

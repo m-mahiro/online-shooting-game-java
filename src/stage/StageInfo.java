@@ -10,9 +10,9 @@ public interface StageInfo {
 
 	Base.State getBlueBaseState();
 
-	int getRemainRedTank();
+	int getRedTank();
 
-	int getRemainBlueTank();
+	int getBlueTank();
 
 	boolean hasFinished();
 

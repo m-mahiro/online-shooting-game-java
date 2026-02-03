@@ -16,10 +16,10 @@ import static stage.Team.*;
 public class Base implements GameObject {
 
     // 定数
-    private static final int INIT_HP = 1000;
+    private final int INIT_HP;
 
     // 状態
-    private int hp = INIT_HP;
+    private int hp;
     private final Point2D.Double position;
     private final Team team;
 
@@ -76,9 +76,10 @@ public class Base implements GameObject {
      * @param y    基地の中心Y座標
      * @param team 基地が所属するチーム
      */
-    public Base(double x, double y, Team team) {
+    public Base(double x, double y, Team team, int hp) {
         this.position = new Point2D.Double(x, y);
         this.team = team;
+        this.hp = INIT_HP = hp;
     }
 
     // ============================= Baseクラス固有のメソッド =============================
