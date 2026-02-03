@@ -1,6 +1,6 @@
 package client;
 
-import client.ui.StartScreenPanel;
+import client.ui.StartPanel;
 
 import javax.swing.JFrame;
 import java.awt.GraphicsDevice;
@@ -47,7 +47,7 @@ public class GameWindow extends JFrame {
 	private void showStartScreen() {
 		// スタート画面のリスナーを作成（クリックされたらゲームを開始する）
 		ActionListener startListener = e -> startGame(true);
-		StartScreenPanel startPanel = new StartScreenPanel(startListener);
+		StartPanel startPanel = new StartPanel(startListener);
 
 		this.getContentPane().removeAll();
 		this.add(startPanel);
