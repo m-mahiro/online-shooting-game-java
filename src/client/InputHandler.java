@@ -15,7 +15,7 @@ public interface InputHandler {
 	 * @param canvasTransform キャンバスの変換行列
 	 * @return 移動ベクトル（-1.0 ～ 1.0の範囲）
 	 */
-	Point2D.Double getMoveVector(AffineTransform canvasTransform);
+	Point2D.Double getMotionDirection(AffineTransform canvasTransform);
 
 	/**
 	 * プレイヤーが照準を合わせている座標を取得する。

@@ -15,7 +15,7 @@ public interface InputStrategy {
      * @param canvasTransform キャンバスの座標変換
      * @return 移動ベクトル
      */
-    Point2D.Double getMoveVector(AffineTransform canvasTransform);
+    Point2D.Double getMotionDirection(AffineTransform canvasTransform);
 
     /**
      * プレイヤーの照準座標を取得します。

@@ -6,6 +6,8 @@ import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import client.GameEngine;
 
+import javax.swing.*;
+
 /**
  * マウスとキーボードによる入力を処理するクラス。
  * InputHandlerインターフェースを実装し、各種リスナーを通じて入力を検知する。
@@ -23,17 +25,17 @@ public class MouseKeyboardInput
 	 * マウスとキーボードの入力ハンドラを初期化する。
 	 * 各種リスナーをゲームパネルに登録する。
 	 *
-	 * @param gamePanel 入力を受け取るゲームパネル
+	 * @param panel 入力を受け取るゲームパネル
 	 */
-	public MouseKeyboardInput(GamePanel gamePanel) {
-		gamePanel.addKeyListener(this);
-		gamePanel.addMouseMotionListener(this);
-		gamePanel.addMouseListener(this);
-		gamePanel.addMouseWheelListener(this);
-		gamePanel.setFocusable(true);
-		gamePanel.requestFocusInWindow();
-		gamePanel.setFocusable(true);
-		gamePanel.requestFocusInWindow();
+	public MouseKeyboardInput(JPanel panel) {
+		panel.addKeyListener(this);
+		panel.addMouseMotionListener(this);
+		panel.addMouseListener(this);
+		panel.addMouseWheelListener(this);
+		panel.setFocusable(true);
+		panel.requestFocusInWindow();
+		panel.setFocusable(true);
+		panel.requestFocusInWindow();
 	}
 
 	// 定数
@@ -63,7 +65,7 @@ public class MouseKeyboardInput
 	 * WASDキーの入力から移動ベクトルを計算する。
 	 */
 	@Override
-	public Point2D.Double getMoveVector(AffineTransform canvasTransform) {
+	public Point2D.Double getMotionDirection(AffineTransform canvasTransform) {
 
 		// 1. キー入力から移動方向を決める
 		double x = 0;
