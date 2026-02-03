@@ -53,8 +53,6 @@ public class NetworkManager extends Thread {
 				// 名前送信（サーバーが期待しているので送る）
 				out.println("Player" + myTankID);
 
-				// 色情報を受け取る（今回は読み捨てるか、後で利用）
-				in.readLine();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

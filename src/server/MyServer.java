@@ -43,16 +43,8 @@ class ClientProcThread extends Thread {
 	 */
 	public void run() {
 		try {
-			myOut.println(number + " is client number");//初回だけ呼ばれる
 
 			myName = myIn.readLine();//初めて接続したときの一行目は名前
-			if (MyServer.member % 2 == 0) {
-				myOut.println("BLACK");
-			} else {
-				myOut.println("WHITE");
-			}
-
-
 
 			while (true) {//無限ループで，ソケットへの入力を監視する
 				String str = myIn.readLine();
@@ -152,6 +144,7 @@ class MyServer {
 				isr[n] = new InputStreamReader(incoming[n].getInputStream());
 				in[n] = new BufferedReader(isr[n]);
 				out[n] = new PrintWriter(incoming[n].getOutputStream(), true);
+				out[n].println(n + " is client number");//初回だけ呼ばれる
 
 				myClientProcThread[n] = new ClientProcThread(n, incoming[n], isr[n], in[n], out[n]);//必要なパラメータを渡しスレッドを作成
 				myClientProcThread[n] .start();//スレッドを開始する
@@ -159,7 +152,7 @@ class MyServer {
 				n++;
 
 				//PLAYER_COUNT分の接続が集まったら通知
-				if (n == PLAYER_COUNT) {
+				if (n == PLAYER_COUNT - 1) {
 //					System.out.println("All " + PLAYER_COUNT + " players connected!");
 					SendAll("PLAYER_COUNT " + PLAYER_COUNT, "SERVER");
 				}

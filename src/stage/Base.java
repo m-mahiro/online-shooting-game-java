@@ -177,7 +177,7 @@ public class Base implements GameObject {
     @Override
     public void update() {
         // リングの回転
-        ringRotation = 0.05;
+        ringRotation += 0.05;
 
         // ひびが入った時のサウンド
         if (hp < INIT_HP / 2 && !isBroken) {

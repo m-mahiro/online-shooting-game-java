@@ -1,6 +1,5 @@
 package client.ui;
 
-import client.GamePanel;
 import client.GameWindow;
 import client.NetworkManager;
 
@@ -24,7 +23,7 @@ public class WaitingRoomPanel extends JPanel {
 		this.networkManager = new NetworkManager(createOnReadyCallback());
 		this.networkManager.start(); // スレッドを開始
 
-		setBackground(Color.BLACK);
+		setBackground(Color.WHITE);
 		setPreferredSize(new Dimension(800, 600));
 
 		// WAITING...の文字を作成
@@ -33,7 +32,7 @@ public class WaitingRoomPanel extends JPanel {
 
 		// 初期位置で作成（後で更新される）
 		for (int i = 0; i < chars.length; i++) {
-			rotationCharsList.add(new RotationChars(chars[i], new Point2D.Double(0, 0), i * 0.15));
+			rotationCharsList.add(new RotationChars(chars[i], new Point2D.Double(0, 0), i * 10, Color.BLACK));
 		}
 
 		// 画面サイズに応じて文字位置を更新するメソッド
@@ -43,17 +42,15 @@ public class WaitingRoomPanel extends JPanel {
 
 			if (panelWidth > 0 && panelHeight > 0) {
 				// 文字の総幅を計算
-				int charCount = chars.length;
-				double spacing = RotationChars.size * 1.2; // 文字間隔
-				double totalWidth = spacing * (charCount - 1);
+				double center = panelWidth / 2.0;
+				double spacing = RotationChars.size * 1.1; // 文字間隔
 
 				// 中央揃え用のx座標開始位置
-				double startX = (panelWidth - totalWidth) / 2.0;
 				double y = panelHeight / 2.0;
 
 				// 各文字の位置を更新
 				for (int i = 0; i < rotationCharsList.size(); i++) {
-					double x = startX + i * spacing;
+					double x = center + spacing * (i - rotationCharsList.size() / 2.0);
 					rotationCharsList.get(i).setPosition(new Point2D.Double(x, y));
 				}
 			}

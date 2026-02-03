@@ -287,7 +287,7 @@ public class StartPanel extends JPanel {
 					String s = list[i];
 					double x = 400.0 * (i - list.length / 2.0) + RotationChars.size / 2.0;
 					double y = -300;
-					screenObjects[i] = new RotationChars(s, new Point2D.Double(x, y), i * 10);
+					screenObjects[i] = new RotationChars(s, new Point2D.Double(x, y), i * 10, Color.BLACK);
 				}
 				return screenObjects;
 			}

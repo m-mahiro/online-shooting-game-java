@@ -213,8 +213,9 @@ public class HowToPlayPanel extends JPanel {
 
 				// 戦車の生成
 				for (int i = 0; i < 4; i++) {
-					Tank tank = new Tank(i % 2 != 0 ? redBase : blueBase);
-					tank.setPosition(new Point2D.Double(0, 0));
+					Base base = i % 2 != 0 ? redBase : blueBase;
+					Tank tank = new Tank(base);
+					if (base == blueBase) tank.setPosition(new Point2D.Double(0, 0));
 					objects.add(tank);
 				}
 

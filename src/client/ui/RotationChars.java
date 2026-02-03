@@ -24,7 +24,7 @@ public class RotationChars implements ScreenObject {
     // 色設定
     private Color fillColor = Color.WHITE;
 
-    public RotationChars(String text, Point2D.Double position, double animationOffset) {
+    public RotationChars(String text, Point2D.Double position, double animationOffset, Color color) {
         this.text = text;
         this.position = position;
         this.animationOffset = animationOffset;
