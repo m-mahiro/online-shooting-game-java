@@ -23,13 +23,16 @@ public class NetworkManager extends Thread {
 	private int networkClientID;
 	private int myTankID;
 	private int playerCount;
+	private Runnable onReady;
 
 	/**
 	 * ネットワークマネージャーを初期化し、サーバーに接続する。
 	 * クライアントIDを受信し、プレイヤー名を送信する。
 	 *
+	 * @param onReady PLAYER_COUNTが揃ったときに呼ばれるコールバック関数
 	 */
-	public NetworkManager() {
+	public NetworkManager(Runnable onReady) {
+		this.onReady = onReady;
 		try {
 			socket = new Socket("localhost", 10000);
 			out = new PrintWriter(socket.getOutputStream(), true);
@@ -134,6 +137,9 @@ public class NetworkManager extends Thread {
 
 		if (cmd.equals("PLAYER_COUNT")) {
 			playerCount = Integer.parseInt(tokens[1]);
+			if (onReady != null) {
+				onReady.run();
+			}
 			return;
 		}
 

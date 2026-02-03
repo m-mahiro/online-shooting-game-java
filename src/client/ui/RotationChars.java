@@ -8,7 +8,7 @@ import java.awt.font.GlyphVector;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 
-public class TitleCharacter implements ScreenObject {
+public class RotationChars implements ScreenObject {
 
     public static final int size = 300;
 
@@ -24,7 +24,7 @@ public class TitleCharacter implements ScreenObject {
     // 色設定
     private Color fillColor = Color.WHITE;
 
-    public TitleCharacter(String text, Point2D.Double position, double animationOffset) {
+    public RotationChars(String text, Point2D.Double position, double animationOffset) {
         this.text = text;
         this.position = position;
         this.animationOffset = animationOffset;
@@ -47,9 +47,9 @@ public class TitleCharacter implements ScreenObject {
         double angle = 0.0;
         boolean isRotating = false;
 
-        if (adjustedFrame >= PAUSE_FRAMES) {
+        if (adjustedFrame >= 0) {
             // 最初の遅延後のフレーム数
-            int cycleFrame = (adjustedFrame - PAUSE_FRAMES) % (ROTATION_FRAMES + PAUSE_FRAMES);
+            int cycleFrame = adjustedFrame % (ROTATION_FRAMES + PAUSE_FRAMES);
 
             // 回転フェーズ
             if (cycleFrame < ROTATION_FRAMES) {

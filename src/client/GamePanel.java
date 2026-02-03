@@ -6,8 +6,11 @@ import stage.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.Shape;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.font.FontRenderContext;
+import java.awt.font.GlyphVector;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
@@ -24,8 +27,10 @@ public class GamePanel extends JPanel {
     /**
      * 練習モードまたは通常モードでゲームパネルを初期化する。
      * パネルの設定、入力ハンドラの登録、ゲームエンジンの生成を行う。
+     *
+     * @param networkManager ネットワークマネージャー
      */
-    public GamePanel() {
+    public GamePanel(NetworkManager networkManager) {
 
         // パネル設定
         this.setBackground(Color.WHITE);
@@ -33,8 +38,7 @@ public class GamePanel extends JPanel {
         this.setPreferredSize(new Dimension(1000, 700));
 
         // サーバに接続して色々情報をもらう
-        // todo: 接続してから、これら二つの情報をもらうまではかなり時間がかかるので、将来的には別のJPanelにしないといけない
-        this.networkManager = new NetworkManager();
+        this.networkManager = networkManager;
         int myTankID = networkManager.getMyTankID();
         int playerCount = networkManager.getPlayerCount();
 
@@ -54,8 +58,11 @@ public class GamePanel extends JPanel {
         NetworkStrategy networkStrategy = createNetworkStrategy();
         InputStrategy inputStrategy = createInputStrategy(new MouseKeyboardInput(this), networkStrategy, myTankID);
 
+        // ゲーム終了時のコールバックを作成
+        Runnable onFinishCallback = createOnFinishCallback(myTeam);
+
         // GameEngineを作成
-        this.gameEngine = new GameEngine(stage, ui, screenObjects, myTankID, this::repaint, inputStrategy);
+        this.gameEngine = new GameEngine(stage, ui, screenObjects, myTankID, this::repaint, onFinishCallback, inputStrategy);
 
         // エンジンにリサイズを通知するためのリスナーを追加
         this.addComponentListener(new ComponentAdapter() {
@@ -116,8 +123,10 @@ public class GamePanel extends JPanel {
                 myTank.aimAt(coordinate);
                 network.aimAt(tankID, coordinate);
 
+                boolean hasFinished = stage.hasFinished();
+
                 // 発射
-                if (inputHandler.shootBullet()) {
+                if (inputHandler.shootBullet() && !hasFinished) {
                     Bullet bullet = myTank.shootBullet();
                     if (bullet != null) {
                         stage.addGameObject(bullet);
@@ -132,7 +141,7 @@ public class GamePanel extends JPanel {
                 }
 
                 // ブロック生成
-                if (inputHandler.createBlock()) {
+                if (inputHandler.createBlock() && !hasFinished) {
                     Block block = myTank.createBlock();
                     if (block != null) {
                         stage.addGameObject(block);
@@ -279,6 +288,136 @@ public class GamePanel extends JPanel {
                     graphics.fillRect(-stageWidth / 2, -stageHeight / 2, stageWidth, stageHeight);
                 }
             };
+    }
+
+    /**
+     * ゲーム終了時のコールバックを生成する。
+     * 勝敗に応じたメッセージとリスタートボタンを表示する。
+     *
+     * @param myTeam 自分のチーム
+     * @return 生成されたコールバック
+     */
+    private Runnable createOnFinishCallback(Team myTeam) {
+        return () -> {
+            // 4秒待ってから表示
+            Timer timer = new Timer(4000, e -> {
+                // レイアウトをnullに設定（絶対配置）
+                setLayout(null);
+
+                // 勝敗判定
+                Base.State redBaseState = gameEngine.getStage().getRedBaseState();
+                Base.State blueBaseState = gameEngine.getStage().getBlueBaseState();
+                Base.State myBaseState = myTeam == Team.RED ? redBaseState : blueBaseState;
+                Base.State enemyBaseState = myTeam == Team.RED ? blueBaseState : redBaseState;
+                boolean won = enemyBaseState == Base.State.RUINS && myBaseState != Base.State.RUINS;
+
+                // メッセージを表示（アウトライン付き）
+                String message = won ? "Congratulation!!" : "Try Next!!";
+                Color textColor = won ? new Color(0, 200, 0) : new Color(200, 0, 0);
+                JLabel messageLabel = new JLabel(message, SwingConstants.CENTER) {
+                    @Override
+                    protected void paintComponent(Graphics g) {
+                        Graphics2D g2d = (Graphics2D) g;
+                        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                        g2d.setFont(getFont());
+
+                        // テキストの位置を計算
+                        FontMetrics fm = g2d.getFontMetrics();
+                        int x = (getWidth() - fm.stringWidth(getText())) / 2;
+                        int y = ((getHeight() - fm.getHeight()) / 2) + fm.getAscent();
+
+                        // 白いアウトラインを描画（太さ4）
+                        g2d.setColor(Color.WHITE);
+                        g2d.setStroke(new BasicStroke(4));
+                        g2d.translate(x, y);
+                        Font font = getFont();
+                        FontRenderContext frc = g2d.getFontRenderContext();
+                        GlyphVector gv = font.createGlyphVector(frc, getText());
+                        Shape outline = gv.getOutline();
+                        g2d.draw(outline);
+
+                        // テキストを描画
+                        g2d.setColor(textColor);
+                        g2d.fill(outline);
+                    }
+                };
+                messageLabel.setFont(new Font("Segoe UI", Font.BOLD, 72));
+                messageLabel.setOpaque(false);
+                add(messageLabel);
+
+                // リスタートボタンを作成
+                JButton restartButton = new JButton("Restart");
+                restartButton.setFont(new Font("Segoe UI", Font.BOLD, 28));
+                restartButton.setBackground(new Color(0, 122, 255));
+                restartButton.setForeground(Color.WHITE);
+                restartButton.setFocusPainted(false);
+                restartButton.setBorderPainted(false);
+
+                // ボタンのアクションリスナー
+                restartButton.addActionListener(evt -> {
+                    // スタート画面に戻る
+                    Container parent = getParent();
+                    while (parent != null && !(parent instanceof GameWindow)) {
+                        parent = parent.getParent();
+                    }
+                    if (parent instanceof GameWindow) {
+                        ((GameWindow) parent).showStartScreen();
+                    }
+                });
+
+                // マウスホバーエフェクト
+                restartButton.addMouseListener(new java.awt.event.MouseAdapter() {
+                    public void mouseEntered(java.awt.event.MouseEvent evt) {
+                        restartButton.setBackground(new Color(0, 100, 220));
+                    }
+
+                    public void mouseExited(java.awt.event.MouseEvent evt) {
+                        restartButton.setBackground(new Color(0, 122, 255));
+                    }
+                });
+
+                add(restartButton);
+
+                // ボタンとメッセージの位置とサイズを設定
+                Runnable updateBounds = () -> {
+                    int panelWidth = getWidth();
+                    int panelHeight = getHeight();
+
+                    // ボタンのサイズ
+                    int buttonWidth = panelWidth / 8;
+                    int buttonHeight = buttonWidth / 3;
+
+                    // ボタンの位置（x: 中央、y: 上から60%）
+                    int buttonX = (panelWidth - buttonWidth) / 2;
+                    int buttonY = (int) (panelHeight * 0.6);
+
+                    restartButton.setBounds(buttonX, buttonY, buttonWidth, buttonHeight);
+
+                    // メッセージの位置（ボタンの上）
+                    int messageWidth = panelWidth / 2;
+                    int messageHeight = 100;
+                    int messageX = (panelWidth - messageWidth) / 2;
+                    int messageY = buttonY - messageHeight - 80;
+
+                    messageLabel.setBounds(messageX, messageY, messageWidth, messageHeight);
+                };
+
+                // 初期配置
+                updateBounds.run();
+
+                // ウィンドウサイズ変更時に再配置
+                addComponentListener(new java.awt.event.ComponentAdapter() {
+                    public void componentResized(java.awt.event.ComponentEvent evt) {
+                        updateBounds.run();
+                    }
+                });
+
+                revalidate();
+                repaint();
+            });
+            timer.setRepeats(false);
+            timer.start();
+        };
     }
 
 }

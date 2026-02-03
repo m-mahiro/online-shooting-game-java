@@ -1,5 +1,7 @@
 package client;
 
+import client.ui.HowToPlayPanel;
+import client.ui.HowToPlaySlideShow;
 import client.ui.StartPanel;
 
 import javax.swing.JFrame;
@@ -45,7 +47,7 @@ public class GameWindow extends JFrame {
 	 * ユーザーがボタンをクリックするとゲームが開始される。
 	 * 現在のコンテンツをクリアし、スタートパネルに切り替える。
 	 */
-	private void showStartScreen() {
+	public void showStartScreen() {
 		// スタート画面のリスナーを作成
 		ActionListener onStartGame = e -> startGame();
 		ActionListener onHowToPlay = e -> showHowToPlay();
@@ -59,21 +61,40 @@ public class GameWindow extends JFrame {
 
 	/**
 	 * How to Play画面を表示する。
-	 * TODO: 実装予定
 	 */
-	private void showHowToPlay() {
-		System.out.println("How to Play button clicked!");
-		// TODO: How to Play画面の実装
+	public void showHowToPlay() {
+		ActionListener onBack = e -> showStartScreen();
+		HowToPlayPanel howToPlayPanel = new HowToPlayPanel(onBack);
+
+		this.getContentPane().removeAll();
+		this.add(howToPlayPanel);
+		howToPlayPanel.requestFocusInWindow(); // GamePanelにフォーカスを移す
+		this.revalidate();
+		this.repaint();
+
 	}
 
 	/**
 	 * ゲームを開始する。
-	 * 練習モードまたは通常モードのステージを生成し、ゲームパネルに切り替える。
-	 *
-	 * @param isPractice true の場合は練習モード、false の場合は通常モード
+	 * 待機室画面を表示し、プレイヤーが揃うのを待つ。
 	 */
-	private void startGame() {
-		GamePanel gamePanel = new GamePanel();
+	public void startGame() {
+		client.ui.WaitingRoomPanel waitingRoomPanel = new client.ui.WaitingRoomPanel(this);
+
+		this.getContentPane().removeAll();
+		this.add(waitingRoomPanel);
+		waitingRoomPanel.requestFocusInWindow();
+		this.revalidate();
+		this.repaint();
+	}
+
+	/**
+	 * GamePanelを表示する。
+	 *
+	 * @param networkManager ネットワークマネージャー
+	 */
+	public void showGamePanel(NetworkManager networkManager) {
+		GamePanel gamePanel = new GamePanel(networkManager);
 
 		this.getContentPane().removeAll();
 		this.add(gamePanel);

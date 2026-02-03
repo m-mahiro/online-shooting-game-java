@@ -57,7 +57,7 @@ class ClientProcThread extends Thread {
 			while (true) {//無限ループで，ソケットへの入力を監視する
 				String str = myIn.readLine();
 
-				System.out.println("Received from client No."+number+"("+myName+"), Messages: "+str);
+//				System.out.println("Received from client No."+number+"("+myName+"), Messages: "+str);
 				if (str != null) {//このソケット（バッファ）に入力があるかをチェック
 					if (str.toUpperCase().equals("BYE")) {
 						myOut.println("Good bye!");
@@ -70,7 +70,7 @@ class ClientProcThread extends Thread {
 			}
 		} catch (Exception e) {
 			//ここにプログラムが到達するときは，接続が切れたとき
-			System.out.println("Disconnect from client No."+number+"("+myName+")");
+//			System.out.println("Disconnect from client No."+number+"("+myName+")");
 			MyServer.SetFlag(number, false);//接続が切れたのでフラグを下げる
 		}
 	}
@@ -83,6 +83,7 @@ class ClientProcThread extends Thread {
  */
 class MyServer {
 
+	private static final int PLAYER_COUNT = 4;//必要なプレイヤー数
 	private static int maxConnection=100;//最大接続数
 	private static Socket[] incoming;//受付用のソケット
 	private static boolean[] flag;//接続中かどうかのフラグ
@@ -105,7 +106,7 @@ class MyServer {
 			if(flag[i] == true){
 				out[i].println(str);
 				out[i].flush();//バッファをはき出す＝＞バッファにある全てのデータをすぐに送信する
-				System.out.println("Send messages to client No."+i);
+//				System.out.println("Send messages to client No."+i);
 			}
 		}
 	}
@@ -141,12 +142,12 @@ class MyServer {
 		member = 0;//誰も接続していないのでメンバー数は０
 
 		try {
-			System.out.println("The server has launched!");
+//			System.out.println("The server has launched!");
 			ServerSocket server = new ServerSocket(10000);//10000番ポートを利用する
 			while (true) {
 				incoming[n] = server.accept();
 				flag[n] = true;
-				System.out.println("Accept client No." + n);
+//				System.out.println("Accept client No." + n);
 				//必要な入出力ストリームを作成する
 				isr[n] = new InputStreamReader(incoming[n].getInputStream());
 				in[n] = new BufferedReader(isr[n]);
@@ -156,6 +157,12 @@ class MyServer {
 				myClientProcThread[n] .start();//スレッドを開始する
 				member = n;//メンバーの数を更新する
 				n++;
+
+				//PLAYER_COUNT分の接続が集まったら通知
+				if (n == PLAYER_COUNT) {
+//					System.out.println("All " + PLAYER_COUNT + " players connected!");
+					SendAll("PLAYER_COUNT " + PLAYER_COUNT, "SERVER");
+				}
 			}
 		} catch (Exception e) {
 			System.err.println("ソケット作成時にエラーが発生しました: " + e);

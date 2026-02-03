@@ -34,51 +34,69 @@ public class StartPanel extends JPanel {
 
 		// ===========================　ボタンの配置  ===========================
 
-		// レイアウトマネージャーを設定（GridBagLayoutで4x4グリッド）
-		setLayout(new GridBagLayout());
-		GridBagConstraints gbc = new GridBagConstraints();
+		// レイアウトマネージャーをnullに設定（絶対配置）
+		setLayout(null);
 
 		// How to Playボタンを生成
 		howToPlayButton = new JButton("How to Play");
 		howToPlayButton.setFont(new Font("Segoe UI", Font.BOLD, 28));
-		howToPlayButton.setPreferredSize(new Dimension(250, 80));
 
 		// Start Gameボタンを生成
 		startButton = new JButton("Start Game");
 		startButton.setFont(new Font("Segoe UI", Font.BOLD, 28));
-		startButton.setPreferredSize(new Dimension(250, 80));
 
 		// モダンな色設定
-		howToPlayButton.setBackground(new Color(0, 122, 255)); // 鮮やかな青
+		howToPlayButton.setBackground(new Color(0, 122, 255));
 		howToPlayButton.setForeground(Color.WHITE);
 		howToPlayButton.setFocusPainted(false);
 		howToPlayButton.setBorderPainted(false);
 
-		// モダンな色設定
-		startButton.setBackground(new Color(0, 122, 255)); // 鮮やかな青
+		startButton.setBackground(new Color(0, 122, 255));
 		startButton.setForeground(Color.WHITE);
 		startButton.setFocusPainted(false);
 		startButton.setBorderPainted(false);
 
 		// ボタンにアクションリスナーを設定
 		startButton.addActionListener(onStartGame);
-
-		// How to Playボタンにアクションリスナーを設定
 		howToPlayButton.addActionListener(onHowToPlay);
 
-		// How to Playボタンを配置
-		gbc.gridx = 2;
-		gbc.gridy = 4;
-		gbc.weightx = 1.0;
-		gbc.weighty = 1.0;
-		add(howToPlayButton, gbc);
+		// ボタンを追加
+		add(howToPlayButton);
+		add(startButton);
 
-		// Start Gameボタンを配置
-		gbc.gridx = 3;
-		gbc.gridy = 4;
-		add(startButton, gbc);
+		// 画面サイズに応じてボタン位置とサイズを更新するメソッド
+		Runnable updateButtonBounds = () -> {
+			int panelWidth = getWidth();
+			int panelHeight = getHeight();
 
-		// 角丸ボーダー風の効果（マウスホバー時のエフェクト）
+			// ボタンのサイズ（画面幅の割合で設定）
+			int buttonWidth = panelWidth / 8;
+			int buttonHeight = buttonWidth / 3;
+
+			// ボタンのy座標（共通)
+			int y = (int) (panelHeight * 0.6);
+
+			// ボタンのx座標
+			int center = panelWidth / 2;
+			int howToPlayX = center - 200 - buttonWidth / 2;
+			int startX = center + 200 - buttonWidth / 2;
+
+			// 座標を設定
+			howToPlayButton.setBounds(howToPlayX, y, buttonWidth, buttonHeight);
+			startButton.setBounds(startX, y, buttonWidth, buttonHeight);
+		};
+
+		// 初期配置
+		updateButtonBounds.run();
+
+		// ウィンドウサイズ変更時に再配置
+		addComponentListener(new java.awt.event.ComponentAdapter() {
+			public void componentResized(java.awt.event.ComponentEvent evt) {
+				updateButtonBounds.run();
+			}
+		});
+
+		// マウスホバーエフェクト
 		howToPlayButton.addMouseListener(new java.awt.event.MouseAdapter() {
 			public void mouseEntered(java.awt.event.MouseEvent evt) {
 				howToPlayButton.setBackground(new Color(0, 100, 220));
@@ -89,7 +107,6 @@ public class StartPanel extends JPanel {
 			}
 		});
 
-		// 角丸ボーダー風の効果（マウスホバー時のエフェクト）
 		startButton.addMouseListener(new java.awt.event.MouseAdapter() {
 			public void mouseEntered(java.awt.event.MouseEvent evt) {
 				startButton.setBackground(new Color(0, 100, 220));
@@ -99,8 +116,6 @@ public class StartPanel extends JPanel {
 				startButton.setBackground(new Color(0, 122, 255));
 			}
 		});
-
-
 
 		// =========================== 背景のデモ映像(ゲームステージ)を作成 ===========================
 
@@ -112,13 +127,13 @@ public class StartPanel extends JPanel {
 		// UIの作成
 		GameUI ui = createGameUI();
 
-
 		// 入力や通信に関する取り決め(Strategy)を作成
 		InputStrategy inputStrategy = createInputStrategy(new MouseKeyboardInput(this));
 
 		// GameEngineを作成
 		int myTankID = 0;
-		this.gameEngine = new GameEngine(stage, ui, screenObjects, myTankID, this::repaint, inputStrategy);
+		Runnable onFinishCallback = () -> {};
+		this.gameEngine = new GameEngine(stage, ui, screenObjects, myTankID, this::repaint, onFinishCallback, inputStrategy);
 
 		// エンジンにリサイズを通知するためのリスナーを追加
 		this.addComponentListener(new ComponentAdapter() {
@@ -270,9 +285,9 @@ public class StartPanel extends JPanel {
 
 				for (int i = 0; i < list.length; i++) {
 					String s = list[i];
-					double x = 400.0 * (i - list.length / 2.0) + TitleCharacter.size / 2.0;
+					double x = 400.0 * (i - list.length / 2.0) + RotationChars.size / 2.0;
 					double y = -300;
-					screenObjects[i] = new TitleCharacter(s, new Point2D.Double(x, y), i * 10);
+					screenObjects[i] = new RotationChars(s, new Point2D.Double(x, y), i * 10);
 				}
 				return screenObjects;
 			}

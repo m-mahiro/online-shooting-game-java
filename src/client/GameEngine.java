@@ -43,6 +43,7 @@ public class GameEngine implements Runnable {
     public double CAMERA_ZOOM_LOWER_THRESHOLD = 0.07;
 
     private final Runnable repaintCallback;
+    private final Runnable onFinishCallback;
 
     /**
      * GameEngineのコンストラクタ。
@@ -50,13 +51,15 @@ public class GameEngine implements Runnable {
      *
      * @param screenObjects
      * @param repaintCallback 画面を再描画するためのコールバック
+     * @param onFinishCallback ゲーム終了時に呼び出されるコールバック
      * @param inputStrategy   入力処理を管理するInputStrategy
      */
-    public GameEngine(GameStage stage, GameUI ui, ScreenObject[] screenObjects, int myTankID, Runnable repaintCallback, InputStrategy inputStrategy) {
+    public GameEngine(GameStage stage, GameUI ui, ScreenObject[] screenObjects, int myTankID, Runnable repaintCallback, Runnable onFinishCallback, InputStrategy inputStrategy) {
         this.stage = stage;
         this.ui = ui;
         this.myTankID = myTankID;
         this.repaintCallback = repaintCallback;
+        this.onFinishCallback = onFinishCallback;
         this.input = inputStrategy;
 
         // スクリーンオブジェクトを追加
@@ -106,6 +109,16 @@ public class GameEngine implements Runnable {
         return Math.min(x, y);
     }
 
+    public void zoomCamera(double zoomDelta) {
+        this.zoomDegrees -= zoomDelta;
+        if (this.zoomDegrees < CAMERA_ZOOM_LOWER_THRESHOLD) {
+            this.zoomDegrees = CAMERA_ZOOM_LOWER_THRESHOLD;
+        } else if (CAMERA_ZOOM_UPPER_THRESHOLD < this.zoomDegrees) {
+            this.zoomDegrees = CAMERA_ZOOM_UPPER_THRESHOLD;
+        }
+    }
+
+
     /**
      * ゲームループを実行します。
      * 一定のフレームレートで更新と描画を繰り返します。
@@ -153,6 +166,11 @@ public class GameEngine implements Runnable {
         // 自分の戦車の操作（InputStrategyに委譲）
         if (!myTank.isDead()) {
             input.handleInput(myTank, getCanvasTransform(), stage);
+        }
+
+        // 終了したときの処理
+        if (this.stage.hasFinished()) {
+            onFinishCallback.run();
         }
     }
 
