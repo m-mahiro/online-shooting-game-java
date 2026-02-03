@@ -2,16 +2,11 @@ package stage;
 
 import util.Util;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static stage.Team.*;
@@ -34,23 +29,15 @@ public class GameStage implements StageInfo {
 	// ステージ外のテクスチャのアニメーション用
 	double outerStageAnimationFrame = 0;
 
-	// 画像リソース
-	private static BufferedImage floorTexture, outerStageTexture;
-
-	static {
-		try {
-			floorTexture = ImageIO.read(Objects.requireNonNull(GameStage.class.getResource("../client/assets/floor_texture.png")));
-			outerStageTexture = ImageIO.read(Objects.requireNonNull(GameStage.class.getResource("../client/assets/ocean_texture.png")));
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
+	// ステージジェネレータへの参照
+	private final StageGenerator generator;
 
 	/**
 	 * コンストラクタ。ステージジェネレータからステージの幅、高さ、各種初期オブジェクトを受け取り、ゲームステージを初期化します。
 	 * @param generator ステージの初期設定を含むStageGeneratorオブジェクト
 	 */
 	public GameStage(StageGenerator generator) {
+		this.generator = generator;
 		this.stageWidth = generator.getStageWidth();
 		this.stageHeight = generator.getStageHeight();
 		this.redBase = generator.getRedBase();
@@ -118,21 +105,8 @@ public class GameStage implements StageInfo {
 	 */
 	public void draw(Graphics2D graphics, double visibleWidth, double visibleHeight) {
 
-		// ステージ外の描画
-		double textureSize = 1000;
-		double translate = outerStageAnimationFrame * 10 % textureSize;
-		Rectangle2D outerStageAnchor = new Rectangle2D.Double(translate, translate, textureSize, textureSize);
-		TexturePaint outerStagePaint = new TexturePaint(outerStageTexture, outerStageAnchor);
-		graphics.setPaint(outerStagePaint);
-		int fillWidth = (int) (stageWidth + visibleWidth);
-		int fillHeight = (int) (stageHeight + visibleHeight);
-		graphics.fillRect(-fillWidth / 2, -fillHeight / 2, fillWidth, fillHeight);
-
-		// フローリングの描画
-		Rectangle2D floorAnchor = new Rectangle2D.Double(0, 0, floorTexture.getWidth(), floorTexture.getHeight());
-		TexturePaint floorPaint = new TexturePaint(floorTexture, floorAnchor);
-		graphics.setPaint(floorPaint);
-		graphics.fillRect(-stageWidth / 2, -stageHeight / 2, stageWidth, stageHeight);
+		// 背景の描画（ステージジェネレータに委譲）
+		generator.drawBackground(graphics, visibleWidth, visibleHeight, outerStageAnimationFrame);
 
 		// GameObjectの描画
 		for (RenderLayer layer : RenderLayer.values()) {
@@ -207,14 +181,12 @@ public class GameStage implements StageInfo {
 				} else if (shape1 instanceof Circle && shape2 instanceof Circle) {
 
 					// ============================= 円 vs 円 =============================
-					// 相対的な位置関係を取得
 					Circle circle1 = (Circle) shape1;
 					Circle circle2 = (Circle) shape2;
-					Point2D.Double vector = Util.subtract(circle1.center, circle2.center);
 
 					// 衝突判定
 					double collisionRange = circle1.radius + circle2.radius;
-					double distance = Util.norm(vector);
+					double distance = circle1.center.distance(circle2.center);
 					if (distance < collisionRange) {
 						isCollided = true;
 					}
@@ -248,7 +220,7 @@ public class GameStage implements StageInfo {
 
 					// クランプした点と、円の中心（ローカル座標）との距離を計算
 					Point2D.Double clampedPoint = new Point2D.Double(clampedX, clampedY);
-					double distance = Util.norm(Util.subtract(circleCenterInRectLocal, clampedPoint));
+					double distance = circleCenterInRectLocal.distance(clampedPoint);
 
 					// 距離が円の半径より小さければ衝突している
 					if (distance < circle.radius) {

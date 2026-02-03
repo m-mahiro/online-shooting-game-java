@@ -1,5 +1,7 @@
 package stage;
 
+import java.awt.*;
+
 public interface StageGenerator {
 
     /**
@@ -38,4 +40,13 @@ public interface StageGenerator {
      * @return ステージの高さ
      */
     int getStageHeight();
+
+    /**
+     * 背景（ステージのテクスチャとステージ外の背景）を描画します。
+     * @param graphics カメラ位置・ズームによる座標変換を適用済みのGraphics2D
+     * @param visibleWidth カメラに映る（ウィンドウに映る）範囲の幅(ステージ上の座標系)
+     * @param visibleHeight カメラに映る（ウィンドウに映る）範囲の高さ(ステージ上の座標系)
+     * @param animationFrame ステージ外のテクスチャのアニメーション用フレーム数
+     */
+    void drawBackground(Graphics2D graphics, double visibleWidth, double visibleHeight, double animationFrame);
 }
