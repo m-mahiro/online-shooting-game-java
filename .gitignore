@@ -34,3 +34,8 @@ bin/
 
 ### Something Else ###
 *.log
+
+*.class
+*.jar
+report.html
+report.md
