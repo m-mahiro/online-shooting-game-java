@@ -10,11 +10,12 @@ import java.awt.geom.Point2D;
 
 public class RotationChars implements ScreenObject {
 
-    public static final int size = 300;
+    public static final int size = 300; // デフォルトサイズ
 
     private final String text;
     private final Point2D.Double position;
     private final double animationOffset;
+    private final int fontSize; // カスタムサイズ
     private int frameCount = 0;
 
     // アニメーション設定
@@ -24,10 +25,17 @@ public class RotationChars implements ScreenObject {
     // 色設定
     private Color fillColor = Color.WHITE;
 
+    // デフォルトサイズのコンストラクタ
     public RotationChars(String text, Point2D.Double position, double animationOffset, Color color) {
+        this(text, position, animationOffset, color, size);
+    }
+
+    // サイズ指定可能なコンストラクタ
+    public RotationChars(String text, Point2D.Double position, double animationOffset, Color color, int fontSize) {
         this.text = text;
         this.position = position;
         this.animationOffset = animationOffset;
+        this.fontSize = fontSize;
     }
 
     @Override
@@ -79,7 +87,7 @@ public class RotationChars implements ScreenObject {
         AffineTransform trans = new AffineTransform();
 
         // 1. フォントの設定 (サイズを大きく、太字に)
-        Font font = new Font("Arial", Font.BOLD, size);
+        Font font = new Font("Arial", Font.BOLD, fontSize);
         FontRenderContext frc = graphics.getFontRenderContext();
 
         // 2. 文字列を形状(Shape)に変換

@@ -139,7 +139,7 @@ class MyServer {
 			while (true) {
 				incoming[n] = server.accept();
 				flag[n] = true;
-//				System.out.println("Accept client No." + n);
+				System.out.println("Accept client No." + n);
 				//必要な入出力ストリームを作成する
 				isr[n] = new InputStreamReader(incoming[n].getInputStream());
 				in[n] = new BufferedReader(isr[n]);
@@ -152,7 +152,7 @@ class MyServer {
 				n++;
 
 				//PLAYER_COUNT分の接続が集まったら通知
-				if (n == PLAYER_COUNT - 1) {
+				if (n % PLAYER_COUNT == 0) {
 //					System.out.println("All " + PLAYER_COUNT + " players connected!");
 					SendAll("PLAYER_COUNT " + PLAYER_COUNT, "SERVER");
 				}

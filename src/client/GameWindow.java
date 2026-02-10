@@ -23,6 +23,7 @@ public class GameWindow extends JFrame {
 		setTitle("Tank Game 2D");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(false);
+		setUndecorated(true);
 
 		showStartScreen();
 
