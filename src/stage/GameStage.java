@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -110,10 +111,16 @@ public class GameStage implements StageInfo {
 		// 背景の描画（ステージジェネレータに委譲）
 		generator.drawBackground(graphics, visibleWidth, visibleHeight, outerStageAnimationFrame);
 
-		// GameObjectの描画
-		for (RenderLayer layer : RenderLayer.values()) {
-			for (GameObject object : objects.values()) {
-				if (object.getRenderLayer() != layer) continue;
+		// GameObjectをレイヤーごとに振り分ける（全オブジェクトをレイヤー数分スキャンする代わりに1回のスキャンで済ませる）
+		List<List<GameObject>> objectsByLayer = new ArrayList<>();
+		for (int i = 0; i < RenderLayer.values().length; i++) objectsByLayer.add(new ArrayList<>());
+		for (GameObject object : objects.values()) {
+			objectsByLayer.get(object.getRenderLayer().ordinal()).add(object);
+		}
+
+		// レイヤーの下から順に描画
+		for (List<GameObject> layerObjects : objectsByLayer) {
+			for (GameObject object : layerObjects) {
 				object.draw(graphics);
 			}
 		}

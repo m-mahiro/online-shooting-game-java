@@ -4,7 +4,6 @@ import stage.Base;
 import stage.StageInfo;
 import stage.Team;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
@@ -33,16 +32,16 @@ public class TeamInfoIcon implements UIContent {
 	static {
 		try {
 			// REDチームの基地の画像
-			normalRedBaseImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/info_team_base_red_normal.png")));
-			brokenRedBaseImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/info_team_base_red_broken.png")));
+			normalRedBaseImage = util.ImageUtil.load(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/info_team_base_red_normal.png")));
+			brokenRedBaseImage = util.ImageUtil.load(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/info_team_base_red_broken.png")));
 
 			// BLUEチームの基地の画像
-			normalBlueBaseImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/info_team_base_blue_normal.png")));
-			brokenBlueBaseImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/info_team_base_blue_broken.png")));
+			normalBlueBaseImage = util.ImageUtil.load(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/info_team_base_blue_normal.png")));
+			brokenBlueBaseImage = util.ImageUtil.load(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/info_team_base_blue_broken.png")));
 
 			// 戦車の画像
-			redTankImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/tank_red.png")));
-			blueTankImage = ImageIO.read(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/tank_blue.png")));
+			redTankImage = util.ImageUtil.load(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/tank_red.png")));
+			blueTankImage = util.ImageUtil.load(Objects.requireNonNull(TeamInfoIcon.class.getResource("../assets/tank_blue.png")));
 
 		} catch (IOException e) {
 			e.printStackTrace();

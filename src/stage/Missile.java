@@ -2,7 +2,6 @@ package stage;
 
 import client.GameEngine;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
@@ -46,16 +45,16 @@ public class Missile implements GameObject, Projectile {
 
     static {
         try {
-            noneImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("/client/assets/none_image.png")));
+            noneImage = util.ImageUtil.load(Objects.requireNonNull(Missile.class.getResource("/client/assets/none_image.png")));
 
-            blueChargingMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("/client/assets/missile_blue_charging.png")));
-            redChargingMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("/client/assets/missile_blue_charging.png")));
+            blueChargingMissileImage = util.ImageUtil.load(Objects.requireNonNull(Missile.class.getResource("/client/assets/missile_blue_charging.png")));
+            redChargingMissileImage = util.ImageUtil.load(Objects.requireNonNull(Missile.class.getResource("/client/assets/missile_blue_charging.png")));
 
-            blueReadyMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("/client/assets/missile_blue_ready.png")));
-            redReadyMissileImage = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("/client/assets/missile_blue_ready.png")));
+            blueReadyMissileImage = util.ImageUtil.load(Objects.requireNonNull(Missile.class.getResource("/client/assets/missile_blue_ready.png")));
+            redReadyMissileImage = util.ImageUtil.load(Objects.requireNonNull(Missile.class.getResource("/client/assets/missile_blue_ready.png")));
 
-            blueMissileDebris = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("/client/assets/bullet_blue_debris.png")));
-            redMissileDebris = ImageIO.read(Objects.requireNonNull(Missile.class.getResource("/client/assets/bullet_red_debris.png")));
+            blueMissileDebris = util.ImageUtil.load(Objects.requireNonNull(Missile.class.getResource("/client/assets/bullet_blue_debris.png")));
+            redMissileDebris = util.ImageUtil.load(Objects.requireNonNull(Missile.class.getResource("/client/assets/bullet_red_debris.png")));
         } catch (IOException e) {
             e.printStackTrace();
         }

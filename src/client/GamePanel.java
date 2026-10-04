@@ -24,6 +24,28 @@ public class GamePanel extends JPanel {
     private final GameEngine gameEngine;
     private final NetworkManager networkManager;
 
+    // 背景テクスチャ（ディスクからの読み込みは起動時に一度だけ行う）
+    private static final java.awt.image.BufferedImage FLOOR_TEXTURE;
+    private static final java.awt.image.BufferedImage OUTER_STAGE_TEXTURE;
+
+    // フローリングは毎フレーム見た目が変わらないので、TexturePaintも一度だけ生成して再利用する
+    private static final TexturePaint FLOOR_PAINT;
+
+    static {
+        try {
+            FLOOR_TEXTURE = util.ImageUtil.load(
+                    java.util.Objects.requireNonNull(GamePanel.class.getResource("assets/floor_texture.png")));
+            OUTER_STAGE_TEXTURE = util.ImageUtil.load(
+                    java.util.Objects.requireNonNull(GamePanel.class.getResource("assets/ocean_texture.png")));
+        } catch (java.io.IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        java.awt.geom.Rectangle2D floorAnchor = new java.awt.geom.Rectangle2D.Double(
+                0, 0, FLOOR_TEXTURE.getWidth(), FLOOR_TEXTURE.getHeight());
+        FLOOR_PAINT = new TexturePaint(FLOOR_TEXTURE, floorAnchor);
+    }
+
     /**
      * 練習モードまたは通常モードでゲームパネルを初期化する。
      * パネルの設定、入力ハンドラの登録、ゲームエンジンの生成を行う。
@@ -262,29 +284,19 @@ public class GamePanel extends JPanel {
 
                 @Override
                 public void drawBackground(Graphics2D graphics, double visibleWidth, double visibleHeight, double animationFrame) {
-                    // 画像リソースの読み込み
-                    java.awt.image.BufferedImage floorTexture, outerStageTexture;
-                    try {
-                        floorTexture = javax.imageio.ImageIO.read(java.util.Objects.requireNonNull(getClass().getResource("assets/floor_texture.png")));
-                        outerStageTexture = javax.imageio.ImageIO.read(java.util.Objects.requireNonNull(getClass().getResource("assets/ocean_texture.png")));
-                    } catch (java.io.IOException e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    // ステージ外の描画
+                    // ステージ外の描画（アニメーションでアンカーが動くのでTexturePaintだけ毎フレーム作り直す。
+                    // 画像自体は起動時に読み込んだものを再利用するので、ディスクI/Oは発生しない）
                     double textureSize = 1000;
                     double translate = animationFrame * 10 % textureSize;
                     java.awt.geom.Rectangle2D outerStageAnchor = new java.awt.geom.Rectangle2D.Double(translate, translate, textureSize, textureSize);
-                    TexturePaint outerStagePaint = new TexturePaint(outerStageTexture, outerStageAnchor);
+                    TexturePaint outerStagePaint = new TexturePaint(OUTER_STAGE_TEXTURE, outerStageAnchor);
                     graphics.setPaint(outerStagePaint);
                     int fillWidth = (int) (stageWidth + visibleWidth);
                     int fillHeight = (int) (stageHeight + visibleHeight);
                     graphics.fillRect(-fillWidth / 2, -fillHeight / 2, fillWidth, fillHeight);
 
-                    // フローリングの描画
-                    java.awt.geom.Rectangle2D floorAnchor = new java.awt.geom.Rectangle2D.Double(0, 0, floorTexture.getWidth(), floorTexture.getHeight());
-                    TexturePaint floorPaint = new TexturePaint(floorTexture, floorAnchor);
-                    graphics.setPaint(floorPaint);
+                    // フローリングの描画（静止画なのでTexturePaintも事前に一度だけ生成したものを使う）
+                    graphics.setPaint(FLOOR_PAINT);
                     graphics.fillRect(-stageWidth / 2, -stageHeight / 2, stageWidth, stageHeight);
                 }
             };

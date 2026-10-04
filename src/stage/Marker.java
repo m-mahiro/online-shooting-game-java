@@ -1,6 +1,5 @@
 package stage;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
@@ -13,9 +12,21 @@ public class Marker implements ScreenObject {
     private final Tank tank;
     private final Point2D.Double position;
 
-    private BufferedImage image;
+    private final BufferedImage image;
 
     private int animationCounter = 0;
+
+    // 画像リソース（他のクラスと同様、起動時に一度だけ読み込んで共有する）
+    private static final BufferedImage blueMarkerImage, redMarkerImage;
+
+    static {
+        try {
+            blueMarkerImage = util.ImageUtil.load(Objects.requireNonNull(Marker.class.getResource("../client/assets/marker_blue.png")));
+            redMarkerImage = util.ImageUtil.load(Objects.requireNonNull(Marker.class.getResource("../client/assets/marker_red.png")));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     /**
      * Markerオブジェクトを初期化します。
@@ -24,19 +35,15 @@ public class Marker implements ScreenObject {
     public Marker(Tank tank) {
         this.tank = tank;
         this.position = tank.getPosition();
-        try {
-            switch (tank.getTeam()) {
-                case BLUE:
-                    this.image = ImageIO.read(Objects.requireNonNull(Marker.class.getResource("../client/assets/marker_blue.png")));
-                    break;
-                case RED:
-                    this.image = ImageIO.read(Objects.requireNonNull(Marker.class.getResource("../client/assets/marker_red.png")));
-                    break;
-                default:
-                    throw new RuntimeException();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        switch (tank.getTeam()) {
+            case BLUE:
+                this.image = blueMarkerImage;
+                break;
+            case RED:
+                this.image = redMarkerImage;
+                break;
+            default:
+                throw new RuntimeException();
         }
     }
 
