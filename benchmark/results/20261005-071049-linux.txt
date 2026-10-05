@@ -1,0 +1,42 @@
+==== Environment ====
+timestamp (UTC): 2026-10-05T07:10:49.638587341Z
+os.name: Linux
+os.version: 6.18.44-fc-v70
+os.arch: amd64
+java.version: 21.0.11
+java.vendor: Ubuntu
+available processors: 4
+max heap (MB): 3422
+java.awt.headless: true
+git commit: ae01ef1
+======================
+warmup=200 iterations=2000
+
+[1. Background Texture Reload]
+  legacy              (毎フレームImageIO.read + TexturePaint): mean=18.2035ms median=16.9515ms p95=25.2161ms min=12.4274ms max=107.4558ms (n=2000)
+  current-texturepaint(キャッシュ済み + TexturePaint)        : mean=16.2248ms median=15.0193ms p95=23.7566ms min=11.2592ms max=32.4749ms (n=2000)
+  current-tiled       (キャッシュ済み + drawImageでタイル描画)  : mean=7.4789ms median=6.8845ms p95=10.6152ms min=4.9956ms max=18.4164ms (n=2000)
+  speedup (mean) current-texturepaint vs legacy: 1.1x
+  speedup (mean) current-tiled        vs legacy: 2.4x
+  speedup (mean) current-tiled vs current-texturepaint: 2.2x
+
+[2. GameStage.draw() Layer Dispatch] objects=350
+  legacy        (レイヤー数分フルスキャン)          : mean=0.0015ms median=0.0010ms p95=0.0018ms min=0.0010ms max=0.6010ms (n=5000)
+  current       (1回のスキャン、毎回ArrayListを新規確保): mean=0.0044ms median=0.0037ms p95=0.0060ms min=0.0030ms max=0.0818ms (n=5000)
+  current-reused(1回のスキャン、ArrayListを再利用)     : mean=0.0029ms median=0.0028ms p95=0.0032ms min=0.0020ms max=0.0480ms (n=5000)
+  speedup (mean) current        vs legacy: 0.3x
+  speedup (mean) current-reused vs legacy: 0.5x
+  (sink=10500000)
+
+[3. GlyphVector Cache]
+  -- scenario: stable --
+    legacy  : mean=0.2112ms median=0.1944ms p95=0.3351ms min=0.1181ms max=3.6921ms (n=5000)
+    current : mean=0.1781ms median=0.1583ms p95=0.2692ms min=0.1127ms max=2.8476ms (n=5000)
+    speedup (mean): 1.2x
+  -- scenario: changing --
+    legacy  : mean=0.1808ms median=0.1824ms p95=0.2719ms min=0.0408ms max=1.9267ms (n=5000)
+    current : mean=0.1956ms median=0.1881ms p95=0.3308ms min=0.0404ms max=2.7959ms (n=5000)
+    speedup (mean): 0.9x
+
+結果を書き出しました: /home/user/online-shooting-game-java/benchmark/results/20261005-071049-linux.txt
+履歴に追記しました:   /home/user/online-shooting-game-java/benchmark/results/history.csv

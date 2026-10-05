@@ -11,11 +11,11 @@ PR「背景テクスチャの毎フレーム再読込を排除し、GPUアクセ
 
 ## 計測対象
 
-| # | 対象 | legacy（修正前の再現） | current（修正後の再現） |
-|---|------|----------------------|------------------------|
-| 1 | `GamePanel.drawBackground()` | 毎フレーム`ImageIO.read()`でPNGを再読込 | 起動時に1回だけ読み込み、参照を再利用 |
-| 2 | `GameStage.draw()` のレイヤー振り分け | `RenderLayer`の数だけ全オブジェクトを毎回フルスキャン | 1回のスキャンでレイヤーごとに振り分け |
-| 3 | `TeamInfoText` / `RotationChars` | 毎フレーム`GlyphVector`から文字の輪郭を再計算 | 表示内容が変わらない限りShapeをキャッシュ |
+| # | 対象 | legacy（最初の修正前の再現） | 中間（1回目の修正の再現） | current（現行実装の再現） |
+|---|------|----------------------|------------------------|------------------------|
+| 1 | `GamePanel.drawBackground()` | 毎フレーム`ImageIO.read()`でPNGを再読込 + `TexturePaint`で塗る | `current-texturepaint`: 起動時に1回だけ読み込むが、塗りは依然`TexturePaint` | `current-tiled`: `TexturePaint`をやめ、`drawImage()`でタイル状に描く |
+| 2 | `GameStage.draw()` のレイヤー振り分け | `RenderLayer`の数だけ全オブジェクトを毎回フルスキャン | `current`: 1回のスキャンで振り分けるが`ArrayList`を毎回新規確保 | `current-reused`: バッファを再利用（※まだ本番には未反映。後述） |
+| 3 | `TeamInfoText` / `RotationChars` | 毎フレーム`GlyphVector`から文字の輪郭を再計算 | - | 表示内容が変わらない限りShapeをキャッシュ |
 
 いずれも、実際の本番コードを直接呼ぶのではなく、各ファイルに「修正前のアルゴリズムを再現した
 legacyメソッド」と「修正後のアルゴリズムを再現したcurrentメソッド」を両方実装し、
@@ -113,6 +113,42 @@ current-reused: mean=0.0022ms  (legacyの約0.7倍、まだ少し遅い)
 いずれを選んでも実際のゲームプレイに体感できる差は出ないはずだが、
 「測ったら想定と違っていた」実例として記録のためここに残しておく。
 
+## 変更点1の追加修正: TexturePaint→drawImageによるタイル描画
+
+上記の「背景のTexturePaint自体が重い」という発見を受けて、`GamePanel.drawBackground()`を
+`TexturePaint`+`fillRect()`から、キャッシュ済みの画像を`drawImage()`でタイル状に繰り返し描く方式
+（`GamePanel.drawTiled()`）に変更した。`drawImage()`は、画像がGraphicsConfiguration互換であれば
+GPUによる高速blitが期待できる、Java2Dで最も最適化された操作である一方、`TexturePaint`による塗りは
+D3D/OpenGLパイプラインのアクセラレーション対象外で常にソフトウェア処理になる（前述の通り）。
+
+このLinux/ソフトウェアレンダリング環境でも、計測で明確な改善が確認できた:
+
+```
+legacy              (毎フレームImageIO.read + TexturePaint): mean=17.1ms
+current-texturepaint(キャッシュ済み + TexturePaint)        : mean=15.9ms  (legacy比 1.1倍)
+current-tiled       (キャッシュ済み + drawImageでタイル描画)  : mean=6.9ms   (legacy比 2.5倍、texturepaint比 2.3倍)
+```
+
+ソフトウェアレンダリングのこの環境でも2倍以上速くなっており、実際のWindows+GPU環境では
+`drawImage()`がアクセラレーションされる分、さらに大きな改善が期待できる（要実機確認）。
+
+タイル描画の範囲は`Graphics2D#getClipBounds()`（カメラ変換後の呼び出しなので、画面に実際に
+映っているワールド座標系の範囲がそのまま返ってくる）で絞り込んでおり、カメラ変換・ズームを
+含めて正しく機能することをSwingの実パネル上で検証済み（`graphics.setTransform()`後に
+`getClipBounds()`が正しく逆変換された矩形を返すことを確認した）。
+
+### 計測中に踏んだ罠（記録として残す）
+
+`current-tiled`を最初に計測したとき、`mean=0.0002ms`という物理的にあり得ない数値が出た
+（数百KB〜数MBのピクセルコピーが200ナノ秒で終わるはずがない）。原因は、ベンチマークの
+`BufferedImage.createGraphics()`で作った`Graphics2D`は、**明示的にクリップを設定しない限り
+`getClipBounds()`が`null`を返す**ため、`drawTiled()`内の`if (area == null) return;`に
+毎回引っかかって実質何も描いていなかったこと。実際のSwingの`paintComponent(Graphics g)`では
+コンポーネントの描画範囲が自動的にクリップとして設定される（これも実際に検証済み）ため、
+本番コード自体に問題はなかったが、ベンチマーク側で`g.setClip(0, 0, width, height)`を
+明示的に呼ぶ修正が必要だった。「数値が速すぎる・遅すぎる場合はまず自分のベンチマークコードを疑う」
+という教訓として記録しておく。
+
 ## 変更点4・5（GPU活用）を実機(Windows)で確認する際のヒント
 
 このベンチマークの対象外だが、将来Windows実機で確認する際のメモ:
@@ -123,14 +159,8 @@ current-reused: mean=0.0022ms  (legacyの約0.7倍、まだ少し遅い)
 - **変更点5**（`-Dsun.java2d.d3d=true`）: Direct3Dパイプラインが実際に初期化されているかどうかは
   起動時のログやトレースで確認できる。D3Dが環境依存で無効化されGDI（ソフトウェア）に
   フォールバックしていないかを見るのが目的。
-- どちらも**実際のGPU・ドライバに依存する**ため、仮想ディスプレイ（Xvfbなど）や
+- **drawImageタイル描画**: 上記の通りこのLinux環境でも2倍以上速くなっているが、実際にGPUの
+  blitが使われているかどうかは、やはり`-Dsun.java2d.trace=log`系のトレースで確認するのが確実。
+- いずれも**実際のGPU・ドライバに依存する**ため、仮想ディスプレイ（Xvfbなど）や
   GPUなしの環境では意味のある比較ができない。必ず実際のWindows PC（できれば対戦時に
   使う想定の環境に近いGPU）で確認すること。
-- また、変更点1のベンチマーク結果を見ると、背景のTexturePaint自体のfillRectが
-  （このLinux/ソフトウェアレンダリング環境では）1回あたり16〜19ミリ秒と、
-  60FPSのフレーム予算をほぼ使い切ってしまうほど重いことが分かった。
-  TexturePaintによる塗りつぶしはJava2DのD3D/OpenGLパイプラインでも基本的に
-  アクセラレーションされない（CPU側のタイル処理にフォールバックする）ことが知られているため、
-  **実機でも同様に重い可能性がある**。もし実機でも背景描画が重いままなら、
-  TexturePaintではなく、背景を1枚の合成済み画像として事前に焼き込んでおき、
-  `drawImage()`（これはアクセラレーションされる）で済ませる方式への変更を検討する価値がある。
