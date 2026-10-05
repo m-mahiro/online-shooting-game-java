@@ -14,14 +14,34 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 変更点2: GameStage.draw()が、RenderLayerの数だけ全オブジェクトを毎回スキャンしていた
- * (フルスキャン×レイヤー数回)問題を切り出して計測する。
+ * GameStage.draw()のレイヤー振り分け方式について、3つの実装候補を比較する。
  *
- * 実際のステージに近い比率（壁多数・弾少数・残骸少数）のダミーGameObjectを用意し、
- *  - legacy : 修正前のアルゴリズム（RenderLayer.values()の数だけ全オブジェクトを走査）
- *  - current: 修正後のアルゴリズム（1回の走査でレイヤーごとに振り分けてから描画）
- * を同じデータに対して実行して比較する。
+ * このベンチマークはちょっとした紆余曲折の記録でもある:
+ *  1. 元々は「RenderLayerの数だけ全オブジェクトを毎回スキャンする」(= legacy)実装だった。
+ *  2. 一度「1回の走査でレイヤーごとに振り分けてから描画する」(= current, 毎フレーム
+ *     ArrayListを4つ新規確保)に変更したが、このベンチマークで計測したところ、
+ *     legacyの方が速いという逆の結果が出た（ArrayList確保のコストが、減らした
+ *     はずの走査コストを上回っていたため）。
+ *  3. バッファを使い回す(= current-reused)案も試したが、legacyには僅かに届かなかった。
+ *  4. さらに「GameObjectのレイヤーが実際いつ変わるか」をソースコードから調査したところ、
+ *     壁・基地は生成後レイヤーが一切変わらず、戦車・弾・ミサイル・ブロックも
+ *     死亡/リスポーン/着弾など特定のイベント時に高々1〜2回しか変わらないと判明。
+ *     「永続的なバケツ構造を差分更新する」設計（Unity/Godotのsorting layer/z_index
+ *     が内部的に行っているようなdirty-flag方式）も検討したが、数千オブジェクト規模の
+ *     汎用エンジンでなければ正当化しづらい複雑さであり、addGameObject()がGUI/
+ *     ネットワークの複数スレッドから呼ばれる並行性も考えると、実装・保守コストが
+ *     見合わないと判断した。
+ *  5. 結論として、GameStage.javaは1.のlegacy方式（最も単純、かつ実測でも最速）に戻した。
  *
+ * このベンチマークは「試した結果、元の実装が最善だった」という結論に至った過程を
+ * 再現・記録するために残している。
+ *
+ * 比較対象:
+ *  - legacy       : RenderLayer.values()の数だけ全オブジェクトを走査する（現在のGameStage.javaの実装）
+ *  - current       : 1回の走査でレイヤーごとに振り分けるが、ArrayListを毎回新規に4つ確保する（過去に試して不採用になった案）
+ *  - current-reused: 同じく1回の走査で振り分けるが、ArrayListを再利用する（不採用になった案の改良版）
+ *
+ * 実際のステージに近い比率（壁多数・弾少数・残骸少数）のダミーGameObjectを用意して計測する。
  * 実際のGameStage.draw()はこれに加えてStageGenerator#drawBackground()も呼ぶが、
  * ここではレイヤー振り分けアルゴリズムの差だけを切り出して計測するため、背景描画は含めない。
  *
@@ -91,9 +111,9 @@ public class LayerBucketBenchmark {
 		g.dispose();
 
 		out.println("[2. GameStage.draw() Layer Dispatch] objects=" + objects.size());
-		out.println("  legacy        (レイヤー数分フルスキャン)          : " + legacyStats);
-		out.println("  current       (1回のスキャン、毎回ArrayListを新規確保): " + currentStats);
-		out.println("  current-reused(1回のスキャン、ArrayListを再利用)     : " + reusedStats);
+		out.println("  legacy        (レイヤー数分フルスキャン・現行実装)        : " + legacyStats);
+		out.println("  current       (1回のスキャン、毎回ArrayListを新規確保・不採用): " + currentStats);
+		out.println("  current-reused(1回のスキャン、ArrayListを再利用・不採用)     : " + reusedStats);
 		out.printf("  speedup (mean) current        vs legacy: %.1fx%n", legacyStats.meanMs / currentStats.meanMs);
 		out.printf("  speedup (mean) current-reused vs legacy: %.1fx%n", legacyStats.meanMs / reusedStats.meanMs);
 		// DummyObject.sinkを実際に読み出して使うことで、JITがdraw()呼び出しごと
