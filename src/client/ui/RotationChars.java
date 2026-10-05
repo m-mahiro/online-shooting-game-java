@@ -18,6 +18,10 @@ public class RotationChars implements ScreenObject {
     private final int fontSize; // カスタムサイズ
     private int frameCount = 0;
 
+    // 文字の輪郭(Shape)は回転しても変わらないので、一度だけ計算してキャッシュする
+    private Shape cachedGlyphShape;
+    private double cachedXOffset, cachedYOffset;
+
     // アニメーション設定
     private static final int PAUSE_FRAMES = 180;      // 静止時間
     private static final int ROTATION_FRAMES = 60;  // 一周にかかる時間
@@ -84,29 +88,31 @@ public class RotationChars implements ScreenObject {
             fillColor = Color.BLACK;
         }
 
+        // 文字の輪郭(Shape)はテキスト・フォントが不変なら毎フレーム同じなので、初回だけ計算してキャッシュする
+        if (cachedGlyphShape == null) {
+            Font font = new Font("Arial", Font.BOLD, fontSize);
+            FontRenderContext frc = graphics.getFontRenderContext();
+
+            // 文字列を形状(Shape)に変換
+            GlyphVector gv = font.createGlyphVector(frc, this.text);
+            Shape textShape = gv.getOutline();
+
+            // 位置合わせ（センタリング）
+            // 文字の「幅」と「高さ」を取得して、指定座標(textX, textY)が「文字の中心」に来るように調整
+            Rectangle bounds = textShape.getBounds();
+            cachedXOffset = -bounds.getWidth() / 2.0;
+            cachedYOffset = bounds.getHeight() / 2.0; // ベースライン(足元)からの高さ調整
+            cachedGlyphShape = textShape;
+        }
+
+        // アフィン変換の適用（回転・移動はフレームごとに変わるので毎回計算する）
         AffineTransform trans = new AffineTransform();
-
-        // 1. フォントの設定 (サイズを大きく、太字に)
-        Font font = new Font("Arial", Font.BOLD, fontSize);
-        FontRenderContext frc = graphics.getFontRenderContext();
-
-        // 2. 文字列を形状(Shape)に変換
-        GlyphVector gv = font.createGlyphVector(frc, this.text);
-        Shape textShape = gv.getOutline();
-
-        // 3. 位置合わせ（センタリング）
-        // 文字の「幅」と「高さ」を取得して、指定座標(textX, textY)が「文字の中心」に来るように調整
-        Rectangle bounds = textShape.getBounds();
-        double xOffset = -bounds.getWidth() / 2.0;
-        double yOffset = bounds.getHeight() / 2.0; // ベースライン(足元)からの高さ調整
-
-        // 4. アフィン変換の適用
         trans.translate(position.x, position.y);     // 指定位置へ移動
         trans.scale(scaleX, 1.0);                    // X方向のスケール変化で回転を再現
-        trans.translate(xOffset, yOffset);           // 中心補正
+        trans.translate(cachedXOffset, cachedYOffset); // 中心補正
 
         // 変換適用済みのShapeを作成
-        Shape finalShape = trans.createTransformedShape(textShape);
+        Shape finalShape = trans.createTransformedShape(cachedGlyphShape);
 
         // 5. 描画設定 (レンダリング品質を上げる)
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);

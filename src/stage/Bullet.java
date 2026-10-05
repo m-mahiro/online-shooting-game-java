@@ -9,7 +9,6 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Objects;
-import javax.imageio.ImageIO;
 
 import static stage.Team.*;
 
@@ -46,11 +45,11 @@ public class Bullet implements GameObject, Projectile {
 
     static {
         try {
-            noneImage = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("/client/assets/none_image.png")));
-            blueNormalBulletImage = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("/client/assets/bullet_blue.png")));
-            redNormalBulletImage = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("/client/assets/bullet_red_normal.png")));
-            blueBulletDebris = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("/client/assets/bullet_blue_debris.png")));
-            redBulletDebris = ImageIO.read(Objects.requireNonNull(Bullet.class.getResource("/client/assets/bullet_red_debris.png")));
+            noneImage = util.ImageUtil.load(Objects.requireNonNull(Bullet.class.getResource("/client/assets/none_image.png")));
+            blueNormalBulletImage = util.ImageUtil.load(Objects.requireNonNull(Bullet.class.getResource("/client/assets/bullet_blue.png")));
+            redNormalBulletImage = util.ImageUtil.load(Objects.requireNonNull(Bullet.class.getResource("/client/assets/bullet_red_normal.png")));
+            blueBulletDebris = util.ImageUtil.load(Objects.requireNonNull(Bullet.class.getResource("/client/assets/bullet_blue_debris.png")));
+            redBulletDebris = util.ImageUtil.load(Objects.requireNonNull(Bullet.class.getResource("/client/assets/bullet_red_debris.png")));
         } catch (IOException e) {
             e.printStackTrace();
         }

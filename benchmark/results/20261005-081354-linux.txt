@@ -1,0 +1,42 @@
+==== Environment ====
+timestamp (UTC): 2026-10-05T08:13:54.328793470Z
+os.name: Linux
+os.version: 6.18.44-fc-v70
+os.arch: amd64
+java.version: 21.0.11
+java.vendor: Ubuntu
+available processors: 4
+max heap (MB): 3422
+java.awt.headless: true
+git commit: bed324e
+======================
+warmup=200 iterations=2000
+
+[1. Background Texture Reload]
+  legacy              (毎フレームImageIO.read + TexturePaint): mean=17.5729ms median=16.7601ms p95=25.1460ms min=12.6303ms max=34.9837ms (n=2000)
+  current-texturepaint(キャッシュ済み + TexturePaint)        : mean=15.8528ms median=14.8906ms p95=22.9973ms min=11.4830ms max=42.9009ms (n=2000)
+  current-tiled       (キャッシュ済み + drawImageでタイル描画)  : mean=6.9468ms median=6.5919ms p95=9.6260ms min=4.9475ms max=15.1766ms (n=2000)
+  speedup (mean) current-texturepaint vs legacy: 1.1x
+  speedup (mean) current-tiled        vs legacy: 2.5x
+  speedup (mean) current-tiled vs current-texturepaint: 2.3x
+
+[2. GameStage.draw() Layer Dispatch] objects=350
+  legacy        (レイヤー数分フルスキャン・現行実装)        : mean=0.0011ms median=0.0010ms p95=0.0011ms min=0.0010ms max=0.0311ms (n=5000)
+  current       (1回のスキャン、毎回ArrayListを新規確保・不採用): mean=0.0267ms median=0.0215ms p95=0.0429ms min=0.0156ms max=0.2507ms (n=5000)
+  current-reused(1回のスキャン、ArrayListを再利用・不採用)     : mean=0.0026ms median=0.0025ms p95=0.0030ms min=0.0018ms max=0.0490ms (n=5000)
+  speedup (mean) current        vs legacy: 0.0x
+  speedup (mean) current-reused vs legacy: 0.4x
+  (sink=10500000)
+
+[3. GlyphVector Cache]
+  -- scenario: stable --
+    legacy  : mean=0.2198ms median=0.2038ms p95=0.3157ms min=0.1405ms max=8.3124ms (n=5000)
+    current : mean=0.1680ms median=0.1581ms p95=0.2186ms min=0.1181ms max=2.7663ms (n=5000)
+    speedup (mean): 1.3x
+  -- scenario: changing --
+    legacy  : mean=0.1996ms median=0.1984ms p95=0.3037ms min=0.0462ms max=3.3716ms (n=5000)
+    current : mean=0.2051ms median=0.1851ms p95=0.3560ms min=0.0408ms max=5.3533ms (n=5000)
+    speedup (mean): 1.0x
+
+結果を書き出しました: /home/user/online-shooting-game-java/benchmark/results/20261005-081354-linux.txt
+履歴に追記しました:   /home/user/online-shooting-game-java/benchmark/results/history.csv

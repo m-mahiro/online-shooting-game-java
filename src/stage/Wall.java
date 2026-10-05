@@ -1,6 +1,5 @@
 package stage;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
@@ -23,7 +22,10 @@ public class Wall implements GameObject {
 
 	static {
 		try {
-			wallImage = ImageIO.read(Objects.requireNonNull(Wall.class.getResource("/client/assets/wall.png"))).getScaledInstance(WIDTH + 1, HEIGHT + 1, Image.SCALE_SMOOTH);
+			java.awt.image.BufferedImage source = util.ImageUtil.load(Objects.requireNonNull(Wall.class.getResource("/client/assets/wall.png")));
+			// GraphicsConfigurationに適合した形式を保ったまま拡大することで、壁は多数描画されるため
+			// 描画時のアクセラレーションが効きやすいようにしておく
+			wallImage = util.ImageUtil.scale(source, WIDTH + 1, HEIGHT + 1);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

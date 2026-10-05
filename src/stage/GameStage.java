@@ -110,7 +110,31 @@ public class GameStage implements StageInfo {
 		// 背景の描画（ステージジェネレータに委譲）
 		generator.drawBackground(graphics, visibleWidth, visibleHeight, outerStageAnimationFrame);
 
-		// GameObjectの描画
+		// GameObjectをレイヤーの下から順に描画する。
+		//
+		// 以前はここで「1回のスキャンでレイヤーごとにArrayListへ振り分けてから描画する」
+		// 方式を試したが、ベンチマーク(benchmark/LayerBucketBenchmark, benchmark/README.md参照)で
+		// 計測した結果、毎フレームArrayListを4つ新規確保するコストの方が、
+		// 単純な「レイヤー数ぶん全オブジェクトを走査する」方式より実測で遅いことが判明したため、
+		// この単純な実装に戻した。
+		//
+		// 理由の裏付け:
+		//  - 各GameObjectのgetRenderLayer()は、対応するオブジェクトの内部状態（HP等）から毎回
+		//    計算される値で、実際に値が変わるのは「壁・基地は生成されてから一度も変わらない」
+		//    「戦車は死亡・リスポーン時のみ」「弾・ミサイルは着弾時に一度だけ」という、
+		//    フレームごとに見ればごく稀なイベントである。つまり、この一覧の「レイヤーごとの
+		//    まとまり具合」自体はフレームをまたいでほぼ変化しない。
+		//  - そのため、変化のたびに差分だけ更新する永続的なバケツ構造（Unity の
+		//    sortingLayer/sortingOrderやGodotのz_indexが内部的に行っているような、
+		//    dirty-flagによる再挿入方式）も検討したが、これは数千オブジェクト規模の
+		//    汎用エンジン内部実装で正当化される複雑さであり、このゲームの物量
+		//    （数百オブジェクト）や、addGameObject()がGUIスレッドとネットワークスレッドの
+		//    両方から呼ばれる（ConcurrentHashMapで保護されている）という並行性を考えると、
+		//    実装・保守コストに見合わないと判断した。
+		//  - 実際、この描画ディスパッチの方式差はいずれも1フレームあたり数マイクロ秒の
+		//    オーダーで、60FPSのフレーム予算(16.6ms)の0.1%にも満たない。各オブジェクトの
+		//    draw()自体（画像のアフィン変換・blit）の方が遥かに支配的なため、この部分は
+		//    「測って一番単純かつ速かったもの」を採用するのが合理的という結論に至った。
 		for (RenderLayer layer : RenderLayer.values()) {
 			for (GameObject object : objects.values()) {
 				if (object.getRenderLayer() != layer) continue;

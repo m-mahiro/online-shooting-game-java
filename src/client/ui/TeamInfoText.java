@@ -19,11 +19,19 @@ import static stage.Team.*;
  */
 public class TeamInfoText implements UIContent {
 
+	// フォントはすべてのインスタンスで共通なので、一度だけ生成して共有する
+	private static final Font FONT = new Font("Arial", Font.BOLD, 100);
+
 	// どちらのチーム用の画面を表示すれば良いか
 	private final Team team;
 
 	// 表示する情報の提供元
 	private StageInfo info;
+
+	// 直前に描画した内容のキャッシュ（テキストが変わらない限りGlyphVectorの再計算を避けるため）
+	private String cachedText;
+	private int cachedWindowWidth, cachedWindowHeight;
+	private Shape cachedShape;
 
 	/**
 	 * TeamInfoTextのコンストラクタ。
@@ -76,30 +84,41 @@ public class TeamInfoText implements UIContent {
 		double textX = isRed ? windowWidth - 400 : 400;
 		double textY = windowHeight - 80;
 
-		AffineTransform textTrans = new AffineTransform();
+		// 表示内容（数字）が変わらないフレームでは、文字の形状(Shape)をフォントから再計算せずキャッシュを使う。
+		// GlyphVectorの生成は文字の輪郭を求める比較的重い処理だが、HPは毎フレーム変化するわけではないため。
+		boolean needsRecompute = cachedShape == null
+				|| !text.equals(cachedText)
+				|| windowWidth != cachedWindowWidth
+				|| windowHeight != cachedWindowHeight;
 
-		// 1. フォントの設定 (サイズを大きく、太字に)
-		Font font = new Font("Arial", Font.BOLD, 100);
-		FontRenderContext frc = graphics.getFontRenderContext();
+		if (needsRecompute) {
+			FontRenderContext frc = graphics.getFontRenderContext();
 
-		// 2. 文字列を形状(Shape)に変換
-		GlyphVector gv = font.createGlyphVector(frc, text);
-		Shape textShape = gv.getOutline();
+			// 1. 文字列を形状(Shape)に変換
+			GlyphVector gv = FONT.createGlyphVector(frc, text);
+			Shape textShape = gv.getOutline();
 
-		// 3. 位置合わせ（センタリング）
-		// 文字の「幅」と「高さ」を取得して、指定座標(textX, textY)が「文字の中心」に来るように調整
-		Rectangle bounds = textShape.getBounds();
-		double xOffset = -bounds.getWidth() / 2.0;
-		double yOffset = bounds.getHeight() / 2.0; // ベースライン(足元)からの高さ調整
+			// 2. 位置合わせ（センタリング）
+			// 文字の「幅」と「高さ」を取得して、指定座標(textX, textY)が「文字の中心」に来るように調整
+			Rectangle bounds = textShape.getBounds();
+			double xOffset = -bounds.getWidth() / 2.0;
+			double yOffset = bounds.getHeight() / 2.0; // ベースライン(足元)からの高さ調整
 
-		// 4. アフィン変換の適用
-		textTrans.translate(textX, textY);     // 指定位置へ移動
-		textTrans.translate(xOffset, yOffset); // 中心補正
+			// 3. アフィン変換の適用
+			AffineTransform textTrans = new AffineTransform();
+			textTrans.translate(textX, textY);     // 指定位置へ移動
+			textTrans.translate(xOffset, yOffset); // 中心補正
 
-		// 変換適用済みのShapeを作成
-		Shape finalShape = textTrans.createTransformedShape(textShape);
+			// 変換適用済みのShapeをキャッシュしておく
+			cachedShape = textTrans.createTransformedShape(textShape);
+			cachedText = text;
+			cachedWindowWidth = windowWidth;
+			cachedWindowHeight = windowHeight;
+		}
 
-		// 5. 描画設定 (レンダリング品質を上げる)
+		Shape finalShape = cachedShape;
+
+		// 4. 描画設定 (レンダリング品質を上げる)
 		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
 

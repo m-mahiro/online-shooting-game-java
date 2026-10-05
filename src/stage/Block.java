@@ -3,7 +3,6 @@ package stage;
 import client.GameEngine;
 import client.SoundManager;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
@@ -47,11 +46,11 @@ public class Block implements GameObject {
 
 	static {
 		try {
-			normalBlockImage = ImageIO.read(Objects.requireNonNull(Block.class.getResource("/client/assets/block_normal.png")));
-			brokenBlockImage = ImageIO.read(Objects.requireNonNull(Block.class.getResource("/client/assets/block_broken.png")));
-			blockDebrisImage = ImageIO.read(Objects.requireNonNull(Block.class.getResource("/client/assets/block_debris.png")));
-			transparentBlockImage = ImageIO.read(Objects.requireNonNull(Block.class.getResource("/client/assets/block_trans.png")));
-			noneImage = ImageIO.read(Objects.requireNonNull(Block.class.getResource("/client/assets/none_image.png")));
+			normalBlockImage = util.ImageUtil.load(Objects.requireNonNull(Block.class.getResource("/client/assets/block_normal.png")));
+			brokenBlockImage = util.ImageUtil.load(Objects.requireNonNull(Block.class.getResource("/client/assets/block_broken.png")));
+			blockDebrisImage = util.ImageUtil.load(Objects.requireNonNull(Block.class.getResource("/client/assets/block_debris.png")));
+			transparentBlockImage = util.ImageUtil.load(Objects.requireNonNull(Block.class.getResource("/client/assets/block_trans.png")));
+			noneImage = util.ImageUtil.load(Objects.requireNonNull(Block.class.getResource("/client/assets/none_image.png")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

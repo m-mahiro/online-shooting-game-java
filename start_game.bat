@@ -12,6 +12,7 @@ for /r src %%F in (*.java) do (call set "SRCS=%%SRCS%% "%%F"")
 javac -d out -encoding UTF-8 %SRCS%
 
 echo Running the game...
-java -cp out client.GameLauncher
+rem Direct3D(GPU)パイプラインを明示的に有効化する。詳細はrun_game.batのコメントを参照。
+java -Dsun.java2d.d3d=true -cp out client.GameLauncher
 
 pause

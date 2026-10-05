@@ -4,7 +4,6 @@ import client.GameEngine;
 import client.SoundManager;
 import util.Util;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
@@ -61,31 +60,31 @@ public class Tank implements GameObject {
     static {
         try {
             // 本当の本当に透明
-            noneImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("/client/assets/none_image.png")));
+            noneImage = util.ImageUtil.load(Objects.requireNonNull(Tank.class.getResource("/client/assets/none_image.png")));
 
             // debris
-            redTankDebris = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("/client/assets/tank_red_debris.png")));
-            blueTankDebris = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("/client/assets/tank_blue_debris.png")));
+            redTankDebris = util.ImageUtil.load(Objects.requireNonNull(Tank.class.getResource("/client/assets/tank_red_debris.png")));
+            blueTankDebris = util.ImageUtil.load(Objects.requireNonNull(Tank.class.getResource("/client/assets/tank_blue_debris.png")));
 
             // red chassis
-            redNormalChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("/client/assets/chassis_red_normal.png")));
-            redBrokenChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("/client/assets/chassis_red_broken.png")));
-            redTransparentChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("/client/assets/chassis_red_trans.png")));
+            redNormalChassisImage = util.ImageUtil.load(Objects.requireNonNull(Tank.class.getResource("/client/assets/chassis_red_normal.png")));
+            redBrokenChassisImage = util.ImageUtil.load(Objects.requireNonNull(Tank.class.getResource("/client/assets/chassis_red_broken.png")));
+            redTransparentChassisImage = util.ImageUtil.load(Objects.requireNonNull(Tank.class.getResource("/client/assets/chassis_red_trans.png")));
 
             // blue chassis
-            blueNormalChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("/client/assets/chassis_blue_normal.png")));
-            blueBrokenChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("/client/assets/chassis_blue_broken.png")));
-            blueTransparentChassisImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("/client/assets/chassis_blue_trans.png")));
+            blueNormalChassisImage = util.ImageUtil.load(Objects.requireNonNull(Tank.class.getResource("/client/assets/chassis_blue_normal.png")));
+            blueBrokenChassisImage = util.ImageUtil.load(Objects.requireNonNull(Tank.class.getResource("/client/assets/chassis_blue_broken.png")));
+            blueTransparentChassisImage = util.ImageUtil.load(Objects.requireNonNull(Tank.class.getResource("/client/assets/chassis_blue_trans.png")));
 
             // red gun
-            redNormalGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("/client/assets/gun_red_normal.png")));
-            redBrokenGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("/client/assets/gun_red_broken.png")));
-            redTransparentGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("/client/assets/gun_red_trans.png")));
+            redNormalGunImage = util.ImageUtil.load(Objects.requireNonNull(Tank.class.getResource("/client/assets/gun_red_normal.png")));
+            redBrokenGunImage = util.ImageUtil.load(Objects.requireNonNull(Tank.class.getResource("/client/assets/gun_red_broken.png")));
+            redTransparentGunImage = util.ImageUtil.load(Objects.requireNonNull(Tank.class.getResource("/client/assets/gun_red_trans.png")));
 
             // blue gun
-            blueNormalGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("/client/assets/gun_blue_normal.png")));
-            blueBrokenGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("/client/assets/gun_blue_broken.png")));
-            blueTransparentGunImage = ImageIO.read(Objects.requireNonNull(Tank.class.getResource("/client/assets/gun_blue_trans.png")));
+            blueNormalGunImage = util.ImageUtil.load(Objects.requireNonNull(Tank.class.getResource("/client/assets/gun_blue_normal.png")));
+            blueBrokenGunImage = util.ImageUtil.load(Objects.requireNonNull(Tank.class.getResource("/client/assets/gun_blue_broken.png")));
+            blueTransparentGunImage = util.ImageUtil.load(Objects.requireNonNull(Tank.class.getResource("/client/assets/gun_blue_trans.png")));
 
         } catch (IOException e) {
             e.printStackTrace();

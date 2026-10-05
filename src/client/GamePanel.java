@@ -24,6 +24,64 @@ public class GamePanel extends JPanel {
     private final GameEngine gameEngine;
     private final NetworkManager networkManager;
 
+    // 背景テクスチャ（ディスクからの読み込みは起動時に一度だけ行う）
+    private static final java.awt.image.BufferedImage FLOOR_TILE;
+    private static final java.awt.image.BufferedImage OUTER_STAGE_TILE;
+
+    static {
+        try {
+            FLOOR_TILE = util.ImageUtil.load(
+                    java.util.Objects.requireNonNull(GamePanel.class.getResource("assets/floor_texture.png")));
+
+            java.awt.image.BufferedImage oceanSource = util.ImageUtil.load(
+                    java.util.Objects.requireNonNull(GamePanel.class.getResource("assets/ocean_texture.png")));
+            // 元のTexturePaintは1000x1000のタイルとして使っていた（画像の実サイズ1040x1035とは異なる）。
+            // 見た目を変えずにdrawImage()での1:1タイリングに置き換えるため、起動時に一度だけ
+            // このサイズへ拡大・縮小しておく（毎フレームのスケーリングを避けるため）。
+            OUTER_STAGE_TILE = util.ImageUtil.scale(oceanSource, 1000, 1000);
+        } catch (java.io.IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 画像(tile)を、area（ワールド座標系での可視範囲）を覆うようにタイル状に繰り返し描画する。
+     *
+     * TexturePaintによるfillRect()は、Java2DのD3D/OpenGLパイプラインではアクセラレーションされず、
+     * 塗る範囲のピクセル数に応じて重いソフトウェア処理になってしまう（計測で確認済み。
+     * benchmark/README.md参照）。一方drawImage()は、画像がGraphicsConfiguration互換であれば
+     * GPUによる高速なblitが期待できる、Java2Dで最も最適化された操作である。
+     * そのため、同じ見た目をTexturePaintではなくdrawImage()の繰り返しで実現する。
+     *
+     * areaは画面に実際に映っている範囲だけに絞ることで、必要なタイルの枚数も最小限にしている。
+     *
+     * @param graphics 描画先
+     * @param tile 繰り返し描画する画像（タイルの境界はanchorX/anchorYを基準に決まる）
+     * @param anchorX タイルの境界のX基準位置（アニメーションでスクロールさせる場合はここをずらす）
+     * @param anchorY タイルの境界のY基準位置
+     * @param area タイルで覆うべきワールド座標系での範囲
+     */
+    private static void drawTiled(Graphics2D graphics, java.awt.image.BufferedImage tile,
+            double anchorX, double anchorY, java.awt.geom.Rectangle2D area) {
+        if (area == null || area.isEmpty()) return;
+
+        double tileWidth = tile.getWidth();
+        double tileHeight = tile.getHeight();
+
+        int firstX = (int) Math.floor((area.getMinX() - anchorX) / tileWidth);
+        int lastX = (int) Math.ceil((area.getMaxX() - anchorX) / tileWidth);
+        int firstY = (int) Math.floor((area.getMinY() - anchorY) / tileHeight);
+        int lastY = (int) Math.ceil((area.getMaxY() - anchorY) / tileHeight);
+
+        for (int ty = firstY; ty < lastY; ty++) {
+            int y = (int) Math.round(anchorY + ty * tileHeight);
+            for (int tx = firstX; tx < lastX; tx++) {
+                int x = (int) Math.round(anchorX + tx * tileWidth);
+                graphics.drawImage(tile, x, y, null);
+            }
+        }
+    }
+
     /**
      * 練習モードまたは通常モードでゲームパネルを初期化する。
      * パネルの設定、入力ハンドラの登録、ゲームエンジンの生成を行う。
@@ -262,30 +320,26 @@ public class GamePanel extends JPanel {
 
                 @Override
                 public void drawBackground(Graphics2D graphics, double visibleWidth, double visibleHeight, double animationFrame) {
-                    // 画像リソースの読み込み
-                    java.awt.image.BufferedImage floorTexture, outerStageTexture;
-                    try {
-                        floorTexture = javax.imageio.ImageIO.read(java.util.Objects.requireNonNull(getClass().getResource("assets/floor_texture.png")));
-                        outerStageTexture = javax.imageio.ImageIO.read(java.util.Objects.requireNonNull(getClass().getResource("assets/ocean_texture.png")));
-                    } catch (java.io.IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    // 画面に実際に映っている範囲（ワールド座標系）だけにタイルを絞り込む。
+                    // Graphics2D#getClipBounds()は、現在のユーザー座標系（=カメラ変換後のワールド座標系）
+                    // でのクリップ範囲を返すので、そのまま「可視範囲」として使える。
+                    java.awt.Rectangle clipBounds = graphics.getClipBounds();
+                    java.awt.geom.Rectangle2D visibleArea = (clipBounds != null)
+                            ? clipBounds
+                            : new java.awt.geom.Rectangle2D.Double(
+                                    -(stageWidth + visibleWidth) / 2.0, -(stageHeight + visibleHeight) / 2.0,
+                                    stageWidth + visibleWidth, stageHeight + visibleHeight);
 
-                    // ステージ外の描画
-                    double textureSize = 1000;
+                    // ステージ外（海）の描画。アニメーションでタイルの基準位置をずらすことでスクロールを表現する。
+                    double textureSize = OUTER_STAGE_TILE.getWidth();
                     double translate = animationFrame * 10 % textureSize;
-                    java.awt.geom.Rectangle2D outerStageAnchor = new java.awt.geom.Rectangle2D.Double(translate, translate, textureSize, textureSize);
-                    TexturePaint outerStagePaint = new TexturePaint(outerStageTexture, outerStageAnchor);
-                    graphics.setPaint(outerStagePaint);
-                    int fillWidth = (int) (stageWidth + visibleWidth);
-                    int fillHeight = (int) (stageHeight + visibleHeight);
-                    graphics.fillRect(-fillWidth / 2, -fillHeight / 2, fillWidth, fillHeight);
+                    drawTiled(graphics, OUTER_STAGE_TILE, translate, translate, visibleArea);
 
-                    // フローリングの描画
-                    java.awt.geom.Rectangle2D floorAnchor = new java.awt.geom.Rectangle2D.Double(0, 0, floorTexture.getWidth(), floorTexture.getHeight());
-                    TexturePaint floorPaint = new TexturePaint(floorTexture, floorAnchor);
-                    graphics.setPaint(floorPaint);
-                    graphics.fillRect(-stageWidth / 2, -stageHeight / 2, stageWidth, stageHeight);
+                    // フローリングの描画。ステージの外には描かず、ステージ範囲と可視範囲の重なりだけに絞る。
+                    java.awt.geom.Rectangle2D stageRect = new java.awt.geom.Rectangle2D.Double(
+                            -stageWidth / 2.0, -stageHeight / 2.0, stageWidth, stageHeight);
+                    java.awt.geom.Rectangle2D floorArea = stageRect.createIntersection(visibleArea);
+                    drawTiled(graphics, FLOOR_TILE, 0, 0, floorArea);
                 }
             };
     }

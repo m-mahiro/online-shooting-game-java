@@ -3,7 +3,6 @@ package client.ui;
 import stage.StageInfo;
 import stage.Team;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
@@ -27,7 +26,19 @@ public class TeamInfoCard implements UIContent {
 
 	// 画像リソース
 	private double imageScale = 0.5;
-	private BufferedImage cardImage;
+	private final BufferedImage cardImage;
+
+	// 画像リソース（他のクラスと同様、起動時に一度だけ読み込んで共有する）
+	private static final BufferedImage redCardImage, blueCardImage;
+
+	static {
+		try {
+			redCardImage = util.ImageUtil.load(Objects.requireNonNull(TeamInfoCard.class.getResource("../assets/side_card_red.png")));
+			blueCardImage = util.ImageUtil.load(Objects.requireNonNull(TeamInfoCard.class.getResource("../assets/side_card_blue.png")));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	/**
 	 * TeamInfoCardのコンストラクタ。
@@ -39,19 +50,15 @@ public class TeamInfoCard implements UIContent {
 	public TeamInfoCard(Team team, StageInfo info) {
 		this.team = team;
 		this.info = info;
-		try {
-			switch (team) {
-				case RED:
-					cardImage = ImageIO.read(Objects.requireNonNull(TeamInfoCard.class.getResource("../assets/side_card_red.png")));
-					break;
-				case BLUE:
-					cardImage = ImageIO.read(Objects.requireNonNull(TeamInfoCard.class.getResource("../assets/side_card_blue.png")));
-					break;
-				default:
-					throw new RuntimeException();
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
+		switch (team) {
+			case RED:
+				cardImage = redCardImage;
+				break;
+			case BLUE:
+				cardImage = blueCardImage;
+				break;
+			default:
+				throw new RuntimeException();
 		}
 	}
 
