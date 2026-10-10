@@ -27,10 +27,10 @@ public class Marker implements ScreenObject {
         try {
             switch (tank.getTeam()) {
                 case BLUE:
-                    this.image = ImageIO.read(Objects.requireNonNull(Marker.class.getResource("../client/assets/marker_blue.png")));
+                    this.image = ImageIO.read(Objects.requireNonNull(Marker.class.getResource("/client/assets/marker_blue.png")));
                     break;
                 case RED:
-                    this.image = ImageIO.read(Objects.requireNonNull(Marker.class.getResource("../client/assets/marker_red.png")));
+                    this.image = ImageIO.read(Objects.requireNonNull(Marker.class.getResource("/client/assets/marker_red.png")));
                     break;
                 default:
                     throw new RuntimeException();
